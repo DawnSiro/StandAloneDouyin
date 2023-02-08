@@ -9,15 +9,20 @@ import (
 )
 
 type DouyinCommentActionRequest struct {
-	Token       string  `thrift:"token,1,required" form:"token,required" json:"token,required" query:"token,required"`
-	VideoID     int64   `thrift:"video_id,2,required" form:"video_id,required" json:"video_id,required" query:"video_id,required"`
-	ActionType  int32   `thrift:"action_type,3,required" form:"action_type,required" json:"action_type,required" query:"action_type,required"`
-	CommentText *string `thrift:"comment_text,4,optional" form:"comment_text" json:"comment_text,omitempty" query:"comment_text"`
-	CommentID   *int64  `thrift:"comment_id,5,optional" form:"comment_id" json:"comment_id,omitempty" query:"comment_id"`
+	UserID      int64   `thrift:"user_id,1,required" form:"user_id,required" json:"user_id,required" query:"user_id,required"`
+	Token       string  `thrift:"token,2,required" form:"token,required" json:"token,required" query:"token,required"`
+	VideoID     int64   `thrift:"video_id,3,required" form:"video_id,required" json:"video_id,required" query:"video_id,required"`
+	ActionType  int32   `thrift:"action_type,4,required" form:"action_type,required" json:"action_type,required" query:"action_type,required"`
+	CommentText *string `thrift:"comment_text,5,optional" form:"comment_text" json:"comment_text,omitempty" query:"comment_text"`
+	CommentID   *int64  `thrift:"comment_id,6,optional" form:"comment_id" json:"comment_id,omitempty" query:"comment_id"`
 }
 
 func NewDouyinCommentActionRequest() *DouyinCommentActionRequest {
 	return &DouyinCommentActionRequest{}
+}
+
+func (p *DouyinCommentActionRequest) GetUserID() (v int64) {
+	return p.UserID
 }
 
 func (p *DouyinCommentActionRequest) GetToken() (v string) {
@@ -51,11 +56,12 @@ func (p *DouyinCommentActionRequest) GetCommentID() (v int64) {
 }
 
 var fieldIDToName_DouyinCommentActionRequest = map[int16]string{
-	1: "token",
-	2: "video_id",
-	3: "action_type",
-	4: "comment_text",
-	5: "comment_id",
+	1: "user_id",
+	2: "token",
+	3: "video_id",
+	4: "action_type",
+	5: "comment_text",
+	6: "comment_id",
 }
 
 func (p *DouyinCommentActionRequest) IsSetCommentText() bool {
@@ -70,6 +76,7 @@ func (p *DouyinCommentActionRequest) Read(iprot thrift.TProtocol) (err error) {
 
 	var fieldTypeId thrift.TType
 	var fieldId int16
+	var issetUserID bool = false
 	var issetToken bool = false
 	var issetVideoID bool = false
 	var issetActionType bool = false
@@ -89,8 +96,19 @@ func (p *DouyinCommentActionRequest) Read(iprot thrift.TProtocol) (err error) {
 
 		switch fieldId {
 		case 1:
-			if fieldTypeId == thrift.STRING {
+			if fieldTypeId == thrift.I64 {
 				if err = p.ReadField1(iprot); err != nil {
+					goto ReadFieldError
+				}
+				issetUserID = true
+			} else {
+				if err = iprot.Skip(fieldTypeId); err != nil {
+					goto SkipFieldError
+				}
+			}
+		case 2:
+			if fieldTypeId == thrift.STRING {
+				if err = p.ReadField2(iprot); err != nil {
 					goto ReadFieldError
 				}
 				issetToken = true
@@ -99,9 +117,9 @@ func (p *DouyinCommentActionRequest) Read(iprot thrift.TProtocol) (err error) {
 					goto SkipFieldError
 				}
 			}
-		case 2:
+		case 3:
 			if fieldTypeId == thrift.I64 {
-				if err = p.ReadField2(iprot); err != nil {
+				if err = p.ReadField3(iprot); err != nil {
 					goto ReadFieldError
 				}
 				issetVideoID = true
@@ -110,9 +128,9 @@ func (p *DouyinCommentActionRequest) Read(iprot thrift.TProtocol) (err error) {
 					goto SkipFieldError
 				}
 			}
-		case 3:
+		case 4:
 			if fieldTypeId == thrift.I32 {
-				if err = p.ReadField3(iprot); err != nil {
+				if err = p.ReadField4(iprot); err != nil {
 					goto ReadFieldError
 				}
 				issetActionType = true
@@ -121,9 +139,9 @@ func (p *DouyinCommentActionRequest) Read(iprot thrift.TProtocol) (err error) {
 					goto SkipFieldError
 				}
 			}
-		case 4:
+		case 5:
 			if fieldTypeId == thrift.STRING {
-				if err = p.ReadField4(iprot); err != nil {
+				if err = p.ReadField5(iprot); err != nil {
 					goto ReadFieldError
 				}
 			} else {
@@ -131,9 +149,9 @@ func (p *DouyinCommentActionRequest) Read(iprot thrift.TProtocol) (err error) {
 					goto SkipFieldError
 				}
 			}
-		case 5:
+		case 6:
 			if fieldTypeId == thrift.I64 {
-				if err = p.ReadField5(iprot); err != nil {
+				if err = p.ReadField6(iprot); err != nil {
 					goto ReadFieldError
 				}
 			} else {
@@ -155,18 +173,23 @@ func (p *DouyinCommentActionRequest) Read(iprot thrift.TProtocol) (err error) {
 		goto ReadStructEndError
 	}
 
-	if !issetToken {
+	if !issetUserID {
 		fieldId = 1
 		goto RequiredFieldNotSetError
 	}
 
-	if !issetVideoID {
+	if !issetToken {
 		fieldId = 2
 		goto RequiredFieldNotSetError
 	}
 
-	if !issetActionType {
+	if !issetVideoID {
 		fieldId = 3
+		goto RequiredFieldNotSetError
+	}
+
+	if !issetActionType {
+		fieldId = 4
 		goto RequiredFieldNotSetError
 	}
 	return nil
@@ -188,6 +211,15 @@ RequiredFieldNotSetError:
 }
 
 func (p *DouyinCommentActionRequest) ReadField1(iprot thrift.TProtocol) error {
+	if v, err := iprot.ReadI64(); err != nil {
+		return err
+	} else {
+		p.UserID = v
+	}
+	return nil
+}
+
+func (p *DouyinCommentActionRequest) ReadField2(iprot thrift.TProtocol) error {
 	if v, err := iprot.ReadString(); err != nil {
 		return err
 	} else {
@@ -196,7 +228,7 @@ func (p *DouyinCommentActionRequest) ReadField1(iprot thrift.TProtocol) error {
 	return nil
 }
 
-func (p *DouyinCommentActionRequest) ReadField2(iprot thrift.TProtocol) error {
+func (p *DouyinCommentActionRequest) ReadField3(iprot thrift.TProtocol) error {
 	if v, err := iprot.ReadI64(); err != nil {
 		return err
 	} else {
@@ -205,7 +237,7 @@ func (p *DouyinCommentActionRequest) ReadField2(iprot thrift.TProtocol) error {
 	return nil
 }
 
-func (p *DouyinCommentActionRequest) ReadField3(iprot thrift.TProtocol) error {
+func (p *DouyinCommentActionRequest) ReadField4(iprot thrift.TProtocol) error {
 	if v, err := iprot.ReadI32(); err != nil {
 		return err
 	} else {
@@ -214,7 +246,7 @@ func (p *DouyinCommentActionRequest) ReadField3(iprot thrift.TProtocol) error {
 	return nil
 }
 
-func (p *DouyinCommentActionRequest) ReadField4(iprot thrift.TProtocol) error {
+func (p *DouyinCommentActionRequest) ReadField5(iprot thrift.TProtocol) error {
 	if v, err := iprot.ReadString(); err != nil {
 		return err
 	} else {
@@ -223,7 +255,7 @@ func (p *DouyinCommentActionRequest) ReadField4(iprot thrift.TProtocol) error {
 	return nil
 }
 
-func (p *DouyinCommentActionRequest) ReadField5(iprot thrift.TProtocol) error {
+func (p *DouyinCommentActionRequest) ReadField6(iprot thrift.TProtocol) error {
 	if v, err := iprot.ReadI64(); err != nil {
 		return err
 	} else {
@@ -258,6 +290,10 @@ func (p *DouyinCommentActionRequest) Write(oprot thrift.TProtocol) (err error) {
 			fieldId = 5
 			goto WriteFieldError
 		}
+		if err = p.writeField6(oprot); err != nil {
+			fieldId = 6
+			goto WriteFieldError
+		}
 
 	}
 	if err = oprot.WriteFieldStop(); err != nil {
@@ -278,10 +314,10 @@ WriteStructEndError:
 }
 
 func (p *DouyinCommentActionRequest) writeField1(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("token", thrift.STRING, 1); err != nil {
+	if err = oprot.WriteFieldBegin("user_id", thrift.I64, 1); err != nil {
 		goto WriteFieldBeginError
 	}
-	if err := oprot.WriteString(p.Token); err != nil {
+	if err := oprot.WriteI64(p.UserID); err != nil {
 		return err
 	}
 	if err = oprot.WriteFieldEnd(); err != nil {
@@ -295,10 +331,10 @@ WriteFieldEndError:
 }
 
 func (p *DouyinCommentActionRequest) writeField2(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("video_id", thrift.I64, 2); err != nil {
+	if err = oprot.WriteFieldBegin("token", thrift.STRING, 2); err != nil {
 		goto WriteFieldBeginError
 	}
-	if err := oprot.WriteI64(p.VideoID); err != nil {
+	if err := oprot.WriteString(p.Token); err != nil {
 		return err
 	}
 	if err = oprot.WriteFieldEnd(); err != nil {
@@ -312,10 +348,10 @@ WriteFieldEndError:
 }
 
 func (p *DouyinCommentActionRequest) writeField3(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("action_type", thrift.I32, 3); err != nil {
+	if err = oprot.WriteFieldBegin("video_id", thrift.I64, 3); err != nil {
 		goto WriteFieldBeginError
 	}
-	if err := oprot.WriteI32(p.ActionType); err != nil {
+	if err := oprot.WriteI64(p.VideoID); err != nil {
 		return err
 	}
 	if err = oprot.WriteFieldEnd(); err != nil {
@@ -329,8 +365,25 @@ WriteFieldEndError:
 }
 
 func (p *DouyinCommentActionRequest) writeField4(oprot thrift.TProtocol) (err error) {
+	if err = oprot.WriteFieldBegin("action_type", thrift.I32, 4); err != nil {
+		goto WriteFieldBeginError
+	}
+	if err := oprot.WriteI32(p.ActionType); err != nil {
+		return err
+	}
+	if err = oprot.WriteFieldEnd(); err != nil {
+		goto WriteFieldEndError
+	}
+	return nil
+WriteFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 4 begin error: ", p), err)
+WriteFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 4 end error: ", p), err)
+}
+
+func (p *DouyinCommentActionRequest) writeField5(oprot thrift.TProtocol) (err error) {
 	if p.IsSetCommentText() {
-		if err = oprot.WriteFieldBegin("comment_text", thrift.STRING, 4); err != nil {
+		if err = oprot.WriteFieldBegin("comment_text", thrift.STRING, 5); err != nil {
 			goto WriteFieldBeginError
 		}
 		if err := oprot.WriteString(*p.CommentText); err != nil {
@@ -342,14 +395,14 @@ func (p *DouyinCommentActionRequest) writeField4(oprot thrift.TProtocol) (err er
 	}
 	return nil
 WriteFieldBeginError:
-	return thrift.PrependError(fmt.Sprintf("%T write field 4 begin error: ", p), err)
+	return thrift.PrependError(fmt.Sprintf("%T write field 5 begin error: ", p), err)
 WriteFieldEndError:
-	return thrift.PrependError(fmt.Sprintf("%T write field 4 end error: ", p), err)
+	return thrift.PrependError(fmt.Sprintf("%T write field 5 end error: ", p), err)
 }
 
-func (p *DouyinCommentActionRequest) writeField5(oprot thrift.TProtocol) (err error) {
+func (p *DouyinCommentActionRequest) writeField6(oprot thrift.TProtocol) (err error) {
 	if p.IsSetCommentID() {
-		if err = oprot.WriteFieldBegin("comment_id", thrift.I64, 5); err != nil {
+		if err = oprot.WriteFieldBegin("comment_id", thrift.I64, 6); err != nil {
 			goto WriteFieldBeginError
 		}
 		if err := oprot.WriteI64(*p.CommentID); err != nil {
@@ -361,9 +414,9 @@ func (p *DouyinCommentActionRequest) writeField5(oprot thrift.TProtocol) (err er
 	}
 	return nil
 WriteFieldBeginError:
-	return thrift.PrependError(fmt.Sprintf("%T write field 5 begin error: ", p), err)
+	return thrift.PrependError(fmt.Sprintf("%T write field 6 begin error: ", p), err)
 WriteFieldEndError:
-	return thrift.PrependError(fmt.Sprintf("%T write field 5 end error: ", p), err)
+	return thrift.PrependError(fmt.Sprintf("%T write field 6 end error: ", p), err)
 }
 
 func (p *DouyinCommentActionRequest) String() string {

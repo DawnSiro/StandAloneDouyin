@@ -4,6 +4,7 @@ package api
 
 import (
 	"context"
+	"douyin/biz/service"
 
 	api "douyin/biz/model/api"
 	"github.com/cloudwego/hertz/pkg/app"
@@ -133,7 +134,8 @@ func CommentAction(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
-	resp := new(api.DouyinCommentActionResponse)
+	// use service
+	resp, err := service.CommentAction()
 
 	c.JSON(consts.StatusOK, resp)
 }
