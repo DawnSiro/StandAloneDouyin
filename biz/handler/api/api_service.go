@@ -135,7 +135,7 @@ func CommentAction(ctx context.Context, c *app.RequestContext) {
 	}
 
 	// use service
-	resp, err := service.CommentAction()
+	resp := service.CommentAction(&req)
 
 	c.JSON(consts.StatusOK, resp)
 }
@@ -151,7 +151,8 @@ func GetCommentList(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
-	resp := new(api.DouyinCommentListResponse)
+	// use service
+	resp := service.CommentList(&req)
 
 	c.JSON(consts.StatusOK, resp)
 }
