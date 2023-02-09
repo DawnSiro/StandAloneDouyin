@@ -9,7 +9,6 @@ require (
 	github.com/cloudwego/hertz v0.5.2
 	gorm.io/driver/mysql v1.4.6
 	gorm.io/gorm v1.24.5
-	gorm.io/plugin/opentracing v0.0.0-20211220013347-7d2b2af23560
 )
 
 require (
@@ -25,12 +24,8 @@ require (
 	github.com/henrylee2cn/goutil v0.0.0-20210127050712-89660552f6f8 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
-	github.com/json-iterator/go v1.1.10 // indirect
 	github.com/klauspost/cpuid/v2 v2.0.9 // indirect
-	github.com/modern-go/concurrent v0.0.0-20180228061459-e0a39a4cb421 // indirect
-	github.com/modern-go/reflect2 v0.0.0-20180701023420-4b7aa43c6742 // indirect
 	github.com/nyaruka/phonenumbers v1.0.55 // indirect
-	github.com/opentracing/opentracing-go v1.2.0 // indirect
 	github.com/tidwall/gjson v1.13.0 // indirect
 	github.com/tidwall/match v1.1.1 // indirect
 	github.com/tidwall/pretty v1.2.0 // indirect

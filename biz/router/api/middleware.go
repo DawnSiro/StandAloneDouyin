@@ -205,3 +205,13 @@ func _register0Mw() []app.HandlerFunc {
 	// your code...
 	return nil
 }
+
+func _favoritevideoMw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
+func _action3Mw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
