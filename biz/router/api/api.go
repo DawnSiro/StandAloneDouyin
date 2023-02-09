@@ -33,6 +33,10 @@ func Register(r *server.Hertz) {
 		{
 			_favorite := _douyin.Group("/favorite", _favoriteMw()...)
 			{
+				_action0 := _favorite.Group("/action", _action0Mw()...)
+				_action0.POST("/", append(_favoritevideoMw(), api.FavoriteVideo)...)
+			}
+			{
 				_list0 := _favorite.Group("/list", _list0Mw()...)
 				_list0.GET("/", append(_getfavoritelistMw(), api.GetFavoriteList)...)
 			}
@@ -44,8 +48,8 @@ func Register(r *server.Hertz) {
 		{
 			_message := _douyin.Group("/message", _messageMw()...)
 			{
-				_action0 := _message.Group("/action", _action0Mw()...)
-				_action0.POST("/", append(_sendmessageMw(), api.SendMessage)...)
+				_action1 := _message.Group("/action", _action1Mw()...)
+				_action1.POST("/", append(_sendmessageMw(), api.SendMessage)...)
 			}
 			{
 				_chat := _message.Group("/chat", _chatMw()...)
@@ -55,8 +59,8 @@ func Register(r *server.Hertz) {
 		{
 			_publish := _douyin.Group("/publish", _publishMw()...)
 			{
-				_action1 := _publish.Group("/action", _action1Mw()...)
-				_action1.POST("/", append(_publish_ctionMw(), api.PublishAction)...)
+				_action2 := _publish.Group("/action", _action2Mw()...)
+				_action2.POST("/", append(_publish_ctionMw(), api.PublishAction)...)
 			}
 			{
 				_list1 := _publish.Group("/list", _list1Mw()...)
@@ -66,8 +70,8 @@ func Register(r *server.Hertz) {
 		{
 			_relation := _douyin.Group("/relation", _relationMw()...)
 			{
-				_action2 := _relation.Group("/action", _action2Mw()...)
-				_action2.POST("/", append(_followMw(), api.Follow)...)
+				_action3 := _relation.Group("/action", _action3Mw()...)
+				_action3.POST("/", append(_followMw(), api.Follow)...)
 			}
 			{
 				_follow0 := _relation.Group("/follow", _follow0Mw()...)

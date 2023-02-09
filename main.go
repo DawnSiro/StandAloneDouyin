@@ -3,12 +3,18 @@
 package main
 
 import (
+	"douyin/dal/db"
 	"github.com/cloudwego/hertz/pkg/app/server"
 )
+
+func Init() {
+	db.Init()
+}
 
 func main() {
 	h := server.Default()
 
+	Init()
 	register(h)
 	h.Spin()
 }

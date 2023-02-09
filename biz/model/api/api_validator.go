@@ -22,6 +22,9 @@ var (
 )
 
 func (p *DouyinCommentActionRequest) IsValid() error {
+	if p.UserID <= int64(0) {
+		return fmt.Errorf("field UserID gt rule failed, current value: %v", p.UserID)
+	}
 	if p.VideoID <= int64(0) {
 		return fmt.Errorf("field VideoID gt rule failed, current value: %v", p.VideoID)
 	}
@@ -240,12 +243,20 @@ func (p *DouyinRelationFriendListResponse) IsValid() error {
 	return nil
 }
 func (p *FriendUser) IsValid() error {
-	if p.Base != nil {
-		if err := p.Base.IsValid(); err != nil {
-			return fmt.Errorf("filed Base not valid, %w", err)
+	if p.ID <= int64(0) {
+		return fmt.Errorf("field ID gt rule failed, current value: %v", p.ID)
+	}
+	if p.FollowCount != nil {
+		if *p.FollowCount <= int64(0) {
+			return fmt.Errorf("field FollowCount gt rule failed, current value: %v", *p.FollowCount)
 		}
 	}
-	_src := []int64{int64(1), int64(2)}
+	if p.FollowerCount != nil {
+		if *p.FollowerCount <= int64(0) {
+			return fmt.Errorf("field FollowerCount gt rule failed, current value: %v", *p.FollowerCount)
+		}
+	}
+	_src := []int64{int64(0), int64(1)}
 	var _exist bool
 	for _, src := range _src {
 		if p.MsgType == int64(src) {

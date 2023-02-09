@@ -4,7 +4,6 @@ package api
 
 import (
 	"context"
-	"douyin/biz/service"
 
 	api "douyin/biz/model/api"
 	"github.com/cloudwego/hertz/pkg/app"
@@ -134,8 +133,7 @@ func CommentAction(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
-	// use service
-	resp, err := service.CommentAction()
+	resp := new(api.DouyinCommentActionResponse)
 
 	c.JSON(consts.StatusOK, resp)
 }
@@ -248,6 +246,22 @@ func GetMessageChat(ctx context.Context, c *app.RequestContext) {
 	}
 
 	resp := new(api.DouyinMessageChatResponse)
+
+	c.JSON(consts.StatusOK, resp)
+}
+
+// FavoriteVideo .
+// @router /douyin/favorite/action/ [POST]
+func FavoriteVideo(ctx context.Context, c *app.RequestContext) {
+	var err error
+	var req api.DouyinFavoriteActionRequest
+	err = c.BindAndValidate(&req)
+	if err != nil {
+		c.String(consts.StatusBadRequest, err.Error())
+		return
+	}
+
+	resp := new(api.DouyinFavoriteActionResponse)
 
 	c.JSON(consts.StatusOK, resp)
 }
