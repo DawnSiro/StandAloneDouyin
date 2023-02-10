@@ -5,6 +5,7 @@ package main
 import (
 	"douyin/biz/mw"
 	"douyin/dal/db"
+	"douyin/util"
 	"github.com/cloudwego/hertz/pkg/app/server"
 )
 
@@ -20,6 +21,8 @@ func main() {
 	)
 
 	Init()
+	util.ScheduledInit()
+
 	register(h)
 	h.Spin()
 }

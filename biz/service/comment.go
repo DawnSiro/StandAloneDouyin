@@ -39,6 +39,9 @@ func CommentAction(req *api.DouyinCommentActionRequest) api.DouyinCommentActionR
 		}
 		con1.IsFollow = db.IsFollow(uint64(req.UserID), con2)
 
+		//update video.comment_count
+		_, err = db.IncreaseFavoriteCount(uint64(req.VideoID))
+
 		resp.StatusCode = 0
 		resp.StatusMsg = new(string)
 		resp.Comment = &api.Comment{
@@ -75,6 +78,9 @@ func CommentAction(req *api.DouyinCommentActionRequest) api.DouyinCommentActionR
 			}
 		}
 		con1.IsFollow = db.IsFollow(uint64(req.UserID), con2)
+
+		//update video.comment_count
+		_, err = db.ReduceFavoriteCount(uint64(req.VideoID))
 
 		resp.StatusCode = 0
 		resp.StatusMsg = new(string)

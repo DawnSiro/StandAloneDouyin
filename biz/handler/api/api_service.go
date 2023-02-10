@@ -5,6 +5,7 @@ package api
 import (
 	"context"
 	"douyin/biz/service"
+
 	"github.com/cloudwego/hertz/pkg/common/hlog"
 
 	api "douyin/biz/model/api"
@@ -132,7 +133,11 @@ func GetFavoriteList(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
-	resp := new(api.DouyinFavoriteListResponse)
+	resp, err := service.FavoriteList(&req)
+	if err != nil {
+		//TODO: 有问题
+		c.JSON(consts.StatusOK, err)
+	}
 
 	c.JSON(consts.StatusOK, resp)
 }
@@ -148,7 +153,7 @@ func CommentAction(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
-	resp := new(api.DouyinCommentActionResponse)
+	resp := service.CommentAction(&req)
 
 	c.JSON(consts.StatusOK, resp)
 }
@@ -164,7 +169,7 @@ func GetCommentList(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
-	resp := new(api.DouyinCommentListResponse)
+	resp := service.CommentList(&req)
 
 	c.JSON(consts.StatusOK, resp)
 }
@@ -297,7 +302,11 @@ func FavoriteVideo(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
-	resp := new(api.DouyinFavoriteActionResponse)
+	resp, err := service.FavoriteAction(&req)
+	if err != nil {
+		//TODO: 返回设置 err
+		c.JSON(consts.StatusOK, err)
+	}
 
 	c.JSON(consts.StatusOK, resp)
 }
