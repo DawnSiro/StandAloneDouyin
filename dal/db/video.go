@@ -1,7 +1,7 @@
 package db
 
 import (
-	"douyin/constants"
+	"douyin/constant"
 	"errors"
 	"gorm.io/gorm"
 )
@@ -17,7 +17,7 @@ type Video struct {
 }
 
 func (n *Video) TableName() string {
-	return constants.VideoTableName
+	return constant.VideoTableName
 }
 
 func SelectAuthorIdByVideoId(videoId int64) (uint64, error) {

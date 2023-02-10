@@ -1,7 +1,7 @@
 package db
 
 import (
-	"douyin/constants"
+	"douyin/constant"
 	"errors"
 	"gorm.io/gorm"
 )
@@ -13,7 +13,7 @@ type Relation struct {
 }
 
 func (n *Relation) TableName() string {
-	return constants.RelationTableName
+	return constant.RelationTableName
 }
 
 func IsFollow(userId uint64, toUserId uint64) bool {
