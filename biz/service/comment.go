@@ -21,7 +21,7 @@ func CommentAction(req *api.DouyinCommentActionRequest) api.DouyinCommentActionR
 			}
 		}
 		//TODO:miss Avatar
-		con1, err := db.SelectUserByUserId(uint(req.UserID))
+		con1, err := db.SelectUserByUserID(uint(req.UserID))
 		if err != nil {
 			return api.DouyinCommentActionResponse{
 				StatusCode: 1001,
@@ -61,7 +61,7 @@ func CommentAction(req *api.DouyinCommentActionRequest) api.DouyinCommentActionR
 			}
 		}
 		//TODO:miss Avatar
-		con1, err := db.SelectUserByUserId(uint(req.UserID))
+		con1, err := db.SelectUserByUserID(uint(req.UserID))
 		if err != nil {
 			return api.DouyinCommentActionResponse{
 				StatusCode: 1001,

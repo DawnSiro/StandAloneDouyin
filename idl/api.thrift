@@ -1,5 +1,13 @@
 namespace go api
 
+enum ErrCode {
+    SuccessCode                = 0
+    ServiceErrCode             = 10001
+    ParamErrCode               = 10002
+    UserAlreadyExistErrCode    = 10003
+    AuthorizationFailedErrCode = 10004
+}
+
 struct douyin_comment_action_request {
   1: required i64 user_id (vt.gt = "0")
   2: required string token       // 用户鉴权token

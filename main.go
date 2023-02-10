@@ -3,6 +3,7 @@
 package main
 
 import (
+	"douyin/biz/mw"
 	"douyin/dal/db"
 	"douyin/util"
 	"github.com/cloudwego/hertz/pkg/app/server"
@@ -10,10 +11,14 @@ import (
 
 func Init() {
 	db.Init()
+	mw.InitJWT()
 }
 
 func main() {
-	h := server.Default()
+	h := server.Default(
+		server.WithHostPorts("192.168.18.6:30000"),
+		server.WithExitWaitTime(0),
+	)
 
 	Init()
 	util.ScheduledInit()

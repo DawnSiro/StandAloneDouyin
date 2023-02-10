@@ -2,7 +2,7 @@ package db
 
 import (
 	"douyin/biz/model/api"
-	"douyin/constants"
+	"douyin/constant"
 	"errors"
 	"gorm.io/gorm"
 )
@@ -15,7 +15,7 @@ type Comment struct {
 }
 
 func (n *Comment) TableName() string {
-	return constants.CommentTableName
+	return constant.CommentTableName
 }
 
 func CreateCommentByUserIdAndVideoIdAndContent(req api.DouyinCommentActionRequest) (*Comment, error) {
@@ -54,7 +54,7 @@ func SelectCommentListByUserId(userId uint64, videoId uint64) ([]*api.Comment, e
 	results := make([]*api.Comment, 0)
 	for i := 0; i < len(*commentResult); i++ {
 
-		con1, err := SelectUserByUserId(uint(userId))
+		con1, err := SelectUserByUserID(uint(userId))
 		if err != nil {
 			return nil, nil
 		}

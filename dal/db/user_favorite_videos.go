@@ -66,7 +66,7 @@ func SelectFavoriteVideoListByUserId(userId uint64) ([]*api.Video, error) {
 		//TODO:Avatar not put
 		userTemp := &api.User{
 			ID:            int64(user.ID),
-			Name:          user.UserName,
+			Name:          user.Username,
 			FollowCount:   &user.FollowingCount,
 			FollowerCount: &user.FollowerCount,
 			IsFollow:      IsFollow(userId, video.AuthorId),
