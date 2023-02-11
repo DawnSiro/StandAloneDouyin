@@ -3,6 +3,7 @@
 package Api
 
 import (
+	"douyin/biz/mw"
 	"github.com/cloudwego/hertz/pkg/app"
 )
 
@@ -18,7 +19,10 @@ func _douyinMw() []app.HandlerFunc {
 
 func _commentMw() []app.HandlerFunc {
 	// your code...
-	return nil
+	return []app.HandlerFunc{
+		// use jwt mw
+		mw.JwtMiddleware.MiddlewareFunc(),
+	}
 }
 
 func _actionMw() []app.HandlerFunc {
@@ -43,7 +47,10 @@ func _getcommentlistMw() []app.HandlerFunc {
 
 func _favoriteMw() []app.HandlerFunc {
 	// your code...
-	return nil
+	return []app.HandlerFunc{
+		// use jwt mw
+		mw.JwtMiddleware.MiddlewareFunc(),
+	}
 }
 
 func _list0Mw() []app.HandlerFunc {
@@ -68,7 +75,10 @@ func _getfeedMw() []app.HandlerFunc {
 
 func _messageMw() []app.HandlerFunc {
 	// your code...
-	return nil
+	return []app.HandlerFunc{
+		// use jwt mw
+		mw.JwtMiddleware.MiddlewareFunc(),
+	}
 }
 
 func _action0Mw() []app.HandlerFunc {
@@ -118,7 +128,10 @@ func _getpublishvideosMw() []app.HandlerFunc {
 
 func _relationMw() []app.HandlerFunc {
 	// your code...
-	return nil
+	return []app.HandlerFunc{
+		// use jwt mw
+		mw.JwtMiddleware.MiddlewareFunc(),
+	}
 }
 
 func _action2Mw() []app.HandlerFunc {
@@ -183,7 +196,10 @@ func _userMw() []app.HandlerFunc {
 
 func _getuserinfoMw() []app.HandlerFunc {
 	// your code...
-	return nil
+	return []app.HandlerFunc{
+		// use jwt mw
+		mw.JwtMiddleware.MiddlewareFunc(),
+	}
 }
 
 func _loginMw() []app.HandlerFunc {
