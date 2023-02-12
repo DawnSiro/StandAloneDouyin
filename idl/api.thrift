@@ -9,12 +9,11 @@ enum ErrCode {
 }
 
 struct douyin_comment_action_request {
-  1: required i64 user_id (vt.gt = "0")
-  2: required string token       // 用户鉴权token
-  3: required i64 video_id (vt.gt = "0")      // 视频id
-  4: required i32 action_type (vt.in = "1", vt.in = "2")   // 1-发布评论，2-删除评论
-  5: optional string comment_text // 用户填写的评论内容，在action_type=1的时候使用
-  6: optional i64 comment_id (vt.gt = "0")  // 要删除的评论id，在action_type=2的时候使用
+  1: required string token       // 用户鉴权token
+  2: required i64 video_id (vt.gt = "0", api.vd="$>0")      // 视频id
+  3: required i32 action_type (vt.in = "1", vt.in = "2")   // 1-发布评论，2-删除评论
+  4: optional string comment_text // 用户填写的评论内容，在action_type=1的时候使用
+  5: optional i64 comment_id   // 要删除的评论id，在action_type=2的时候使用
 }
 
 struct douyin_comment_action_response {
@@ -25,7 +24,7 @@ struct douyin_comment_action_response {
 
 struct douyin_comment_list_request {
   1: required string token // 用户鉴权token
-  2: required i64 video_id (vt.gt = "0") // 视频id
+  2: required i64 video_id (vt.gt = "0", api.vd="$>0") // 视频id
 }
 
 struct douyin_comment_list_response {
@@ -35,14 +34,14 @@ struct douyin_comment_list_response {
 }
 
 struct Comment {
-  1: required i64 id (vt.gt = "0") // 视频评论id
+  1: required i64 id (vt.gt = "0", api.vd="$>0") // 视频评论id
   2: required User user // 评论用户信息
   3: required string content // 评论内容
   4: required string create_date // 评论发布日期，格式 mm-dd
 }
 
 struct User {
-  1: required i64 id (vt.gt = "0") // 用户id
+  1: required i64 id (vt.gt = "0", api.vd="$>0") // 用户id
   2: required string name  // 用户名称
   3: optional i64 follow_count (vt.gt = "0")  // 关注总数
   4: optional i64 follower_count (vt.gt = "0")  // 粉丝总数
@@ -52,8 +51,8 @@ struct User {
 
 struct douyin_favorite_action_request {
   1: required string token  // 用户鉴权token
-  2: required i64 video_id (vt.gt = "0")  // 视频id
-  3: required i32 action_type (vt.in = "1", vt.in = "2") // 1-点赞，2-取消点赞
+  2: required i64 video_id (vt.gt = "0", api.vd="$>0")  // 视频id
+  3: required i32 action_type (vt.in = "1", vt.in = "2", api.vd = "$==1||$==2") // 1-点赞，2-取消点赞
 }
 
 struct douyin_favorite_action_response {
@@ -62,7 +61,7 @@ struct douyin_favorite_action_response {
 }
 
 struct douyin_favorite_list_request {
-  1: required i64 user_id (vt.gt = "0") // 用户id
+  1: required i64 user_id (vt.gt = "0", api.vd="$>0") // 用户id
   2: required string token // 用户鉴权token
 }
 
@@ -97,7 +96,7 @@ struct douyin_feed_response {
 
 struct douyin_message_chat_request {
   1: required string token // 用户鉴权token
-  2: required i64 to_user_id (vt.gt = "0")  // 对方用户id
+  2: required i64 to_user_id (vt.gt = "0", api.vd="$>0")  // 对方用户id
 }
 
 struct douyin_message_chat_response {
@@ -111,13 +110,13 @@ struct Message {
   2: required i64 to_user_id (vt.gt = "0") // 该消息接收者的id
   3: required i64 from_user_id (vt.gt = "0") // 该消息发送者的id
   4: required string content // 消息内容
-  5: optional string create_time // 消息创建时间
+  5: optional i64 create_time // 消息创建时间
 }
 
 struct douyin_message_action_request {
   1: required string token // 用户鉴权token
-  2: required i64 to_user_id (vt.gt = "0") // 对方用户id
-  3: required i32 action_type (vt.in = "1") // 1-发送消息
+  2: required i64 to_user_id (vt.gt = "0", api.vd="$>0") // 对方用户id
+  3: required i32 action_type (vt.in = "1", api.vd="$==1") // 1-发送消息
   4: required string content // 消息内容
 }
 
@@ -128,7 +127,7 @@ struct douyin_message_action_response {
 
 struct douyin_publish_action_request {
   1: required string token // 用户鉴权token
-  2: required binary data // 视频数据
+  2: optional binary data // 视频数据
   3: required string title // 视频标题
 }
 
@@ -138,7 +137,7 @@ struct douyin_publish_action_response {
 }
 
 struct douyin_publish_list_request {
-  1: required i64 user_id (vt.gt = "0")  // 用户id
+  1: required i64 user_id (vt.gt = "0", api.vd="$>0")  // 用户id
   2: required string token  // 用户鉴权token
 }
 
@@ -151,7 +150,7 @@ struct douyin_publish_list_response {
 
 struct douyin_relation_action_request {
   1: required string token // 用户鉴权token
-  2: required i64 to_user_id (vt.gt = "0") // 对方用户id
+  2: required i64 to_user_id (vt.gt = "0", api.vd="$>0") // 对方用户id
   3: required i32 action_type (vt.in = "1", vt.in = "2") // 1-关注，2-取消关注
 }
 
@@ -161,7 +160,7 @@ struct douyin_relation_action_response {
 }
 
 struct douyin_relation_follow_list_request {
-  1: required i64 user_id (vt.gt = "0") // 用户id
+  1: required i64 user_id (vt.gt = "0", api.vd="$>0") // 用户id
   2: required string token // 用户鉴权token
 }
 
@@ -172,7 +171,7 @@ struct douyin_relation_follow_list_response {
 }
 
 struct douyin_relation_follower_list_request {
-  1: required i64 user_id (vt.gt = "0")  // 用户id
+  1: required i64 user_id (vt.gt = "0", api.vd="$>0")  // 用户id
   2: required string token // 用户鉴权token
 }
 
@@ -184,7 +183,7 @@ struct douyin_relation_follower_list_response {
 
 
 struct douyin_relation_friend_list_request {
-  1: required i64 user_id (vt.gt = "0")  // 用户id
+  1: required i64 user_id (vt.gt = "0", api.vd="$>0")  // 用户id
   2: required string token  // 用户鉴权token
 }
 
@@ -208,8 +207,8 @@ struct FriendUser {
 
 
 struct douyin_user_register_request {
-  1: required string username (vt.min_size = "2", vt.max_size = "32") // 注册用户名，最长32个字符
-  2: required string password (vt.min_size = "6", vt.max_size = "32", vt.pattern = "[0-9A-Za-z]+") // 密码，最长32个字符
+  1: required string username (vt.min_size = "2", vt.max_size = "32", api.vd = "len($)>2 && len($)<32") // 注册用户名，最长32个字符
+  2: required string password (vt.min_size = "6", vt.max_size = "32", vt.pattern = "[0-9A-Za-z]+", api.vd = "len($)>2 && len($)<32") // 密码，最长32个字符
 }
 
 struct douyin_user_register_response {
@@ -220,8 +219,8 @@ struct douyin_user_register_response {
 }
 
 struct douyin_user_login_request {
-  1: required string username (vt.min_size = "2", vt.max_size = "32") // 登录用户名
-  2: required string password (vt.min_size = "6", vt.max_size = "32") // 登录密码
+  1: required string username (vt.min_size = "2", vt.max_size = "32", api.vd = "len($)>2 && len($)<32") // 登录用户名
+  2: required string password (vt.min_size = "6", vt.max_size = "32", api.vd = "len($)>2 && len($)<32") // 登录密码
 }
 
 struct douyin_user_login_response {
@@ -232,7 +231,7 @@ struct douyin_user_login_response {
 }
 
 struct douyin_user_request {
-  1: required i64 user_id (vt.gt = "0") // 用户id
+  1: required i64 user_id (vt.gt = "0", api.vd = "$>0") // 用户id
   2: required string token // 用户鉴权token
 }
 
@@ -242,24 +241,43 @@ struct douyin_user_response {
   3: required User user // 用户信息
 }
 
-service ApiService {
-    // 基础接口
+
+// 基础接口
+service FeedService {
     douyin_feed_response GetFeed(1: douyin_feed_request req) (api.get="/douyin/feed/")
+}
+
+service UserService {
     douyin_user_register_response Register(1: douyin_user_register_request req) (api.post="/douyin/user/register/")
     douyin_user_login_response Login(1: douyin_user_login_request req) (api.post="/douyin/user/login/")
     douyin_user_response GetUserInfo(1: douyin_user_request req) (api.get="/douyin/user/")
+}
+
+service PublishService {
     douyin_publish_action_response PublishAction(1: douyin_publish_action_request req) (api.post="/douyin/publish/action/")
     douyin_publish_list_response GetPublishVideos(1: douyin_publish_list_request req) (api.get="/douyin/publish/list/")
-    // 互动接口
+}
+
+// 互动接口
+service FavoriteService {
     douyin_favorite_action_response FavoriteVideo(1: douyin_favorite_action_request req) (api.post="/douyin/favorite/action/")
     douyin_favorite_list_response GetFavoriteList(1: douyin_favorite_list_request req) (api.get="/douyin/favorite/list/")
+}
+
+service CommentService {
     douyin_comment_action_response CommentAction(1: douyin_comment_action_request req) (api.post="/douyin/comment/action/")
     douyin_comment_list_response GetCommentList(1: douyin_comment_list_request req) (api.get="/douyin/comment/list/")
-    // 社交接口
+}
+
+// 社交接口
+service RelationService {
     douyin_relation_action_response Follow(1: douyin_relation_action_request req) (api.post="/douyin/relation/action/")
     douyin_relation_follow_list_response GetFollowList(1: douyin_relation_follow_list_request req) (api.get="/douyin/relation/follow/list/")
     douyin_relation_follower_list_response GetFollowerList(1: douyin_relation_follower_list_request req) (api.get="/douyin/relation/follower/list/")
     douyin_relation_friend_list_response GetFriendList(1: douyin_relation_friend_list_request req) (api.get="/douyin/relation/friend/list/")
+}
+
+service MessageService {
     douyin_message_action_response SendMessage(1: douyin_message_action_request req) (api.post="/douyin/message/action/")
     douyin_message_chat_response GetMessageChat(1: douyin_message_chat_request req) (api.get="/douyin/message/chat/")
 }

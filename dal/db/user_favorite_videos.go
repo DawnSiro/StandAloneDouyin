@@ -2,7 +2,7 @@ package db
 
 import (
 	"douyin/biz/model/api"
-	"douyin/constants"
+	"douyin/constant"
 )
 
 type UserFavoriteVideos struct {
@@ -11,7 +11,7 @@ type UserFavoriteVideos struct {
 }
 
 func (n *UserFavoriteVideos) TableName() string {
-	return constants.UserFavoriteVideosTableName
+	return constant.UserFavoriteVideosTableName
 }
 
 func Like(userId uint64, videoId uint64) (uint, error) {
@@ -51,10 +51,10 @@ func UnLike(userId uint64, videoId uint64) (uint, error) {
 	return 1, nil
 }
 
-func SelectFavoriteVideoListByUserId(userId uint64) ([]*api.Video, error) {
+func SelectFavoriteVideoListByUserId(userId uint64, toUserId uint64) ([]*api.Video, error) {
 	resultList := make([]*api.Video, 0)
 	userFavoriteVideosList := new([]*UserFavoriteVideos)
-	if err := DB.Where("user_id", userId).Find(&userFavoriteVideosList).Error; err != nil {
+	if err := DB.Where("user_id", toUserId).Find(&userFavoriteVideosList).Error; err != nil {
 		return nil, err
 	}
 
@@ -62,15 +62,14 @@ func SelectFavoriteVideoListByUserId(userId uint64) ([]*api.Video, error) {
 		video := &Video{}
 		user := &User{}
 		DB.Where("id", (*userFavoriteVideosList)[i].VideoId).Find(&video)
-		DB.Where("id", video.AuthorId).Find(&user)
-		//TODO:Avatar not put
+		DB.Where("id", video.AuthorID).Find(&user)
 		userTemp := &api.User{
 			ID:            int64(user.ID),
 			Name:          user.Username,
 			FollowCount:   &user.FollowingCount,
 			FollowerCount: &user.FollowerCount,
-			IsFollow:      IsFollow(userId, video.AuthorId),
-			Avatar:        "",
+			IsFollow:      IsFollow(userId, video.AuthorID),
+			Avatar:        user.Avatar,
 		}
 		videoTemp := &api.Video{
 			ID:            int64(video.ID),

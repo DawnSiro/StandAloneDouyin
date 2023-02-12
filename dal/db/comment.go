@@ -18,11 +18,11 @@ func (n *Comment) TableName() string {
 	return constant.CommentTableName
 }
 
-func CreateCommentByUserIdAndVideoIdAndContent(req api.DouyinCommentActionRequest) (*Comment, error) {
+func CreateCommentByUserIdAndVideoIdAndContent(req api.DouyinCommentActionRequest, userID uint64) (*Comment, error) {
 	comment := &Comment{
 		Model:   gorm.Model{},
 		VideoId: uint64(req.VideoID),
-		UserId:  uint64(req.UserID),
+		UserId:  userID,
 		Content: *req.CommentText,
 	}
 	//
@@ -46,7 +46,7 @@ func DeleteCommentByCommentId(commentId int64) (*Comment, error) {
 
 func SelectCommentListByUserId(userId uint64, videoId uint64) ([]*api.Comment, error) {
 	commentResult := new([]*Comment)
-	result := DB.Where("user_id", userId).Where("video_id", videoId).Find(&commentResult)
+	result := DB.Where("video_id", videoId).Find(&commentResult)
 	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 		return nil, nil
 	}
@@ -72,5 +72,13 @@ func SelectCommentListByUserId(userId uint64, videoId uint64) ([]*api.Comment, e
 		results = append(results, commentTemp)
 	}
 	return results, nil
+}
 
+func IsCommentCreatedByMyself(userId uint64, commentId int64) (bool, error) {
+	commentResult := &Comment{}
+	result := DB.Where("user_id", userId).Where("id", commentId).Find(&commentResult)
+	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+		return false, result.Error
+	}
+	return true, nil
 }

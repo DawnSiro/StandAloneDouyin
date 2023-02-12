@@ -22,9 +22,6 @@ var (
 )
 
 func (p *DouyinCommentActionRequest) IsValid() error {
-	if p.UserID <= int64(0) {
-		return fmt.Errorf("field UserID gt rule failed, current value: %v", p.UserID)
-	}
 	if p.VideoID <= int64(0) {
 		return fmt.Errorf("field VideoID gt rule failed, current value: %v", p.VideoID)
 	}
@@ -38,11 +35,6 @@ func (p *DouyinCommentActionRequest) IsValid() error {
 	}
 	if !_exist {
 		return fmt.Errorf("field ActionType in rule failed, current value: %v", p.ActionType)
-	}
-	if p.CommentID != nil {
-		if *p.CommentID <= int64(0) {
-			return fmt.Errorf("field CommentID gt rule failed, current value: %v", *p.CommentID)
-		}
 	}
 	return nil
 }

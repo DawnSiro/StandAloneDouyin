@@ -24,4 +24,5 @@ const (
 	ExportEndpoint              = ":4317"
 	ETCDAddress                 = ":2379"
 	DefaultLimit                = 10
+	MaxVideoNum                 = 30
 )

@@ -4,20 +4,38 @@ import (
 	"douyin/constant"
 	"errors"
 	"gorm.io/gorm"
+	"time"
 )
 
 type Video struct {
 	gorm.Model
-	AuthorId      uint64 `json:"author_id"`
-	PlayUrl       string `json:"play_url"`
-	CoverUrl      string `json:"cover_url"`
-	FavoriteCount int64  `json:"favorite_count"`
-	CommentCount  int64  `json:"comment_count"`
-	Title         string `json:"title"`
+	UpdatedAt     time.Time `gorm:"column:update_time;not null;index:idx_update" `
+	AuthorID      uint64    `gorm:"index:idx_authorid;not null"`
+	PlayUrl       string    `gorm:"type:varchar(255);not null"`
+	CoverUrl      string    `gorm:"type:varchar(255)"`
+	FavoriteCount int64     `gorm:"default:0"`
+	CommentCount  int64     `gorm:"default:0"`
+	Title         string    `gorm:"type:varchar(50);not null"`
 }
 
 func (n *Video) TableName() string {
 	return constant.VideoTableName
+}
+
+// MGetVideos multiple get list of videos info
+func MGetVideos(maxVideoNum int, latestTime *int64) ([]*Video, error) {
+	res := make([]*Video, 0)
+
+	if latestTime == nil || *latestTime == 0 {
+		currentTime := time.Now().UnixMilli()
+		latestTime = &currentTime
+	}
+
+	if err := DB.Where("update_time < ?", time.UnixMilli(*latestTime)).Limit(maxVideoNum).
+		Order("update_time desc").Find(&res).Error; err != nil {
+		return nil, err
+	}
+	return res, nil
 }
 
 func SelectAuthorIdByVideoId(videoId int64) (uint64, error) {
@@ -31,7 +49,7 @@ func SelectAuthorIdByVideoId(videoId int64) (uint64, error) {
 	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 		return 0, nil
 	}
-	return video.AuthorId, nil
+	return video.AuthorID, nil
 }
 
 func UpdateFavoriteCount(videoId uint64, favoriteCount int64) (int64, error) {
