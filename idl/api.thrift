@@ -128,8 +128,8 @@ struct douyin_message_action_response {
 
 struct douyin_publish_action_request {
   1: required string token // 用户鉴权token
-  2: optional binary data // 视频数据
-  3: required string title // 视频标题
+//  2: optional binary data // 视频数据
+  2: required string title // 视频标题
 }
 
 struct douyin_publish_action_response {

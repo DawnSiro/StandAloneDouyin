@@ -4,8 +4,6 @@ package api
 
 import (
 	"context"
-	"github.com/cloudwego/hertz/pkg/common/hlog"
-
 	api "douyin/biz/model/api"
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/protocol/consts"
@@ -22,7 +20,7 @@ func GetFeed(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
-	hlog.Info(*req.LatestTime)
+	//hlog.Info(*req.LatestTime)
 
 	var followCount int64 = 3
 	var followerCount int64 = 3
@@ -45,6 +43,24 @@ func GetFeed(ctx context.Context, c *app.RequestContext) {
 		CommentCount:  2,
 		IsFavorite:    false,
 		Title:         "video01",
+	}, &api.Video{
+		ID:            3,
+		Author:        u,
+		PlayURL:       "https://picture-bucket-01.oss-cn-beijing.aliyuncs.com/DouYin/video/video02.mp4",
+		CoverURL:      "https://picture-bucket-01.oss-cn-beijing.aliyuncs.com/DouYin/cover/cover02.png",
+		FavoriteCount: 0,
+		CommentCount:  0,
+		IsFavorite:    false,
+		Title:         "title02",
+	}, &api.Video{
+		ID:            4,
+		Author:        u,
+		PlayURL:       "https://picture-bucket-01.oss-cn-beijing.aliyuncs.com/DouYin/video/video03.mp4",
+		CoverURL:      "https://picture-bucket-01.oss-cn-beijing.aliyuncs.com/DouYin/cover/cover03.png",
+		FavoriteCount: 0,
+		CommentCount:  0,
+		IsFavorite:    false,
+		Title:         "title03",
 	})
 	var nextTime int64 = 100000
 	resp := &api.DouyinFeedResponse{

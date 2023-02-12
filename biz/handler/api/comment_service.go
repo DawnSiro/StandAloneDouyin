@@ -24,7 +24,7 @@ func CommentAction(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
-	hlog.Infof("%#v", req)
+	hlog.Infof("%#v comment action", req)
 
 	userID := c.GetInt64(constant.IdentityKey)
 	hlog.Info(userID)

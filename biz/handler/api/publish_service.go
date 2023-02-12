@@ -23,9 +23,9 @@ func PublishAction(ctx context.Context, c *app.RequestContext) {
 		hlog.Info("error")
 		hlog.Info(err)
 	}
-	hlog.Infof("%#v", file)
+	hlog.Infof("%#v", file.Filename)
 
-	err = c.Bind(&req)
+	err = c.BindAndValidate(&req)
 	//if err != nil {
 	//	c.String(consts.StatusBadRequest, err.Error())
 	//	return
