@@ -2,42 +2,40 @@ package service
 
 import (
 	"douyin/biz/model/api"
+	"douyin/constant"
 	"douyin/dal/db"
+	"github.com/cloudwego/hertz/pkg/app"
 )
 
 // CommentAction impl
-func CommentAction(req *api.DouyinCommentActionRequest) api.DouyinCommentActionResponse {
+func CommentAction(req *api.DouyinCommentActionRequest, c *app.RequestContext) api.DouyinCommentActionResponse {
 	var resp api.DouyinCommentActionResponse
-	serverError := "服务器内部错误"
 
+	userId := c.GetInt64(constant.IdentityKey)
 	if req.ActionType == 1 {
 		//publish comment
-		con, err := db.CreateCommentByUserIdAndVideoIdAndContent(*req)
+		con, err := db.CreateCommentByUserIdAndVideoIdAndContent(*req, uint64(userId))
 		if err != nil {
 			return api.DouyinCommentActionResponse{
-				StatusCode: 1001,
-				StatusMsg:  &serverError,
+				StatusCode: int64(api.ErrCode_ServiceErrCode),
 				Comment:    nil,
 			}
 		}
-		//TODO:miss Avatar
-		con1, err := db.SelectUserByUserID(uint(req.UserID))
+		con1, err := db.SelectUserByUserID(uint(userId))
 		if err != nil {
 			return api.DouyinCommentActionResponse{
-				StatusCode: 1001,
-				StatusMsg:  &serverError,
+				StatusCode: int64(api.ErrCode_ServiceErrCode),
 				Comment:    nil,
 			}
 		}
 		con2, err := db.SelectAuthorIdByVideoId(req.VideoID)
 		if err != nil || con2 == 0 {
 			return api.DouyinCommentActionResponse{
-				StatusCode: 1001,
-				StatusMsg:  &serverError,
+				StatusCode: int64(api.ErrCode_ServiceErrCode),
 				Comment:    nil,
 			}
 		}
-		con1.IsFollow = db.IsFollow(uint64(req.UserID), con2)
+		con1.IsFollow = db.IsFollow(uint64(userId), con2)
 
 		//update video.comment_count
 		_, err = db.IncreaseFavoriteCount(uint64(req.VideoID))
@@ -52,32 +50,43 @@ func CommentAction(req *api.DouyinCommentActionRequest) api.DouyinCommentActionR
 		}
 	} else if req.ActionType == 2 {
 		//delete comment
-		con, err := db.DeleteCommentByCommentId(*req.CommentID)
+		//查询此评论是否是本人发送的
+		isComment, err := db.IsCommentCreatedByMyself(uint64(userId), *req.CommentID)
 		if err != nil {
 			return api.DouyinCommentActionResponse{
-				StatusCode: 1001,
-				StatusMsg:  &serverError,
+				StatusCode: int64(api.ErrCode_ServiceErrCode),
 				Comment:    nil,
 			}
 		}
-		//TODO:miss Avatar
-		con1, err := db.SelectUserByUserID(uint(req.UserID))
+		//非本人评论
+		if !isComment {
+			return api.DouyinCommentActionResponse{
+				StatusCode: int64(api.ErrCode_AuthorizationFailedErrCode),
+				Comment:    nil,
+			}
+		}
+		con, err := db.DeleteCommentByCommentId(*req.CommentID)
 		if err != nil {
 			return api.DouyinCommentActionResponse{
-				StatusCode: 1001,
-				StatusMsg:  &serverError,
+				StatusCode: int64(api.ErrCode_ServiceErrCode),
+				Comment:    nil,
+			}
+		}
+		con1, err := db.SelectUserByUserID(uint(userId))
+		if err != nil {
+			return api.DouyinCommentActionResponse{
+				StatusCode: int64(api.ErrCode_ServiceErrCode),
 				Comment:    nil,
 			}
 		}
 		con2, err := db.SelectAuthorIdByVideoId(req.VideoID)
 		if err != nil || con2 == 0 {
 			return api.DouyinCommentActionResponse{
-				StatusCode: 1001,
-				StatusMsg:  &serverError,
+				StatusCode: int64(api.ErrCode_ServiceErrCode),
 				Comment:    nil,
 			}
 		}
-		con1.IsFollow = db.IsFollow(uint64(req.UserID), con2)
+		con1.IsFollow = db.IsFollow(uint64(userId), con2)
 
 		//update video.comment_count
 		_, err = db.ReduceFavoriteCount(uint64(req.VideoID))
@@ -93,8 +102,7 @@ func CommentAction(req *api.DouyinCommentActionRequest) api.DouyinCommentActionR
 	} else {
 		//type is illegal
 		return api.DouyinCommentActionResponse{
-			StatusCode: 1002,
-			StatusMsg:  &serverError,
+			StatusCode: int64(api.ErrCode_ParamErrCode),
 			Comment:    new(api.Comment),
 		}
 	}
@@ -102,20 +110,17 @@ func CommentAction(req *api.DouyinCommentActionRequest) api.DouyinCommentActionR
 	return resp
 }
 
-func CommentList(req *api.DouyinCommentListRequest) api.DouyinCommentListResponse {
+func CommentList(req *api.DouyinCommentListRequest, c *app.RequestContext) api.DouyinCommentListResponse {
 	var resp api.DouyinCommentListResponse
-	serverError := "服务器内部错误"
 
-	//TODO:token -> userId
 	//not finish token to userid
 	//make a fake userid
-	userId := 1
+	userId := c.GetInt64(constant.IdentityKey)
 	//if []api.Comment is nil so the database don't have the data of this user
 	list, err := db.SelectCommentListByUserId(uint64(userId), uint64(req.VideoID))
 	if err != nil {
 		return api.DouyinCommentListResponse{
-			StatusCode:  1001,
-			StatusMsg:   &serverError,
+			StatusCode:  int64(api.ErrCode_ParamErrCode),
 			CommentList: nil,
 		}
 	}

@@ -22,9 +22,6 @@ var (
 )
 
 func (p *DouyinCommentActionRequest) IsValid() error {
-	if p.UserID <= int64(0) {
-		return fmt.Errorf("field UserID gt rule failed, current value: %v", p.UserID)
-	}
 	if p.VideoID <= int64(0) {
 		return fmt.Errorf("field VideoID gt rule failed, current value: %v", p.VideoID)
 	}

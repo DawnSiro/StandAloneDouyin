@@ -25,7 +25,11 @@ func FavoriteVideo(ctx context.Context, c *app.RequestContext) {
 
 	hlog.Infof("%#v", req)
 
-	resp := new(api.DouyinFavoriteActionResponse)
+	resp, err := service.FavoriteAction(&req, c)
+	if err != nil {
+		c.String(consts.StatusBadRequest, err.Error())
+		return
+	}
 
 	c.JSON(consts.StatusOK, resp)
 }
@@ -43,10 +47,10 @@ func GetFavoriteList(ctx context.Context, c *app.RequestContext) {
 
 	hlog.Infof("%#v", req)
 
-	resp, err := service.FavoriteList(&req)
+	resp, err := service.FavoriteList(&req, c)
 	if err != nil {
-		//TODO: 有问题
-		c.JSON(consts.StatusOK, err)
+		c.String(consts.StatusBadRequest, err.Error())
+		return
 	}
 
 	c.JSON(consts.StatusOK, resp)

@@ -29,7 +29,7 @@ func CommentAction(ctx context.Context, c *app.RequestContext) {
 	userID := c.GetInt64(constant.IdentityKey)
 	hlog.Info(userID)
 
-	resp := service.CommentAction(&req)
+	resp := service.CommentAction(&req, c)
 
 	c.JSON(consts.StatusOK, resp)
 }
@@ -47,7 +47,7 @@ func GetCommentList(ctx context.Context, c *app.RequestContext) {
 
 	hlog.Infof("%#v", req)
 
-	resp := service.CommentList(&req)
+	resp := service.CommentList(&req, c)
 
 	c.JSON(consts.StatusOK, resp)
 }
