@@ -42,7 +42,10 @@ func _listMw() []app.HandlerFunc {
 
 func _getcommentlistMw() []app.HandlerFunc {
 	// your code...
-	return nil
+	return []app.HandlerFunc{
+		// use jwt mw
+		mw.JwtMiddleware.MiddlewareFunc(),
+	}
 }
 
 func _favoriteMw() []app.HandlerFunc {
@@ -60,7 +63,10 @@ func _list0Mw() []app.HandlerFunc {
 
 func _getfavoritelistMw() []app.HandlerFunc {
 	// your code...
-	return nil
+	return []app.HandlerFunc{
+		// use jwt mw
+		mw.JwtMiddleware.MiddlewareFunc(),
+	}
 }
 
 func _feedMw() []app.HandlerFunc {
@@ -224,7 +230,10 @@ func _register0Mw() []app.HandlerFunc {
 
 func _favoritevideoMw() []app.HandlerFunc {
 	// your code...
-	return nil
+	return []app.HandlerFunc{
+		// use jwt mw
+		mw.JwtMiddleware.MiddlewareFunc(),
+	}
 }
 
 func _action3Mw() []app.HandlerFunc {

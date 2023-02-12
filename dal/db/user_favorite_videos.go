@@ -51,10 +51,10 @@ func UnLike(userId uint64, videoId uint64) (uint, error) {
 	return 1, nil
 }
 
-func SelectFavoriteVideoListByUserId(userId uint64) ([]*api.Video, error) {
+func SelectFavoriteVideoListByUserId(userId uint64, toUserId uint64) ([]*api.Video, error) {
 	resultList := make([]*api.Video, 0)
 	userFavoriteVideosList := new([]*UserFavoriteVideos)
-	if err := DB.Where("user_id", userId).Find(&userFavoriteVideosList).Error; err != nil {
+	if err := DB.Where("user_id", toUserId).Find(&userFavoriteVideosList).Error; err != nil {
 		return nil, err
 	}
 
@@ -63,14 +63,13 @@ func SelectFavoriteVideoListByUserId(userId uint64) ([]*api.Video, error) {
 		user := &User{}
 		DB.Where("id", (*userFavoriteVideosList)[i].VideoId).Find(&video)
 		DB.Where("id", video.AuthorID).Find(&user)
-		//TODO:Avatar not put
 		userTemp := &api.User{
 			ID:            int64(user.ID),
 			Name:          user.Username,
 			FollowCount:   &user.FollowingCount,
 			FollowerCount: &user.FollowerCount,
-			IsFollow:      IsFollow(userId, uint64(video.AuthorID)),
-			Avatar:        "",
+			IsFollow:      IsFollow(userId, video.AuthorID),
+			Avatar:        user.Avatar,
 		}
 		videoTemp := &api.Video{
 			ID:            int64(video.ID),
