@@ -14,7 +14,7 @@ struct douyin_comment_action_request {
   3: required i64 video_id (vt.gt = "0", api.vd="$>0")      // 视频id
   4: required i32 action_type (vt.in = "1", vt.in = "2")   // 1-发布评论，2-删除评论
   5: optional string comment_text // 用户填写的评论内容，在action_type=1的时候使用
-  6: optional i64 comment_id (vt.gt = "0", api.vd="$>0")  // 要删除的评论id，在action_type=2的时候使用
+  6: optional i64 comment_id   // 要删除的评论id，在action_type=2的时候使用
 }
 
 struct douyin_comment_action_response {
@@ -128,7 +128,7 @@ struct douyin_message_action_response {
 
 struct douyin_publish_action_request {
   1: required string token // 用户鉴权token
-  2: required binary data // 视频数据
+  2: optional binary data // 视频数据
   3: required string title // 视频标题
 }
 

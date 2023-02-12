@@ -5,6 +5,8 @@ package api
 import (
 	"context"
 	"douyin/biz/service"
+	"douyin/constant"
+	"github.com/cloudwego/hertz/pkg/common/hlog"
 
 	api "douyin/biz/model/api"
 	"github.com/cloudwego/hertz/pkg/app"
@@ -22,6 +24,11 @@ func CommentAction(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
+	hlog.Infof("%#v", req)
+
+	userID := c.GetInt64(constant.IdentityKey)
+	hlog.Info(userID)
+
 	resp := service.CommentAction(&req)
 
 	c.JSON(consts.StatusOK, resp)
@@ -37,6 +44,8 @@ func GetCommentList(ctx context.Context, c *app.RequestContext) {
 		c.String(consts.StatusBadRequest, err.Error())
 		return
 	}
+
+	hlog.Infof("%#v", req)
 
 	resp := service.CommentList(&req)
 

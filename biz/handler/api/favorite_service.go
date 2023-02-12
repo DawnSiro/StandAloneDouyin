@@ -5,6 +5,7 @@ package api
 import (
 	"context"
 	"douyin/biz/service"
+	"github.com/cloudwego/hertz/pkg/common/hlog"
 
 	api "douyin/biz/model/api"
 	"github.com/cloudwego/hertz/pkg/app"
@@ -22,6 +23,8 @@ func FavoriteVideo(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
+	hlog.Infof("%#v", req)
+
 	resp := new(api.DouyinFavoriteActionResponse)
 
 	c.JSON(consts.StatusOK, resp)
@@ -37,6 +40,8 @@ func GetFavoriteList(ctx context.Context, c *app.RequestContext) {
 		c.String(consts.StatusBadRequest, err.Error())
 		return
 	}
+
+	hlog.Infof("%#v", req)
 
 	resp, err := service.FavoriteList(&req)
 	if err != nil {

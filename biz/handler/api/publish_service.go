@@ -11,18 +11,43 @@ import (
 	"github.com/cloudwego/hertz/pkg/protocol/consts"
 )
 
-// GetFeed .
-// @router /douyin/feed/ [GET]
-func GetFeed(ctx context.Context, c *app.RequestContext) {
+// PublishAction .
+// @router /douyin/publish/action/ [POST]
+func PublishAction(ctx context.Context, c *app.RequestContext) {
 	var err error
-	var req api.DouyinFeedRequest
+	var req api.DouyinPublishActionRequest
+	hlog.Infof("%#v de", req)
+
+	file, err := c.FormFile("data")
+	if err != nil {
+		hlog.Info("error")
+		hlog.Info(err)
+	}
+	hlog.Infof("%#v", file)
+
+	err = c.Bind(&req)
+	//if err != nil {
+	//	c.String(consts.StatusBadRequest, err.Error())
+	//	return
+	//}
+
+	resp := new(api.DouyinPublishActionResponse)
+
+	c.JSON(consts.StatusOK, resp)
+}
+
+// GetPublishVideos .
+// @router /douyin/publish/list/ [GET]
+func GetPublishVideos(ctx context.Context, c *app.RequestContext) {
+	var err error
+	var req api.DouyinPublishListRequest
 	err = c.BindAndValidate(&req)
 	if err != nil {
 		c.String(consts.StatusBadRequest, err.Error())
 		return
 	}
 
-	hlog.Info(*req.LatestTime)
+	hlog.Infof("%#v", req)
 
 	var followCount int64 = 3
 	var followerCount int64 = 3
@@ -37,7 +62,7 @@ func GetFeed(ctx context.Context, c *app.RequestContext) {
 
 	videos := make([]*api.Video, 0)
 	videos = append(videos, &api.Video{
-		ID:            2,
+		ID:            1,
 		Author:        u,
 		PlayURL:       "https://picture-bucket-01.oss-cn-beijing.aliyuncs.com/DouYin/video/video01.mp4",
 		CoverURL:      "https://picture-bucket-01.oss-cn-beijing.aliyuncs.com/DouYin/cover/cover01.png",
@@ -46,12 +71,10 @@ func GetFeed(ctx context.Context, c *app.RequestContext) {
 		IsFavorite:    false,
 		Title:         "video01",
 	})
-	var nextTime int64 = 100000
-	resp := &api.DouyinFeedResponse{
+	resp := &api.DouyinPublishListResponse{
 		StatusCode: 0,
 		StatusMsg:  nil,
 		VideoList:  videos,
-		NextTime:   &nextTime,
 	}
 
 	c.JSON(consts.StatusOK, resp)

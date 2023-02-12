@@ -26,12 +26,16 @@ func InitJWT() {
 		Timeout:       time.Hour * 12,
 		MaxRefresh:    time.Hour * 3,
 		IdentityKey:   constant.IdentityKey,
+		// 用于设置获取身份信息的函数，默认与 IdentityKey 配合使用
 		IdentityHandler: func(ctx context.Context, c *app.RequestContext) interface{} {
 			claims := jwt.ExtractClaims(ctx, c)
-			return &api.User{
-				ID: int64(claims[constant.IdentityKey].(float64)),
-			}
+			//return &api.User{
+			//	ID: int64(claims[constant.IdentityKey].(float64)),
+			//}
+			// 这里的返回值可以通过 c.Get() 或者 c.GetInt64() 去取到
+			return int64(claims[constant.IdentityKey].(float64))
 		},
+		// 用于设置登陆成功后为向 token 中添加自定义负载信息的函数
 		PayloadFunc: func(data interface{}) jwt.MapClaims {
 			if v, ok := data.(int64); ok {
 				return jwt.MapClaims{
@@ -40,6 +44,7 @@ func InitJWT() {
 			}
 			return jwt.MapClaims{}
 		},
+		// 用于设置登录时认证用户信息的函数（必要配置）
 		Authenticator: func(ctx context.Context, c *app.RequestContext) (interface{}, error) {
 			var err error
 			var req api.DouyinUserLoginRequest
@@ -59,6 +64,7 @@ func InitJWT() {
 			c.Set(constant.IdentityKey, userID)
 			return userID, nil
 		},
+		// 用于设置登录的响应函数
 		LoginResponse: func(ctx context.Context, c *app.RequestContext, code int, token string, expire time.Time) {
 			hlog.Info("loginResponse")
 			// 可以通过 Get 去取放在 请求上下文 的数据

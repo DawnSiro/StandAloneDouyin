@@ -2,7 +2,7 @@ package db
 
 import (
 	"douyin/biz/model/api"
-	"douyin/constants"
+	"douyin/constant"
 )
 
 type UserFavoriteVideos struct {
@@ -11,7 +11,7 @@ type UserFavoriteVideos struct {
 }
 
 func (n *UserFavoriteVideos) TableName() string {
-	return constants.UserFavoriteVideosTableName
+	return constant.UserFavoriteVideosTableName
 }
 
 func Like(userId uint64, videoId uint64) (uint, error) {
@@ -62,14 +62,14 @@ func SelectFavoriteVideoListByUserId(userId uint64) ([]*api.Video, error) {
 		video := &Video{}
 		user := &User{}
 		DB.Where("id", (*userFavoriteVideosList)[i].VideoId).Find(&video)
-		DB.Where("id", video.AuthorId).Find(&user)
+		DB.Where("id", video.AuthorID).Find(&user)
 		//TODO:Avatar not put
 		userTemp := &api.User{
 			ID:            int64(user.ID),
 			Name:          user.Username,
 			FollowCount:   &user.FollowingCount,
 			FollowerCount: &user.FollowerCount,
-			IsFollow:      IsFollow(userId, video.AuthorId),
+			IsFollow:      IsFollow(userId, uint64(video.AuthorID)),
 			Avatar:        "",
 		}
 		videoTemp := &api.Video{
