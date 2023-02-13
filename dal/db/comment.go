@@ -46,7 +46,7 @@ func DeleteCommentByCommentId(commentId int64) (*Comment, error) {
 
 func SelectCommentListByUserId(userId uint64, videoId uint64) ([]*api.Comment, error) {
 	commentResult := new([]*Comment)
-	result := DB.Where("video_id", videoId).Find(&commentResult)
+	result := DB.Where("video_id = ?", videoId).Find(&commentResult)
 	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 		return nil, nil
 	}
@@ -76,7 +76,7 @@ func SelectCommentListByUserId(userId uint64, videoId uint64) ([]*api.Comment, e
 
 func IsCommentCreatedByMyself(userId uint64, commentId int64) (bool, error) {
 	commentResult := &Comment{}
-	result := DB.Where("user_id", userId).Where("id", commentId).Find(&commentResult)
+	result := DB.Where("user_id = ?", userId).Where("id = ?", commentId).Find(&commentResult)
 	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 		return false, result.Error
 	}

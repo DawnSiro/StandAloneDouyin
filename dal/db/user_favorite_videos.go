@@ -22,7 +22,7 @@ func Like(userId uint64, videoId uint64) (uint, error) {
 
 	//is database has this data?
 	userFavoriteVideosTemp := &UserFavoriteVideos{}
-	result := DB.Where("user_id", userId).Where("video_id", videoId).Find(userFavoriteVideosTemp)
+	result := DB.Where("user_id = ?", userId).Where("video_id = ?", videoId).Find(userFavoriteVideosTemp)
 	if result.RowsAffected != 0 {
 		return 0, nil
 	}
@@ -40,12 +40,12 @@ func UnLike(userId uint64, videoId uint64) (uint, error) {
 	}
 	//is database has this data?
 	userFavoriteVideosTemp := &UserFavoriteVideos{}
-	result := DB.Where("user_id", userId).Where("video_id", videoId).Find(userFavoriteVideosTemp)
+	result := DB.Where("user_id = ? and video_id = ?", userId, videoId).Find(userFavoriteVideosTemp)
 	if result.RowsAffected != 1 {
 		return 0, nil
 	}
 
-	if err := DB.Delete(userFavoriteVideos).Error; err != nil {
+	if err := DB.Where("user_id = ? and video_id = ?", userId, videoId).Delete(userFavoriteVideos).Error; err != nil {
 		return 0, err
 	}
 	return 1, nil
@@ -54,15 +54,15 @@ func UnLike(userId uint64, videoId uint64) (uint, error) {
 func SelectFavoriteVideoListByUserId(userId uint64, toUserId uint64) ([]*api.Video, error) {
 	resultList := make([]*api.Video, 0)
 	userFavoriteVideosList := new([]*UserFavoriteVideos)
-	if err := DB.Where("user_id", toUserId).Find(&userFavoriteVideosList).Error; err != nil {
+	if err := DB.Where("user_id = ?", toUserId).Find(&userFavoriteVideosList).Error; err != nil {
 		return nil, err
 	}
 
 	for i := 0; i < len(*userFavoriteVideosList); i++ {
 		video := &Video{}
 		user := &User{}
-		DB.Where("id", (*userFavoriteVideosList)[i].VideoId).Find(&video)
-		DB.Where("id", video.AuthorID).Find(&user)
+		DB.Where("id = ?", (*userFavoriteVideosList)[i].VideoId).Find(&video)
+		DB.Where("id = ?", video.AuthorID).Find(&user)
 		userTemp := &api.User{
 			ID:            int64(user.ID),
 			Name:          user.Username,
