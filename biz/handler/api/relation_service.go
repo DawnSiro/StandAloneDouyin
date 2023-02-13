@@ -4,10 +4,10 @@ package api
 
 import (
 	"context"
-	"github.com/cloudwego/hertz/pkg/common/hlog"
-
 	api "douyin/biz/model/api"
+	"douyin/biz/service"
 	"github.com/cloudwego/hertz/pkg/app"
+	"github.com/cloudwego/hertz/pkg/common/hlog"
 	"github.com/cloudwego/hertz/pkg/protocol/consts"
 )
 
@@ -22,7 +22,13 @@ func Follow(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
-	resp := new(api.DouyinRelationActionResponse)
+	hlog.Info(req)
+
+	resp, err := service.Follow(req, c)
+	if err != nil {
+		c.JSON(consts.StatusOK, resp)
+		return
+	}
 
 	c.JSON(consts.StatusOK, resp)
 }
@@ -38,7 +44,13 @@ func GetFollowList(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
-	resp := new(api.DouyinRelationFollowListResponse)
+	hlog.Info(req)
+
+	resp, err := service.GetFollowList(req, c)
+	if err != nil {
+		c.String(consts.StatusBadRequest, err.Error())
+		return
+	}
 
 	c.JSON(consts.StatusOK, resp)
 }
@@ -56,25 +68,10 @@ func GetFollowerList(ctx context.Context, c *app.RequestContext) {
 
 	hlog.Info(req)
 
-	var followCount int64 = 1
-	var followerCount int64 = 1
-	s := "dui"
-	userList := make([]*api.FriendUser, 0)
-	userList = append(userList, &api.FriendUser{
-		ID:            1,
-		Name:          "",
-		FollowCount:   &followCount,
-		FollowerCount: &followerCount,
-		IsFollow:      false,
-		Avatar:        "https://picture-bucket-01.oss-cn-beijing.aliyuncs.com/DouYin/cover/%E6%B5%8B%E8%AF%95%E5%9B%BE%E7%89%871.png",
-		Message:       &s,
-		MsgType:       0,
-	})
-
-	resp := &api.DouyinRelationFriendListResponse{
-		StatusCode: 0,
-		StatusMsg:  nil,
-		UserList:   userList,
+	resp, err := service.GetFollowerList(req, c)
+	if err != nil {
+		c.String(consts.StatusBadRequest, err.Error())
+		return
 	}
 
 	c.JSON(consts.StatusOK, resp)
@@ -93,25 +90,10 @@ func GetFriendList(ctx context.Context, c *app.RequestContext) {
 
 	hlog.Info(req)
 
-	var followCount int64 = 1
-	var followerCount int64 = 1
-	s := "dui"
-	userList := make([]*api.FriendUser, 0)
-	userList = append(userList, &api.FriendUser{
-		ID:            1,
-		Name:          "",
-		FollowCount:   &followCount,
-		FollowerCount: &followerCount,
-		IsFollow:      false,
-		Avatar:        "https://picture-bucket-01.oss-cn-beijing.aliyuncs.com/DouYin/cover/%E6%B5%8B%E8%AF%95%E5%9B%BE%E7%89%871.png",
-		Message:       &s,
-		MsgType:       0,
-	})
-
-	resp := &api.DouyinRelationFriendListResponse{
-		StatusCode: 0,
-		StatusMsg:  nil,
-		UserList:   userList,
+	resp, err := service.GetFriendList(req, c)
+	if err != nil {
+		c.String(consts.StatusBadRequest, err.Error())
+		return
 	}
 
 	c.JSON(consts.StatusOK, resp)

@@ -147,7 +147,10 @@ func _action2Mw() []app.HandlerFunc {
 
 func _followMw() []app.HandlerFunc {
 	// your code...
-	return nil
+	return []app.HandlerFunc{
+		// use jwt mw
+		mw.JwtMiddleware.MiddlewareFunc(),
+	}
 }
 
 func _follow0Mw() []app.HandlerFunc {
@@ -192,7 +195,10 @@ func _list4Mw() []app.HandlerFunc {
 
 func _getfriendlistMw() []app.HandlerFunc {
 	// your code...
-	return nil
+	return []app.HandlerFunc{
+		// use jwt mw
+		mw.JwtMiddleware.MiddlewareFunc(),
+	}
 }
 
 func _userMw() []app.HandlerFunc {
