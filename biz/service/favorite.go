@@ -37,7 +37,6 @@ func FavoriteAction(req *api.DouyinFavoriteActionRequest, c *app.RequestContext)
 				StatusCode: int64(api.ErrCode_ServiceErrCode),
 			}, err
 		}
-		db.RDB.Set(videoLikeKey, likeInt64+1, 0)
 
 		resultLike, err := db.Like(uint64(userId), uint64(req.VideoID))
 		if err != nil || resultLike == 0 {
@@ -45,6 +44,7 @@ func FavoriteAction(req *api.DouyinFavoriteActionRequest, c *app.RequestContext)
 				StatusCode: int64(api.ErrCode_ServiceErrCode),
 			}, err
 		}
+		db.RDB.Set(videoLikeKey, likeInt64+1, 0)
 
 	} else if req.ActionType == 2 {
 		//cancel like
@@ -55,7 +55,6 @@ func FavoriteAction(req *api.DouyinFavoriteActionRequest, c *app.RequestContext)
 				StatusCode: int64(api.ErrCode_ServiceErrCode),
 			}, err
 		}
-		db.RDB.Set(videoLikeKey, likeInt64-1, 0)
 
 		resultLike, err := db.UnLike(uint64(userId), uint64(req.VideoID))
 		if err != nil || resultLike == 0 {
@@ -63,6 +62,7 @@ func FavoriteAction(req *api.DouyinFavoriteActionRequest, c *app.RequestContext)
 				StatusCode: int64(api.ErrCode_ServiceErrCode),
 			}, err
 		}
+		db.RDB.Set(videoLikeKey, likeInt64-1, 0)
 
 	}
 

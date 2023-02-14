@@ -54,7 +54,7 @@ func SelectCommentListByUserId(userId uint64, videoId uint64) ([]*api.Comment, e
 	results := make([]*api.Comment, 0)
 	for i := 0; i < len(*commentResult); i++ {
 
-		con1, err := SelectUserByUserID(uint(userId))
+		con1, err := SelectUserByUserID(uint((*commentResult)[i].UserId))
 		if err != nil {
 			return nil, nil
 		}
