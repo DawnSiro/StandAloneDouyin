@@ -3,8 +3,13 @@
 package api
 
 import (
+	"bytes"
 	"context"
+	"douyin/biz/service"
+	"douyin/constant"
 	"github.com/cloudwego/hertz/pkg/common/hlog"
+	"io"
+	"mime/multipart"
 
 	api "douyin/biz/model/api"
 	"github.com/cloudwego/hertz/pkg/app"
@@ -16,24 +21,49 @@ import (
 func PublishAction(ctx context.Context, c *app.RequestContext) {
 	var err error
 	var req api.DouyinPublishActionRequest
+	err = c.BindAndValidate(&req)
+	if err != nil {
+		c.String(consts.StatusBadRequest, err.Error())
+		return
+	}
+
 	hlog.Infof("%#v de", req)
 
-	file, err := c.FormFile("data")
+	fileHeader, err := c.FormFile("data")
 	if err != nil {
 		hlog.Info("error")
 		hlog.Info(err)
 	}
-	hlog.Infof("%#v", file)
+	hlog.Infof("filename = %#v", fileHeader.Filename)
 
-	err = c.Bind(&req)
-	//if err != nil {
-	//	c.String(consts.StatusBadRequest, err.Error())
-	//	return
-	//}
+	file, err := fileHeader.Open()
 
-	resp := new(api.DouyinPublishActionResponse)
+	defer func(file multipart.File) {
+		err := file.Close()
+		if err != nil {
+			return
+		}
+	}(file)
 
-	c.JSON(consts.StatusOK, resp)
+	buf := bytes.NewBuffer(nil)
+	if _, err := io.Copy(buf, file); err != nil {
+		c.JSON(consts.StatusOK, err)
+		return
+	}
+
+	userID := c.GetInt64(constant.IdentityKey)
+
+	hlog.Info(userID)
+	err = service.PublishAction(req.Title, buf.Bytes(), userID)
+	if err != nil {
+		c.JSON(consts.StatusOK, err)
+		return
+	}
+
+	c.JSON(consts.StatusOK, api.DouyinPublishActionResponse{
+		StatusCode: 0,
+		StatusMsg:  nil,
+	})
 }
 
 // GetPublishVideos .
@@ -49,32 +79,37 @@ func GetPublishVideos(ctx context.Context, c *app.RequestContext) {
 
 	hlog.Infof("%#v", req)
 
-	var followCount int64 = 3
-	var followerCount int64 = 3
-	u := &api.User{
-		ID:            1,
-		Name:          "name",
-		FollowCount:   &followCount,
-		FollowerCount: &followerCount,
-		IsFollow:      false,
-		Avatar:        "https://picture-bucket-01.oss-cn-beijing.aliyuncs.com/DouYin/cover/cover01.png",
-	}
+	//var followCount int64 = 3
+	//var followerCount int64 = 3
+	//u := &api.User{
+	//	ID:            1,
+	//	Name:          "name",
+	//	FollowCount:   &followCount,
+	//	FollowerCount: &followerCount,
+	//	IsFollow:      false,
+	//	Avatar:        "https://picture-bucket-01.oss-cn-beijing.aliyuncs.com/DouYin/cover/cover01.png",
+	//}
+	//
+	//videos := make([]*api.Video, 0)
+	//videos = append(videos, &api.Video{
+	//	ID:            1,
+	//	Author:        u,
+	//	PlayURL:       "https://picture-bucket-01.oss-cn-beijing.aliyuncs.com/DouYin/video/video01.mp4",
+	//	CoverURL:      "https://picture-bucket-01.oss-cn-beijing.aliyuncs.com/DouYin/cover/cover01.png",
+	//	FavoriteCount: 2,
+	//	CommentCount:  2,
+	//	IsFavorite:    false,
+	//	Title:         "video01",
+	//})
+	//resp := &api.DouyinPublishListResponse{
+	//	StatusCode: 0,
+	//	StatusMsg:  nil,
+	//	VideoList:  videos,
+	//}
 
-	videos := make([]*api.Video, 0)
-	videos = append(videos, &api.Video{
-		ID:            1,
-		Author:        u,
-		PlayURL:       "https://picture-bucket-01.oss-cn-beijing.aliyuncs.com/DouYin/video/video01.mp4",
-		CoverURL:      "https://picture-bucket-01.oss-cn-beijing.aliyuncs.com/DouYin/cover/cover01.png",
-		FavoriteCount: 2,
-		CommentCount:  2,
-		IsFavorite:    false,
-		Title:         "video01",
-	})
-	resp := &api.DouyinPublishListResponse{
-		StatusCode: 0,
-		StatusMsg:  nil,
-		VideoList:  videos,
+	resp, err := service.GetPublishVideos(uint64(req.UserID))
+	if err != nil {
+		c.JSON(consts.StatusOK, err)
 	}
 
 	c.JSON(consts.StatusOK, resp)

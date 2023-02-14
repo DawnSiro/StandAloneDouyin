@@ -68,7 +68,7 @@ func GetFollowList(userID uint64) ([]*api.User, error) {
 	for i := 0; i < len(*commonResult); i++ {
 		con1, err := SelectUserByUserID(uint((*commonResult)[i].ToUserId))
 		if err != nil {
-			return nil, nil
+			return nil, err
 		}
 
 		results = append(results,
@@ -97,7 +97,7 @@ func GetFollowerList(userID uint64) ([]*api.User, error) {
 	for i := 0; i < len(*commonResult); i++ {
 		con1, err := SelectUserByUserID(uint((*commonResult)[i].ToUserId))
 		if err != nil {
-			return nil, nil
+			return nil, err
 		}
 
 		results = append(results,
@@ -134,18 +134,12 @@ func GetFriendList(userID uint64) ([]*api.FriendUser, error) {
 
 		con1, err := SelectUserByUserID(uint((*commonResult)[i].ToUserId))
 		if err != nil {
-			return nil, nil
+			return nil, err
 		}
 
-		//TODO:这里想想如何优化
-		*messageResult, err = GetLatestMsg(userID, (*commonResult)[i].ToUserId)
+		messageResult, err = GetLatestMsg(userID, (*commonResult)[i].ToUserId)
 		if err != nil {
-			return nil, nil
-		}
-		//两者从来没有发过信息
-		if messageResult.MsgType == 3 {
-			messageResult.MsgType = 1
-			messageResult.Content = ""
+			return nil, err
 		}
 
 		results = append(results,

@@ -5190,8 +5190,8 @@ func (p *DouyinMessageActionResponse) String() string {
 
 type DouyinPublishActionRequest struct {
 	Token string `thrift:"token,1,required" form:"token,required" json:"token,required" query:"token,required"`
-	Data  []byte `thrift:"data,2,optional" form:"data" json:"data,omitempty" query:"data"`
-	Title string `thrift:"title,3,required" form:"title,required" json:"title,required" query:"title,required"`
+	//  2: optional binary data // 视频数据
+	Title string `thrift:"title,2,required" form:"title,required" json:"title,required" query:"title,required"`
 }
 
 func NewDouyinPublishActionRequest() *DouyinPublishActionRequest {
@@ -5202,27 +5202,13 @@ func (p *DouyinPublishActionRequest) GetToken() (v string) {
 	return p.Token
 }
 
-var DouyinPublishActionRequest_Data_DEFAULT []byte
-
-func (p *DouyinPublishActionRequest) GetData() (v []byte) {
-	if !p.IsSetData() {
-		return DouyinPublishActionRequest_Data_DEFAULT
-	}
-	return p.Data
-}
-
 func (p *DouyinPublishActionRequest) GetTitle() (v string) {
 	return p.Title
 }
 
 var fieldIDToName_DouyinPublishActionRequest = map[int16]string{
 	1: "token",
-	2: "data",
-	3: "title",
-}
-
-func (p *DouyinPublishActionRequest) IsSetData() bool {
-	return p.Data != nil
+	2: "title",
 }
 
 func (p *DouyinPublishActionRequest) Read(iprot thrift.TProtocol) (err error) {
@@ -5262,16 +5248,6 @@ func (p *DouyinPublishActionRequest) Read(iprot thrift.TProtocol) (err error) {
 				if err = p.ReadField2(iprot); err != nil {
 					goto ReadFieldError
 				}
-			} else {
-				if err = iprot.Skip(fieldTypeId); err != nil {
-					goto SkipFieldError
-				}
-			}
-		case 3:
-			if fieldTypeId == thrift.STRING {
-				if err = p.ReadField3(iprot); err != nil {
-					goto ReadFieldError
-				}
 				issetTitle = true
 			} else {
 				if err = iprot.Skip(fieldTypeId); err != nil {
@@ -5298,7 +5274,7 @@ func (p *DouyinPublishActionRequest) Read(iprot thrift.TProtocol) (err error) {
 	}
 
 	if !issetTitle {
-		fieldId = 3
+		fieldId = 2
 		goto RequiredFieldNotSetError
 	}
 	return nil
@@ -5329,15 +5305,6 @@ func (p *DouyinPublishActionRequest) ReadField1(iprot thrift.TProtocol) error {
 }
 
 func (p *DouyinPublishActionRequest) ReadField2(iprot thrift.TProtocol) error {
-	if v, err := iprot.ReadBinary(); err != nil {
-		return err
-	} else {
-		p.Data = []byte(v)
-	}
-	return nil
-}
-
-func (p *DouyinPublishActionRequest) ReadField3(iprot thrift.TProtocol) error {
 	if v, err := iprot.ReadString(); err != nil {
 		return err
 	} else {
@@ -5358,10 +5325,6 @@ func (p *DouyinPublishActionRequest) Write(oprot thrift.TProtocol) (err error) {
 		}
 		if err = p.writeField2(oprot); err != nil {
 			fieldId = 2
-			goto WriteFieldError
-		}
-		if err = p.writeField3(oprot); err != nil {
-			fieldId = 3
 			goto WriteFieldError
 		}
 
@@ -5401,26 +5364,7 @@ WriteFieldEndError:
 }
 
 func (p *DouyinPublishActionRequest) writeField2(oprot thrift.TProtocol) (err error) {
-	if p.IsSetData() {
-		if err = oprot.WriteFieldBegin("data", thrift.STRING, 2); err != nil {
-			goto WriteFieldBeginError
-		}
-		if err := oprot.WriteBinary([]byte(p.Data)); err != nil {
-			return err
-		}
-		if err = oprot.WriteFieldEnd(); err != nil {
-			goto WriteFieldEndError
-		}
-	}
-	return nil
-WriteFieldBeginError:
-	return thrift.PrependError(fmt.Sprintf("%T write field 2 begin error: ", p), err)
-WriteFieldEndError:
-	return thrift.PrependError(fmt.Sprintf("%T write field 2 end error: ", p), err)
-}
-
-func (p *DouyinPublishActionRequest) writeField3(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("title", thrift.STRING, 3); err != nil {
+	if err = oprot.WriteFieldBegin("title", thrift.STRING, 2); err != nil {
 		goto WriteFieldBeginError
 	}
 	if err := oprot.WriteString(p.Title); err != nil {
@@ -5431,9 +5375,9 @@ func (p *DouyinPublishActionRequest) writeField3(oprot thrift.TProtocol) (err er
 	}
 	return nil
 WriteFieldBeginError:
-	return thrift.PrependError(fmt.Sprintf("%T write field 3 begin error: ", p), err)
+	return thrift.PrependError(fmt.Sprintf("%T write field 2 begin error: ", p), err)
 WriteFieldEndError:
-	return thrift.PrependError(fmt.Sprintf("%T write field 3 end error: ", p), err)
+	return thrift.PrependError(fmt.Sprintf("%T write field 2 end error: ", p), err)
 }
 
 func (p *DouyinPublishActionRequest) String() string {

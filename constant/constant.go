@@ -25,4 +25,7 @@ const (
 	ETCDAddress                 = ":2379"
 	DefaultLimit                = 10
 	MaxVideoNum                 = 30
+	VideoFileType               = "video"
+	PictureFileType             = "picture"
+	MessageSendActionType       = 1
 )

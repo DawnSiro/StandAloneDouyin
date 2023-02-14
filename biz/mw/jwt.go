@@ -33,6 +33,7 @@ func InitJWT() {
 			//	ID: int64(claims[constant.IdentityKey].(float64)),
 			//}
 			// 这里的返回值可以通过 c.Get() 或者 c.GetInt64() 去取到
+			hlog.Infof("jwt %d", int64(claims[constant.IdentityKey].(float64)))
 			return int64(claims[constant.IdentityKey].(float64))
 		},
 		// 用于设置登陆成功后为向 token 中添加自定义负载信息的函数

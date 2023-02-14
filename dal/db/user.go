@@ -51,27 +51,19 @@ func SelectUserByUserID(userId uint) (*api.User, error) {
 	return &result, nil
 }
 
-//func SelectUserByID(userId uint) (*User, error) {
-//	var result api.User
-//
-//	user := &User{
-//		Model: gorm.Model{
-//			ID: userId,
-//		},
-//	}
-//	if err := DB.First(&user, "id = ?", userId).Error; err != nil {
-//		return nil, err
-//	}
-//
-//	result.ID = int64(user.ID)
-//	result.Name = user.Username
-//	result.FollowCount = &user.FollowingCount
-//	result.FollowerCount = &user.FollowerCount
-//	result.IsFollow = false
-//	//TODO:miss avatar
-//
-//	return &result, nil
-//}
+func SelectUserByID(userId uint) (*User, error) {
+	res := &User{
+		Model: gorm.Model{
+			ID: userId,
+		},
+	}
+
+	if err := DB.First(&res, "id = ?", userId).Error; err != nil {
+		return nil, err
+	}
+
+	return res, nil
+}
 
 func SelectUserByName(username string) ([]*User, error) {
 	res := make([]*User, 0)

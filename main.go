@@ -16,7 +16,7 @@ func Init() {
 
 func main() {
 	h := server.Default(
-		server.WithHostPorts("0.0.0.0:8080"),
+		server.WithHostPorts("192.168.18.6:30000"),
 		server.WithExitWaitTime(0),
 	)
 
