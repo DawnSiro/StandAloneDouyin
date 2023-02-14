@@ -13,7 +13,14 @@ func Follow(req api.DouyinRelationActionRequest, c *app.RequestContext) (api.Dou
 	//先获取到userID
 	userId := c.GetInt64(constant.IdentityKey)
 	errorText := "请勿重复操作"
+	errorText2 := "不能自己关注自己哦"
 
+	if uint64(userId) == uint64(req.ToUserID) {
+		return api.DouyinRelationActionResponse{
+			StatusCode: int64(api.ErrCode_ParamErrCode),
+			StatusMsg:  &errorText2,
+		}, errors.New(strconv.FormatInt(int64(api.ErrCode_ParamErrCode), 10))
+	}
 	isFollow := db.IsFollow(uint64(userId), uint64(req.ToUserID))
 	if !isFollow && req.ActionType == 1 {
 		//关注操作
@@ -44,7 +51,7 @@ func Follow(req api.DouyinRelationActionRequest, c *app.RequestContext) (api.Dou
 
 }
 
-func GetFollowList(req api.DouyinRelationFollowListRequest, c *app.RequestContext) (api.DouyinRelationFollowListResponse, error) {
+func GetFollowList(req api.DouyinRelationFollowListRequest) (api.DouyinRelationFollowListResponse, error) {
 	resp := api.DouyinRelationFollowListResponse{}
 
 	resultList, err := db.GetFollowList(uint64(req.UserID))
@@ -60,7 +67,7 @@ func GetFollowList(req api.DouyinRelationFollowListRequest, c *app.RequestContex
 
 }
 
-func GetFollowerList(req api.DouyinRelationFollowerListRequest, c *app.RequestContext) (api.DouyinRelationFollowerListResponse, error) {
+func GetFollowerList(req api.DouyinRelationFollowerListRequest) (api.DouyinRelationFollowerListResponse, error) {
 	resp := api.DouyinRelationFollowerListResponse{}
 
 	resultList, err := db.GetFollowerList(uint64(req.UserID))
@@ -75,7 +82,7 @@ func GetFollowerList(req api.DouyinRelationFollowerListRequest, c *app.RequestCo
 	return resp, nil
 }
 
-func GetFriendList(req api.DouyinRelationFriendListRequest, c *app.RequestContext) (api.DouyinRelationFriendListResponse, error) {
+func GetFriendList(req api.DouyinRelationFriendListRequest) (api.DouyinRelationFriendListResponse, error) {
 	resp := api.DouyinRelationFriendListResponse{}
 
 	//userID := c.GetInt64(constant.IdentityKey)

@@ -37,7 +37,10 @@ func ScheduledInit() {
 	}
 
 	//each hour execute
-	spec := "0 0 */1 * * ?"
-	crontab.AddFunc(spec, updateRedis)
+	spec := "*/5 * * * * ?"
+	_, err := crontab.AddFunc(spec, updateRedis)
+	if err != nil {
+		return
+	}
 	crontab.Start()
 }

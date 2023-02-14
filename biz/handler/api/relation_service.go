@@ -46,7 +46,7 @@ func GetFollowList(ctx context.Context, c *app.RequestContext) {
 
 	hlog.Info(req)
 
-	resp, err := service.GetFollowList(req, c)
+	resp, err := service.GetFollowList(req)
 	if err != nil {
 		c.String(consts.StatusBadRequest, err.Error())
 		return
@@ -68,7 +68,7 @@ func GetFollowerList(ctx context.Context, c *app.RequestContext) {
 
 	hlog.Info(req)
 
-	resp, err := service.GetFollowerList(req, c)
+	resp, err := service.GetFollowerList(req)
 	if err != nil {
 		c.String(consts.StatusBadRequest, err.Error())
 		return
@@ -90,7 +90,7 @@ func GetFriendList(ctx context.Context, c *app.RequestContext) {
 
 	hlog.Info(req)
 
-	resp, err := service.GetFriendList(req, c)
+	resp, err := service.GetFriendList(req)
 	if err != nil {
 		c.String(consts.StatusBadRequest, err.Error())
 		return
