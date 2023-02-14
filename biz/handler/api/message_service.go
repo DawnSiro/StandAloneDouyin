@@ -4,6 +4,8 @@ package api
 
 import (
 	"context"
+	"douyin/biz/service"
+	"douyin/constant"
 	"github.com/cloudwego/hertz/pkg/common/hlog"
 
 	api "douyin/biz/model/api"
@@ -24,7 +26,11 @@ func SendMessage(ctx context.Context, c *app.RequestContext) {
 
 	hlog.Info(req)
 
-	resp := new(api.DouyinMessageActionResponse)
+	fromUserID := c.GetInt64(constant.IdentityKey)
+	resp, err := service.SendMessage(uint64(fromUserID), uint64(req.ToUserID), req.ActionType, req.Content)
+	if err != nil {
+		c.JSON(consts.StatusOK, err)
+	}
 
 	c.JSON(consts.StatusOK, resp)
 }
@@ -36,27 +42,34 @@ func GetMessageChat(ctx context.Context, c *app.RequestContext) {
 	var req api.DouyinMessageChatRequest
 	err = c.BindAndValidate(&req)
 	if err != nil {
+		hlog.Info(err)
 		c.String(consts.StatusBadRequest, err.Error())
 		return
 	}
 
 	hlog.Info(req)
 
-	messages := make([]*api.Message, 0)
+	//messages := make([]*api.Message, 0)
+	//
+	//var createTime int64 = 100000
+	//messages = append(messages, &api.Message{
+	//	ID:         1,
+	//	ToUserID:   1,
+	//	FromUserID: 2,
+	//	Content:    "duide",
+	//	CreateTime: &createTime,
+	//})
+	//
+	//resp := &api.DouyinMessageChatResponse{
+	//	StatusCode:  0,
+	//	StatusMsg:   nil,
+	//	MessageList: messages,
+	//}
 
-	var createTime int64 = 100000
-	messages = append(messages, &api.Message{
-		ID:         1,
-		ToUserID:   1,
-		FromUserID: 2,
-		Content:    "duide",
-		CreateTime: &createTime,
-	})
-
-	resp := &api.DouyinMessageChatResponse{
-		StatusCode:  0,
-		StatusMsg:   nil,
-		MessageList: messages,
+	userID := c.GetInt64(constant.IdentityKey)
+	resp, err := service.GetMessageChat(uint64(userID), uint64(req.ToUserID))
+	if err != nil {
+		c.JSON(consts.StatusOK, err)
 	}
 
 	c.JSON(consts.StatusOK, resp)

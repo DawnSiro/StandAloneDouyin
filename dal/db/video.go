@@ -11,8 +11,8 @@ type Video struct {
 	gorm.Model
 	UpdatedAt     time.Time `gorm:"column:update_time;not null;index:idx_update" `
 	AuthorID      uint64    `gorm:"index:idx_authorid;not null"`
-	PlayUrl       string    `gorm:"type:varchar(255);not null"`
-	CoverUrl      string    `gorm:"type:varchar(255)"`
+	PlayURL       string    `gorm:"type:varchar(255);not null"`
+	CoverURL      string    `gorm:"type:varchar(255)"`
 	FavoriteCount int64     `gorm:"default:0"`
 	CommentCount  int64     `gorm:"default:0"`
 	Title         string    `gorm:"type:varchar(50);not null"`
@@ -20,6 +20,10 @@ type Video struct {
 
 func (n *Video) TableName() string {
 	return constant.VideoTableName
+}
+
+func CreateVideo(video *Video) error {
+	return DB.Create(&video).Error
 }
 
 // MGetVideos multiple get list of videos info
@@ -33,6 +37,15 @@ func MGetVideos(maxVideoNum int, latestTime *int64) ([]*Video, error) {
 
 	if err := DB.Where("update_time < ?", time.UnixMilli(*latestTime)).Limit(maxVideoNum).
 		Order("update_time desc").Find(&res).Error; err != nil {
+		return nil, err
+	}
+	return res, nil
+}
+
+func GetVideosByAuthorID(userID uint64) ([]*Video, error) {
+	res := make([]*Video, 0)
+	err := DB.Find(&res, "author_id = ? ", userID).Error
+	if err != nil {
 		return nil, err
 	}
 	return res, nil

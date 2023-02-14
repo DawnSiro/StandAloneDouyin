@@ -74,8 +74,8 @@ func SelectFavoriteVideoListByUserId(userId uint64, toUserId uint64) ([]*api.Vid
 		videoTemp := &api.Video{
 			ID:            int64(video.ID),
 			Author:        userTemp,
-			PlayURL:       video.PlayUrl,
-			CoverURL:      video.CoverUrl,
+			PlayURL:       video.PlayURL,
+			CoverURL:      video.CoverURL,
 			FavoriteCount: video.FavoriteCount,
 			CommentCount:  video.CommentCount,
 			IsFavorite:    true,
@@ -85,4 +85,13 @@ func SelectFavoriteVideoListByUserId(userId uint64, toUserId uint64) ([]*api.Vid
 	}
 
 	return resultList, nil
+}
+
+func IsFavorite(userID, videoID uint64) bool {
+	if userID == 0 {
+		return false
+	}
+	ufv := make([]*UserFavoriteVideos, 1)
+	res := DB.Find(&ufv, "user_id = ? and video_id = ?", userID, videoID)
+	return res.RowsAffected == 1
 }
