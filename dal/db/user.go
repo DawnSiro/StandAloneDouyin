@@ -3,7 +3,6 @@ package db
 import (
 	"douyin/biz/model/api"
 	"douyin/constant"
-	"github.com/cloudwego/hertz/pkg/common/hlog"
 	"gorm.io/gorm"
 )
 
@@ -22,22 +21,21 @@ func (n *User) TableName() string {
 
 // CreateUser create user
 func CreateUser(user *User) (userID int64, err error) {
-	hlog.Info("dui")
 	if err := DB.Create(user).Error; err != nil {
 		return 0, err
 	}
 	return int64(user.ID), nil
 }
 
-func SelectUserByUserID(userId uint) (*api.User, error) {
+func SelectUserByUserID(userID uint) (*api.User, error) {
 	var result api.User
 
 	user := &User{
 		Model: gorm.Model{
-			ID: userId,
+			ID: userID,
 		},
 	}
-	if err := DB.First(&user, "id = ?", userId).Error; err != nil {
+	if err := DB.First(&user, "id = ?", userID).Error; err != nil {
 		return nil, err
 	}
 

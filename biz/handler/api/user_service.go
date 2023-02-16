@@ -24,12 +24,9 @@ func Register(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
-	resp, err := service.Register(&api.DouyinUserRegisterRequest{
-		Username: req.Username,
-		Password: req.Password,
-	})
+	hlog.Infof("Register Request: %s", req)
 
-	hlog.Info("resp")
+	resp, err := service.Register(&req)
 
 	if err != nil {
 		c.JSON(consts.StatusOK, resp)

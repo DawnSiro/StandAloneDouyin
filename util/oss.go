@@ -51,7 +51,7 @@ func UploadVideo(file *io.Reader, fileName string) (videoURL, coverURL string, e
 	response := GetSTS()
 	securityToken := response.Credentials.SecurityToken //上面获取的临时授权的数据里的Credentials.SecurityToken
 	// 从STS服务获取的临时访问密钥（AccessKey ID和AccessKey Secret）。
-	// 从STS服务获取临时访问凭证后，您可以通过临时访问密钥和安全令牌生成OSSClient。
+	// 从STS服务获取临时访问凭证后，可以通过临时访问密钥和安全令牌生成OSSClient。
 	// 创建OSSClient实例。
 	// 第一个参数就是bucket的Endpoint，可以在对象储存oss控制台的bucket的概览得到，例如http://oss-cn-beijing.aliyuncs.com
 	// 第二个参数就是上面获取的临时授权的数据里的Credentials.AccessKeyId
