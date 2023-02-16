@@ -4,16 +4,34 @@ import (
 	"douyin/biz/model/api"
 	"douyin/constant"
 	"douyin/dal/db"
+	"douyin/util"
+	"errors"
 	"github.com/cloudwego/hertz/pkg/app"
+	"github.com/cloudwego/hertz/pkg/common/json"
+	"github.com/go-redis/redis"
+	"strconv"
 )
 
 // CommentAction impl
 func CommentAction(req *api.DouyinCommentActionRequest, c *app.RequestContext) api.DouyinCommentActionResponse {
 	var resp api.DouyinCommentActionResponse
+	filterErr := "评论带有敏感词"
 
 	userID := c.GetInt64(constant.IdentityKey)
+
+	//删除redis评论列表缓存
+	commentListKey := strconv.FormatInt(req.VideoID, 10) + "_video_" + strconv.FormatInt(userID, 10) + "_userId" + "_comments"
+	db.RDB.Del(commentListKey)
+
 	if req.ActionType == constant.PostComment {
 		//publish comment
+		//检测是否带有敏感词
+		if util.IsWordsFilter(*req.CommentText) {
+			return api.DouyinCommentActionResponse{
+				StatusCode: int64(api.ErrCode_ParamErrCode),
+				StatusMsg:  &filterErr,
+			}
+		}
 		con, err := db.CreateComment(uint64(req.VideoID), *req.CommentText, uint64(userID))
 		if err != nil {
 			return api.DouyinCommentActionResponse{
@@ -113,15 +131,32 @@ func CommentAction(req *api.DouyinCommentActionRequest, c *app.RequestContext) a
 func CommentList(req *api.DouyinCommentListRequest, c *app.RequestContext) api.DouyinCommentListResponse {
 	var resp api.DouyinCommentListResponse
 
-	//not finish token to userid
-	//make a fake userid
 	userID := c.GetInt64(constant.IdentityKey)
-	//if []api.Comment is nil so the database don't have the data of this user
-	list, err := db.SelectCommentListByUserID(uint64(userID), uint64(req.VideoID))
+
+	commentListKey := strconv.FormatInt(req.VideoID, 10) + "_video_" + strconv.FormatInt(userID, 10) + "_userId" + "_comments"
+	commentList, err := db.RDB.Get(commentListKey).Result()
+	if err == redis.Nil {
+		//find like_count in mysql
+		list, err := db.SelectCommentListByUserID(uint64(userID), uint64(req.VideoID))
+		if err != nil {
+			return api.DouyinCommentListResponse{
+				StatusCode:  int64(api.ErrCode_ParamErrCode),
+				CommentList: nil,
+			}
+		}
+		//序列化
+		marshalList, _ := json.Marshal(list)
+		db.RDB.Set(commentListKey, marshalList, 0)
+	}
+
+	commentList, _ = db.RDB.Get(commentListKey).Result()
+	//反序列化
+	var list []*api.Comment
+	err = json.Unmarshal([]byte(commentList), &list)
 	if err != nil {
-		return api.DouyinCommentListResponse{
-			StatusCode:  int64(api.ErrCode_ParamErrCode),
-			CommentList: nil,
+		err := errors.New("unmarshal error")
+		if err != nil {
+			return api.DouyinCommentListResponse{}
 		}
 	}
 

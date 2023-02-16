@@ -17,15 +17,16 @@ const (
 	PublishServiceName          = "publish"
 	RelationServiceName         = "relation"
 	UserServiceName             = "user"
-	MySQLDefaultDSN             = "douyin:BS5sp3K4yZTiEJ4S@tcp(119.29.27.252:3306)/douyin?charset=utf8&parseTime=True&loc=Local"
-	TCP                         = "tcp"
-	UserServiceAddr             = ":30110"
-	NoteServiceAddr             = ":30120"
-	ExportEndpoint              = ":4317"
-	ETCDAddress                 = ":2379"
-	DefaultLimit                = 10
-	MaxVideoNum                 = 30
-	MessageSendActionType       = 1
+	//MySQLDefaultDSN             = "douyin:BS5sp3K4yZTiEJ4S@tcp(119.29.27.252:3306)/douyin?charset=utf8&parseTime=True&loc=Local"
+	MySQLDefaultDSN       = "douyin:!wwTF5VK)vPglY@-@tcp(172.17.0.1:3306)/douyin?charset=utf8&parseTime=True&loc=Local"
+	TCP                   = "tcp"
+	UserServiceAddr       = ":30110"
+	NoteServiceAddr       = ":30120"
+	ExportEndpoint        = ":4317"
+	ETCDAddress           = ":2379"
+	DefaultLimit          = 10
+	MaxVideoNum           = 30
+	MessageSendActionType = 1
 )
 
 // ActionType 的枚举
