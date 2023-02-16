@@ -26,7 +26,6 @@ func FavoriteAction(req *api.DouyinFavoriteActionRequest, c *app.RequestContext)
 			}, err
 		}
 		db.RDB.Set(videoLikeKey, likeInt64, 0)
-
 	}
 	if req.ActionType == constant.Favorite {
 		//like
