@@ -7,8 +7,10 @@ import (
 	"douyin/util"
 	"errors"
 	"github.com/cloudwego/hertz/pkg/app"
+	"github.com/cloudwego/hertz/pkg/common/hlog"
 	"github.com/cloudwego/hertz/pkg/common/json"
 	"github.com/go-redis/redis"
+	"reflect"
 	"strconv"
 )
 
@@ -20,8 +22,22 @@ func CommentAction(req *api.DouyinCommentActionRequest, c *app.RequestContext) a
 	userID := c.GetInt64(constant.IdentityKey)
 
 	//删除redis评论列表缓存
-	commentListKey := strconv.FormatInt(req.VideoID, 10) + "_video_" + strconv.FormatInt(userID, 10) + "_userId" + "_comments"
-	db.RDB.Del(commentListKey)
+	delCommentListKey := strconv.FormatInt(req.VideoID, 10) + "_video" + "_comments"
+
+	keysMatch, err := db.RDB.Do("keys", "*"+delCommentListKey).Result()
+	if err != nil {
+		hlog.Info("查询批量删除的redisKey失败", err)
+	}
+	if reflect.TypeOf(keysMatch).Kind() == reflect.Slice {
+		val := reflect.ValueOf(keysMatch)
+		// 删除key
+		for i := 0; i < val.Len(); i++ {
+			db.RDB.Del(val.Index(i).Interface().(string))
+			hlog.Info("删除了rediskey:", val.Index(i).Interface().(string))
+		}
+	}
+
+	//db.RDB.Del(commentListKey)
 
 	if req.ActionType == constant.PostComment {
 		//publish comment
@@ -133,7 +149,7 @@ func CommentList(req *api.DouyinCommentListRequest, c *app.RequestContext) api.D
 
 	userID := c.GetInt64(constant.IdentityKey)
 
-	commentListKey := strconv.FormatInt(req.VideoID, 10) + "_video_" + strconv.FormatInt(userID, 10) + "_userId" + "_comments"
+	commentListKey := strconv.FormatInt(userID, 10) + "_userId_" + strconv.FormatInt(req.VideoID, 10) + "_video" + "_comments"
 	commentList, err := db.RDB.Get(commentListKey).Result()
 	if err == redis.Nil {
 		//find like_count in mysql
@@ -146,10 +162,15 @@ func CommentList(req *api.DouyinCommentListRequest, c *app.RequestContext) api.D
 		}
 		//序列化
 		marshalList, _ := json.Marshal(list)
-		db.RDB.Set(commentListKey, marshalList, 0)
+		_, err = db.RDB.Set(commentListKey, marshalList, 0).Result()
+		if err != nil {
+			hlog.Info("redis_error", err)
+		}
+		commentList, err = db.RDB.Get(commentListKey).Result()
+		if err != nil {
+			hlog.Info("redis_error", err)
+		}
 	}
-
-	commentList, _ = db.RDB.Get(commentListKey).Result()
 	//反序列化
 	var list []*api.Comment
 	err = json.Unmarshal([]byte(commentList), &list)

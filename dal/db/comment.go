@@ -62,7 +62,11 @@ func SelectCommentListByUserID(userID uint64, videoID uint64) ([]*api.Comment, e
 		if err != nil || con2 == 0 {
 			return nil, err
 		}
-		con1.IsFollow = IsFollow(userID, con2)
+		if userID == 0 {
+			con1.IsFollow = false
+		} else {
+			con1.IsFollow = IsFollow(userID, con2)
+		}
 		commentTemp := &api.Comment{
 			ID:         int64((*commentResult)[i].ID),
 			User:       con1,
