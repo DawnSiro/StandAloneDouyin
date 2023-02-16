@@ -49,23 +49,6 @@ func GetMessageChat(ctx context.Context, c *app.RequestContext) {
 
 	hlog.Info(req)
 
-	//messages := make([]*api.Message, 0)
-	//
-	//var createTime int64 = 100000
-	//messages = append(messages, &api.Message{
-	//	ID:         1,
-	//	ToUserID:   1,
-	//	FromUserID: 2,
-	//	Content:    "duide",
-	//	CreateTime: &createTime,
-	//})
-	//
-	//resp := &api.DouyinMessageChatResponse{
-	//	StatusCode:  0,
-	//	StatusMsg:   nil,
-	//	MessageList: messages,
-	//}
-
 	userID := c.GetInt64(constant.IdentityKey)
 	resp, err := service.GetMessageChat(uint64(userID), uint64(req.ToUserID))
 	if err != nil {

@@ -15,11 +15,11 @@ func FavoriteAction(req *api.DouyinFavoriteActionRequest, c *app.RequestContext)
 	videoLikeKey := strconv.FormatInt(req.VideoID, 10) + "_video" + "_like"
 
 	//find like in redis is nil?
-	userId := c.GetInt64(constant.IdentityKey)
+	userID := c.GetInt64(constant.IdentityKey)
 	likeCount, err := db.RDB.Get(videoLikeKey).Result()
 	if err == redis.Nil {
 		//find like_count in mysql
-		likeInt64, err := db.SelectFavoriteCountByVideoId(req.VideoID)
+		likeInt64, err := db.SelectFavoriteCountByVideoID(req.VideoID)
 		if err != nil {
 			return api.DouyinFavoriteActionResponse{
 				StatusCode: int64(api.ErrCode_ServiceErrCode),
@@ -28,7 +28,7 @@ func FavoriteAction(req *api.DouyinFavoriteActionRequest, c *app.RequestContext)
 		db.RDB.Set(videoLikeKey, likeInt64, 0)
 
 	}
-	if req.ActionType == 1 {
+	if req.ActionType == constant.Favorite {
 		//like
 		//put it into redis
 		likeInt64, err := strconv.ParseInt(likeCount, 10, 64)
@@ -38,7 +38,7 @@ func FavoriteAction(req *api.DouyinFavoriteActionRequest, c *app.RequestContext)
 			}, err
 		}
 
-		resultLike, err := db.Like(uint64(userId), uint64(req.VideoID))
+		resultLike, err := db.Like(uint64(userID), uint64(req.VideoID))
 		if err != nil || resultLike == 0 {
 			return api.DouyinFavoriteActionResponse{
 				StatusCode: int64(api.ErrCode_ServiceErrCode),
@@ -46,7 +46,7 @@ func FavoriteAction(req *api.DouyinFavoriteActionRequest, c *app.RequestContext)
 		}
 		db.RDB.Set(videoLikeKey, likeInt64+1, 0)
 
-	} else if req.ActionType == 2 {
+	} else if req.ActionType == constant.CancelFavorite {
 		//cancel like
 		//put it into redis
 		likeInt64, err := strconv.ParseInt(likeCount, 10, 64)
@@ -56,7 +56,7 @@ func FavoriteAction(req *api.DouyinFavoriteActionRequest, c *app.RequestContext)
 			}, err
 		}
 
-		resultLike, err := db.UnLike(uint64(userId), uint64(req.VideoID))
+		resultLike, err := db.UnLike(uint64(userID), uint64(req.VideoID))
 		if err != nil || resultLike == 0 {
 			return api.DouyinFavoriteActionResponse{
 				StatusCode: int64(api.ErrCode_ServiceErrCode),
@@ -74,8 +74,8 @@ func FavoriteAction(req *api.DouyinFavoriteActionRequest, c *app.RequestContext)
 func FavoriteList(req *api.DouyinFavoriteListRequest, c *app.RequestContext) (api.DouyinFavoriteListResponse, error) {
 	var resp api.DouyinFavoriteListResponse
 
-	userId := c.GetInt64(constant.IdentityKey)
-	resultList, err := db.SelectFavoriteVideoListByUserId(uint64(userId), uint64(req.UserID))
+	userID := c.GetInt64(constant.IdentityKey)
+	resultList, err := db.SelectFavoriteVideoListByUserId(uint64(userID), uint64(req.UserID))
 	if err != nil {
 		return api.DouyinFavoriteListResponse{
 			StatusCode: int64(api.ErrCode_ServiceErrCode),

@@ -9,7 +9,7 @@ import (
 )
 
 func SendMessage(fromUserID, toUserID uint64, actionType int32, content string) (*api.DouyinMessageActionResponse, error) {
-	if actionType == constant.MessageSendActionType {
+	if actionType == constant.SendMessageAction {
 		err := db.CreateMessage(fromUserID, toUserID, content)
 		if err != nil {
 			return nil, err

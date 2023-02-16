@@ -51,10 +51,10 @@ func GetVideosByAuthorID(userID uint64) ([]*Video, error) {
 	return res, nil
 }
 
-func SelectAuthorIdByVideoId(videoId int64) (uint64, error) {
+func SelectAuthorIDByVideoID(videoID int64) (uint64, error) {
 	video := &Video{
 		Model: gorm.Model{
-			ID: uint(videoId),
+			ID: uint(videoID),
 		},
 	}
 
@@ -65,10 +65,10 @@ func SelectAuthorIdByVideoId(videoId int64) (uint64, error) {
 	return video.AuthorID, nil
 }
 
-func UpdateFavoriteCount(videoId uint64, favoriteCount int64) (int64, error) {
+func UpdateFavoriteCount(videoID uint64, favoriteCount int64) (int64, error) {
 	video := &Video{
 		Model: gorm.Model{
-			ID: uint(videoId),
+			ID: uint(videoID),
 		},
 	}
 
@@ -79,10 +79,10 @@ func UpdateFavoriteCount(videoId uint64, favoriteCount int64) (int64, error) {
 }
 
 // IncreaseFavoriteCount increase 1
-func IncreaseFavoriteCount(videoId uint64) (int64, error) {
+func IncreaseFavoriteCount(videoID uint64) (int64, error) {
 	video := &Video{
 		Model: gorm.Model{
-			ID: uint(videoId),
+			ID: uint(videoID),
 		},
 	}
 	if err := DB.Find(&video).Error; err != nil {
@@ -95,10 +95,10 @@ func IncreaseFavoriteCount(videoId uint64) (int64, error) {
 }
 
 // ReduceFavoriteCount reduce 1
-func ReduceFavoriteCount(videoId uint64) (int64, error) {
+func ReduceFavoriteCount(videoID uint64) (int64, error) {
 	video := &Video{
 		Model: gorm.Model{
-			ID: uint(videoId),
+			ID: uint(videoID),
 		},
 	}
 	if err := DB.Find(&video).Error; err != nil {
@@ -110,10 +110,10 @@ func ReduceFavoriteCount(videoId uint64) (int64, error) {
 	return video.FavoriteCount, nil
 }
 
-func SelectFavoriteCountByVideoId(videoId int64) (int64, error) {
+func SelectFavoriteCountByVideoID(videoID int64) (int64, error) {
 	video := &Video{
 		Model: gorm.Model{
-			ID: uint(videoId),
+			ID: uint(videoID),
 		},
 	}
 
@@ -124,10 +124,10 @@ func SelectFavoriteCountByVideoId(videoId int64) (int64, error) {
 	return video.FavoriteCount, nil
 }
 
-func SelectCommentCountByVideoId(videoId int64) (int64, error) {
+func SelectCommentCountByVideoID(videoID int64) (int64, error) {
 	video := &Video{
 		Model: gorm.Model{
-			ID: uint(videoId),
+			ID: uint(videoID),
 		},
 	}
 

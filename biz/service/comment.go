@@ -11,31 +11,31 @@ import (
 func CommentAction(req *api.DouyinCommentActionRequest, c *app.RequestContext) api.DouyinCommentActionResponse {
 	var resp api.DouyinCommentActionResponse
 
-	userId := c.GetInt64(constant.IdentityKey)
-	if req.ActionType == 1 {
+	userID := c.GetInt64(constant.IdentityKey)
+	if req.ActionType == constant.PostComment {
 		//publish comment
-		con, err := db.CreateCommentByUserIdAndVideoIdAndContent(*req, uint64(userId))
+		con, err := db.CreateComment(uint64(req.VideoID), *req.CommentText, uint64(userID))
 		if err != nil {
 			return api.DouyinCommentActionResponse{
 				StatusCode: int64(api.ErrCode_ServiceErrCode),
 				Comment:    nil,
 			}
 		}
-		con1, err := db.SelectUserByUserID(uint(userId))
+		con1, err := db.SelectUserByUserID(uint(userID))
 		if err != nil {
 			return api.DouyinCommentActionResponse{
 				StatusCode: int64(api.ErrCode_ServiceErrCode),
 				Comment:    nil,
 			}
 		}
-		con2, err := db.SelectAuthorIdByVideoId(req.VideoID)
+		con2, err := db.SelectAuthorIDByVideoID(req.VideoID)
 		if err != nil || con2 == 0 {
 			return api.DouyinCommentActionResponse{
 				StatusCode: int64(api.ErrCode_ServiceErrCode),
 				Comment:    nil,
 			}
 		}
-		con1.IsFollow = db.IsFollow(uint64(userId), con2)
+		con1.IsFollow = db.IsFollow(uint64(userID), con2)
 
 		//update video.comment_count
 		_, err = db.IncreaseFavoriteCount(uint64(req.VideoID))
@@ -48,10 +48,10 @@ func CommentAction(req *api.DouyinCommentActionRequest, c *app.RequestContext) a
 			Content:    con.Content,
 			CreateDate: con.CreatedAt.String(),
 		}
-	} else if req.ActionType == 2 {
+	} else if req.ActionType == constant.DeleteComment {
 		//delete comment
 		//查询此评论是否是本人发送的
-		isComment, err := db.IsCommentCreatedByMyself(uint64(userId), *req.CommentID)
+		isComment, err := db.IsCommentCreatedByMyself(uint64(userID), *req.CommentID)
 		if err != nil {
 			return api.DouyinCommentActionResponse{
 				StatusCode: int64(api.ErrCode_ServiceErrCode),
@@ -65,28 +65,28 @@ func CommentAction(req *api.DouyinCommentActionRequest, c *app.RequestContext) a
 				Comment:    nil,
 			}
 		}
-		con, err := db.DeleteCommentByCommentId(*req.CommentID)
+		con, err := db.DeleteCommentByCommentID(*req.CommentID)
 		if err != nil {
 			return api.DouyinCommentActionResponse{
 				StatusCode: int64(api.ErrCode_ServiceErrCode),
 				Comment:    nil,
 			}
 		}
-		con1, err := db.SelectUserByUserID(uint(userId))
+		con1, err := db.SelectUserByUserID(uint(userID))
 		if err != nil {
 			return api.DouyinCommentActionResponse{
 				StatusCode: int64(api.ErrCode_ServiceErrCode),
 				Comment:    nil,
 			}
 		}
-		con2, err := db.SelectAuthorIdByVideoId(req.VideoID)
+		con2, err := db.SelectAuthorIDByVideoID(req.VideoID)
 		if err != nil || con2 == 0 {
 			return api.DouyinCommentActionResponse{
 				StatusCode: int64(api.ErrCode_ServiceErrCode),
 				Comment:    nil,
 			}
 		}
-		con1.IsFollow = db.IsFollow(uint64(userId), con2)
+		con1.IsFollow = db.IsFollow(uint64(userID), con2)
 
 		//update video.comment_count
 		_, err = db.ReduceFavoriteCount(uint64(req.VideoID))
@@ -115,9 +115,9 @@ func CommentList(req *api.DouyinCommentListRequest, c *app.RequestContext) api.D
 
 	//not finish token to userid
 	//make a fake userid
-	userId := c.GetInt64(constant.IdentityKey)
+	userID := c.GetInt64(constant.IdentityKey)
 	//if []api.Comment is nil so the database don't have the data of this user
-	list, err := db.SelectCommentListByUserId(uint64(userId), uint64(req.VideoID))
+	list, err := db.SelectCommentListByUserID(uint64(userID), uint64(req.VideoID))
 	if err != nil {
 		return api.DouyinCommentListResponse{
 			StatusCode:  int64(api.ErrCode_ParamErrCode),

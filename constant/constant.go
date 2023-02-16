@@ -25,7 +25,22 @@ const (
 	ETCDAddress                 = ":2379"
 	DefaultLimit                = 10
 	MaxVideoNum                 = 30
-	VideoFileType               = "video"
-	PictureFileType             = "picture"
 	MessageSendActionType       = 1
+)
+
+// ActionType 的枚举
+// 1-发布评论，2-删除评论
+// 1-点赞，2-取消点赞
+// 1-关注，2-取消关注
+// 1-发送消息
+// 0-当前请求用户接收的消息， 1-当前请求用户发送的消息
+const (
+	PostComment       = 1
+	DeleteComment     = 2
+	Favorite          = 1
+	CancelFavorite    = 2
+	Follow            = 1
+	SendMessageAction = 1
+	ReceivedMessage   = 0
+	SentMessage       = 1
 )

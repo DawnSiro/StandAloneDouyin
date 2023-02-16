@@ -56,12 +56,12 @@ func GetLatestMsg(userID uint64, toUserID uint64) (*FriendMessageResp, error) {
 	case toUserID:
 		return &FriendMessageResp{
 			Content: message.Content,
-			MsgType: 1,
+			MsgType: constant.SentMessage,
 		}, nil
 	default: // 默认发给自己
 		return &FriendMessageResp{
 			Content: message.Content,
-			MsgType: 0,
+			MsgType: constant.ReceivedMessage,
 		}, nil
 	}
 

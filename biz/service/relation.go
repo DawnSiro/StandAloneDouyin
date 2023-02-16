@@ -11,28 +11,28 @@ import (
 
 func Follow(req api.DouyinRelationActionRequest, c *app.RequestContext) (api.DouyinRelationActionResponse, error) {
 	//先获取到userID
-	userId := c.GetInt64(constant.IdentityKey)
+	userID := c.GetInt64(constant.IdentityKey)
 	errorText := "请勿重复操作"
 	errorText2 := "不能自己关注自己哦"
 
-	if uint64(userId) == uint64(req.ToUserID) {
+	if uint64(userID) == uint64(req.ToUserID) {
 		return api.DouyinRelationActionResponse{
 			StatusCode: int64(api.ErrCode_ParamErrCode),
 			StatusMsg:  &errorText2,
 		}, errors.New(strconv.FormatInt(int64(api.ErrCode_ParamErrCode), 10))
 	}
-	isFollow := db.IsFollow(uint64(userId), uint64(req.ToUserID))
-	if !isFollow && req.ActionType == 1 {
+	isFollow := db.IsFollow(uint64(userID), uint64(req.ToUserID))
+	if !isFollow && req.ActionType == constant.Follow {
 		//关注操作
-		err := db.AddFollow(uint64(userId), uint64(req.ToUserID))
+		err := db.AddFollow(uint64(userID), uint64(req.ToUserID))
 		if err != nil {
 			return api.DouyinRelationActionResponse{
 				StatusCode: int64(api.ErrCode_ServiceErrCode),
 			}, nil
 		}
-	} else if isFollow && req.ActionType == 2 {
+	} else if isFollow && req.ActionType == constant.CancelFavorite {
 		//取消关注
-		err := db.DelFollow(uint64(userId), uint64(req.ToUserID))
+		err := db.DelFollow(uint64(userID), uint64(req.ToUserID))
 		if err != nil {
 			return api.DouyinRelationActionResponse{
 				StatusCode: int64(api.ErrCode_ServiceErrCode),
@@ -85,7 +85,6 @@ func GetFollowerList(req api.DouyinRelationFollowerListRequest) (api.DouyinRelat
 func GetFriendList(req api.DouyinRelationFriendListRequest) (api.DouyinRelationFriendListResponse, error) {
 	resp := api.DouyinRelationFriendListResponse{}
 
-	//userID := c.GetInt64(constant.IdentityKey)
 	resultList, err := db.GetFriendList(uint64(req.UserID))
 	if err != nil {
 		return api.DouyinRelationFriendListResponse{

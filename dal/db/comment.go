@@ -9,8 +9,8 @@ import (
 
 type Comment struct {
 	gorm.Model
-	VideoId uint64 `json:"video_id"`
-	UserId  uint64 `json:"user_id"`
+	VideoID uint64 `json:"video_id"`
+	UserID  uint64 `json:"user_id"`
 	Content string `json:"content"`
 }
 
@@ -18,24 +18,24 @@ func (n *Comment) TableName() string {
 	return constant.CommentTableName
 }
 
-func CreateCommentByUserIdAndVideoIdAndContent(req api.DouyinCommentActionRequest, userID uint64) (*Comment, error) {
+func CreateComment(videoID uint64, content string, userID uint64) (*Comment, error) {
 	comment := &Comment{
 		Model:   gorm.Model{},
-		VideoId: uint64(req.VideoID),
-		UserId:  userID,
-		Content: *req.CommentText,
+		VideoID: videoID,
+		UserID:  userID,
+		Content: content,
 	}
 	//
-	if err := DB.Select("UserId", "VideoId", "Content").Create(comment).Error; err != nil {
+	if err := DB.Select("user_id", "video_id", "Content").Create(comment).Error; err != nil {
 		return nil, err
 	}
 	return comment, nil
 }
 
-func DeleteCommentByCommentId(commentId int64) (*Comment, error) {
+func DeleteCommentByCommentID(commentID int64) (*Comment, error) {
 	comment := &Comment{
 		Model: gorm.Model{
-			ID: uint(commentId),
+			ID: uint(commentID),
 		},
 	}
 	if err := DB.Delete(comment).Error; err != nil {
@@ -44,25 +44,25 @@ func DeleteCommentByCommentId(commentId int64) (*Comment, error) {
 	return comment, nil
 }
 
-func SelectCommentListByUserId(userId uint64, videoId uint64) ([]*api.Comment, error) {
+func SelectCommentListByUserID(userID uint64, videoID uint64) ([]*api.Comment, error) {
 	commentResult := new([]*Comment)
-	result := DB.Where("video_id = ?", videoId).Find(&commentResult)
-	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-		return nil, nil
+	err := DB.Where("video_id = ?", videoID).Find(&commentResult).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, err
 	}
 
 	results := make([]*api.Comment, 0)
 	for i := 0; i < len(*commentResult); i++ {
 
-		con1, err := SelectUserByUserID(uint((*commentResult)[i].UserId))
+		con1, err := SelectUserByUserID(uint((*commentResult)[i].UserID))
 		if err != nil {
-			return nil, nil
+			return nil, err
 		}
-		con2, err := SelectAuthorIdByVideoId(int64(videoId))
+		con2, err := SelectAuthorIDByVideoID(int64(videoID))
 		if err != nil || con2 == 0 {
-			return nil, nil
+			return nil, err
 		}
-		con1.IsFollow = IsFollow(userId, con2)
+		con1.IsFollow = IsFollow(userID, con2)
 		commentTemp := &api.Comment{
 			ID:         int64((*commentResult)[i].ID),
 			User:       con1,

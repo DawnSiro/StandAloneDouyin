@@ -24,7 +24,7 @@ func PublishAction(title string, videoData []byte, userID int64) error {
 		return err
 	}
 	fileName := u1.String() + "." + "mp4"
-	// 上传视频和封面
+	// 上传视频并生成封面
 	playURL, coverURL, err := util.UploadVideo(&reader, fileName)
 	if err != nil {
 		return err
@@ -60,7 +60,7 @@ func GetPublishVideos(userID uint64) (*api.DouyinPublishListResponse, error) {
 		}
 
 		video, err := pack.Videos(videos[i], u,
-			db.IsFollow(uint64(userID), uint64(u.ID)), db.IsFavorite(uint64(userID), uint64(videos[i].ID)))
+			db.IsFollow(userID, uint64(u.ID)), db.IsFavorite(userID, uint64(videos[i].ID)))
 		if err != nil {
 			return nil, err
 		}
@@ -73,26 +73,3 @@ func GetPublishVideos(userID uint64) (*api.DouyinPublishListResponse, error) {
 
 	return res, nil
 }
-
-//// ReadFrameAsJpeg
-//// 从视频文件中截取一帧并返回 需要在本地环境中安装ffmpeg并将bin添加到环境变量
-//func extractFrameAsJpeg(filePath string) ([]byte, error) {
-//	reader := bytes.NewBuffer(nil)
-//	err := ffmpeg.Input(filePath).
-//		Filter("select", ffmpeg.Args{fmt.Sprintf("gte(n,%d)", 1)}).
-//		Output("pipe:", ffmpeg.KwArgs{"vframes": 1, "format": "image2", "vcodec": "mjpeg"}).
-//		WithOutput(reader, os.Stdout).
-//		Run()
-//	if err != nil {
-//		return nil, err
-//	}
-//	img, _, err := image.Decode(reader)
-//	if err != nil {
-//		return nil, err
-//	}
-//
-//	buf := new(bytes.Buffer)
-//	jpeg.Encode(buf, img, nil)
-//
-//	return buf.Bytes(), err
-//}
