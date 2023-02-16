@@ -162,10 +162,15 @@ func CommentList(req *api.DouyinCommentListRequest, c *app.RequestContext) api.D
 		}
 		//序列化
 		marshalList, _ := json.Marshal(list)
-		db.RDB.Set(commentListKey, marshalList, 0)
+		_, err = db.RDB.Set(commentListKey, marshalList, 0).Result()
+		if err != nil {
+			hlog.Info("redis_error", err)
+		}
+		commentList, err = db.RDB.Get(commentListKey).Result()
+		if err != nil {
+			hlog.Info("redis_error", err)
+		}
 	}
-
-	commentList, _ = db.RDB.Get(commentListKey).Result()
 	//反序列化
 	var list []*api.Comment
 	err = json.Unmarshal([]byte(commentList), &list)
