@@ -25,11 +25,11 @@ func ScheduledInit() {
 			}
 			//update database
 			count := db.RDB.Get(redisKey).Val()
-			countInt64, err := strconv.ParseInt(count, 10, 64)
+			countInt64, err := strconv.ParseUint(count, 10, 64)
 			if err != nil {
 				panic(err)
 			}
-			_, err = db.UpdateFavoriteCount(uint64(videoList[i].ID), countInt64)
+			_, err = db.UpdateVideoFavoriteCount(videoList[i].ID, countInt64)
 			if err != nil {
 				panic(err)
 			}

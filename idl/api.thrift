@@ -11,7 +11,7 @@ enum ErrCode {
 struct douyin_comment_action_request {
   1: required string token       // 用户鉴权token
   2: required i64 video_id (vt.gt = "0", api.vd="$>0")      // 视频id
-  3: required i32 action_type (vt.in = "1", vt.in = "2")   // 1-发布评论，2-删除评论
+  3: required i8 action_type (vt.in = "1", vt.in = "2")   // 1-发布评论，2-删除评论
   4: optional string comment_text // 用户填写的评论内容，在action_type=1的时候使用
   5: optional i64 comment_id   // 要删除的评论id，在action_type=2的时候使用
 }
@@ -52,7 +52,7 @@ struct User {
 struct douyin_favorite_action_request {
   1: required string token  // 用户鉴权token
   2: required i64 video_id (vt.gt = "0", api.vd="$>0")  // 视频id
-  3: required i32 action_type (vt.in = "1", vt.in = "2", api.vd = "$==1||$==2") // 1-点赞，2-取消点赞
+  3: required i8 action_type (vt.in = "1", vt.in = "2", api.vd = "$==1||$==2") // 1-点赞，2-取消点赞
 }
 
 struct douyin_favorite_action_response {
@@ -116,7 +116,7 @@ struct Message {
 struct douyin_message_action_request {
   1: required string token // 用户鉴权token
   2: required i64 to_user_id (vt.gt = "0", api.vd="$>0") // 对方用户id
-  3: required i32 action_type (vt.in = "1", api.vd="$==1") // 1-发送消息
+  3: required i8 action_type (vt.in = "1", api.vd="$==1") // 1-发送消息
   4: required string content // 消息内容
 }
 
@@ -151,7 +151,7 @@ struct douyin_publish_list_response {
 struct douyin_relation_action_request {
   1: required string token // 用户鉴权token
   2: required i64 to_user_id (vt.gt = "0", api.vd="$>0") // 对方用户id
-  3: required i32 action_type (vt.in = "1", vt.in = "2") // 1-关注，2-取消关注
+  3: required i8 action_type (vt.in = "1", vt.in = "2") // 1-关注，2-取消关注
 }
 
 struct douyin_relation_action_response {
@@ -202,7 +202,7 @@ struct FriendUser {
   5: required bool is_follow  // true-已关注，false-未关注
   6: required string avatar  // 用户头像Url
   7: optional string message // 和该好友的最新聊天消息
-  8: required i64 msgType (vt.in = "0", vt.in = "1") // message消息的类型，0 => 当前请求用户接收的消息， 1 => 当前请求用户发送的消息
+  8: required i8 msgType (vt.in = "0", vt.in = "1") // message消息的类型，0 => 当前请求用户接收的消息， 1 => 当前请求用户发送的消息
 }
 
 
@@ -238,7 +238,18 @@ struct douyin_user_request {
 struct douyin_user_response {
   1: required i64 status_code // 状态码，0-成功，其他值-失败
   2: optional string status_msg // 返回状态描述
-  3: required User user // 用户信息
+  3: required UserInfo user // 用户信息
+}
+
+struct UserInfo {
+  1: required i64 id (vt.gt = "0", api.vd="$>0") // 用户id
+  2: required string name  // 用户名称
+  3: optional i64 follow_count (vt.gt = "0")  // 关注总数
+  4: optional i64 follower_count (vt.gt = "0")  // 粉丝总数
+  5: required bool is_follow  // true-已关注，false-未关注
+  6: required string avatar  // 用户头像Url
+  7: optional i64 work_count (vt.gt = "0")  // 用户作品数
+  8: optional i64 favorite_count (vt.gt = "0")  // 用户点赞的视频数
 }
 
 

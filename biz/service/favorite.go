@@ -2,87 +2,94 @@ package service
 
 import (
 	"douyin/biz/model/api"
-	"douyin/constant"
 	"douyin/dal/db"
-	"github.com/cloudwego/hertz/pkg/app"
+	"douyin/dal/pack"
 	"github.com/go-redis/redis"
 	"strconv"
 )
 
-// FavoriteAction this is a func for add Favorite or reduce Favorite
-func FavoriteAction(req *api.DouyinFavoriteActionRequest, c *app.RequestContext) (api.DouyinFavoriteActionResponse, error) {
-	var resp api.DouyinFavoriteActionResponse
-	videoLikeKey := strconv.FormatInt(req.VideoID, 10) + "_video" + "_like"
+// FavoriteVideo this is a func for add Favorite or reduce Favorite
+func FavoriteVideo(userID, videoID uint64) (*api.DouyinFavoriteActionResponse, error) {
+	videoLikeKey := strconv.FormatUint(videoID, 10) + "_video" + "_like"
 
-	//find like in redis is nil?
-	userID := c.GetInt64(constant.IdentityKey)
 	likeCount, err := db.RDB.Get(videoLikeKey).Result()
 	if err == redis.Nil {
-		//find like_count in mysql
-		likeInt64, err := db.SelectFavoriteCountByVideoID(req.VideoID)
+		likeInt64, err := db.SelectVideoFavoriteCountByVideoID(videoID)
 		if err != nil {
-			return api.DouyinFavoriteActionResponse{
-				StatusCode: int64(api.ErrCode_ServiceErrCode),
-			}, err
+			return nil, err
 		}
 		db.RDB.Set(videoLikeKey, likeInt64, 0)
 	}
-	if req.ActionType == constant.Favorite {
-		//like
-		//put it into redis
-		likeInt64, err := strconv.ParseInt(likeCount, 10, 64)
-		if err != nil {
-			return api.DouyinFavoriteActionResponse{
-				StatusCode: int64(api.ErrCode_ServiceErrCode),
-			}, err
-		}
-
-		resultLike, err := db.Like(uint64(userID), uint64(req.VideoID))
-		if err != nil || resultLike == 0 {
-			return api.DouyinFavoriteActionResponse{
-				StatusCode: int64(api.ErrCode_ServiceErrCode),
-			}, err
-		}
-		db.RDB.Set(videoLikeKey, likeInt64+1, 0)
-
-	} else if req.ActionType == constant.CancelFavorite {
-		//cancel like
-		//put it into redis
-		likeInt64, err := strconv.ParseInt(likeCount, 10, 64)
-		if err != nil {
-			return api.DouyinFavoriteActionResponse{
-				StatusCode: int64(api.ErrCode_ServiceErrCode),
-			}, err
-		}
-
-		resultLike, err := db.UnLike(uint64(userID), uint64(req.VideoID))
-		if err != nil || resultLike == 0 {
-			return api.DouyinFavoriteActionResponse{
-				StatusCode: int64(api.ErrCode_ServiceErrCode),
-			}, err
-		}
-		db.RDB.Set(videoLikeKey, likeInt64-1, 0)
-
+	//like
+	//put it into redis
+	likeInt64, err := strconv.ParseUint(likeCount, 10, 64)
+	if err != nil {
+		return nil, err
 	}
 
-	resp.StatusCode = int64(api.ErrCode_SuccessCode)
-	return resp, nil
+	err = db.FavoriteVideo(userID, videoID)
+	if err != nil {
+		return nil, err
+	}
+	db.RDB.Set(videoLikeKey, likeInt64+1, 0)
+
+	return &api.DouyinFavoriteActionResponse{
+		StatusCode: 0,
+		StatusMsg:  nil,
+	}, nil
 }
 
-// FavoriteList this is a func for get Favorite List
-func FavoriteList(req *api.DouyinFavoriteListRequest, c *app.RequestContext) (api.DouyinFavoriteListResponse, error) {
-	var resp api.DouyinFavoriteListResponse
+func CancelFavoriteVideo(userID, videoID uint64) (*api.DouyinFavoriteActionResponse, error) {
+	videoLikeKey := strconv.FormatUint(videoID, 10) + "_video" + "_like"
 
-	userID := c.GetInt64(constant.IdentityKey)
-	resultList, err := db.SelectFavoriteVideoListByUserId(uint64(userID), uint64(req.UserID))
+	likeCount, err := db.RDB.Get(videoLikeKey).Result()
+	if err == redis.Nil {
+		//find like_count in mysql
+		likeInt64, err := db.SelectVideoFavoriteCountByVideoID(videoID)
+		if err != nil {
+			return nil, err
+		}
+		db.RDB.Set(videoLikeKey, likeInt64, 0)
+	}
+	//cancel like
+	//put it into redis
+	likeInt64, err := strconv.ParseInt(likeCount, 10, 64)
 	if err != nil {
-		return api.DouyinFavoriteListResponse{
-			StatusCode: int64(api.ErrCode_ServiceErrCode),
-		}, err
+		return nil, err
 	}
 
-	resp.StatusCode = int64(api.ErrCode_SuccessCode)
-	resp.VideoList = resultList
+	err = db.CancelFavoriteVideo(userID, videoID)
+	if err != nil {
+		return nil, err
+	}
+	db.RDB.Set(videoLikeKey, likeInt64-1, 0)
 
-	return resp, nil
+	return &api.DouyinFavoriteActionResponse{
+		StatusCode: 0,
+		StatusMsg:  nil,
+	}, nil
+}
+
+func FavoriteList(userID, selectUserID uint64) (*api.DouyinFavoriteListResponse, error) {
+	videos, err := db.SelectFavoriteVideoListByUserID(selectUserID)
+	if err != nil {
+		return nil, err
+	}
+
+	videoList := make([]*api.Video, 0)
+	for i := 0; i < len(videos); i++ {
+		u, err := db.SelectUserByID(videos[i].AuthorID)
+		if err != nil {
+			return nil, err
+		}
+		video := pack.Video(videos[i], u,
+			db.IsFollow(userID, selectUserID), db.IsFavoriteVideo(userID, videos[i].ID))
+		videoList = append(videoList, video)
+	}
+
+	return &api.DouyinFavoriteListResponse{
+		StatusCode: 0,
+		StatusMsg:  nil,
+		VideoList:  videoList,
+	}, nil
 }

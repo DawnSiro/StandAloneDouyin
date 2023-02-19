@@ -5,6 +5,8 @@ package api
 import (
 	"context"
 	"douyin/biz/service"
+	"douyin/pkg/constant"
+	"errors"
 	"github.com/cloudwego/hertz/pkg/common/hlog"
 
 	api "douyin/biz/model/api"
@@ -24,10 +26,18 @@ func FavoriteVideo(ctx context.Context, c *app.RequestContext) {
 	}
 
 	hlog.Infof("%#v", req)
+	userID := c.GetUint64(constant.IdentityKey)
+	resp := new(api.DouyinFavoriteActionResponse)
+	if req.ActionType == constant.Favorite {
+		resp, err = service.FavoriteVideo(userID, uint64(req.VideoID))
+	} else if req.ActionType == constant.CancelFavorite {
+		resp, err = service.CancelFavoriteVideo(userID, uint64(req.VideoID))
+	} else {
+		err = errors.New("action type error")
+	}
 
-	resp, err := service.FavoriteAction(&req, c)
 	if err != nil {
-		c.String(consts.StatusBadRequest, err.Error())
+		c.JSON(consts.StatusOK, err)
 		return
 	}
 
@@ -46,10 +56,10 @@ func GetFavoriteList(ctx context.Context, c *app.RequestContext) {
 	}
 
 	hlog.Infof("%#v", req)
-
-	resp, err := service.FavoriteList(&req, c)
+	userID := c.GetUint64(constant.IdentityKey)
+	resp, err := service.FavoriteList(userID, uint64(req.UserID))
 	if err != nil {
-		c.String(consts.StatusBadRequest, err.Error())
+		c.JSON(consts.StatusOK, err)
 		return
 	}
 

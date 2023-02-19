@@ -4,12 +4,12 @@ import (
 	"context"
 	"douyin/biz/model/api"
 	"douyin/biz/service"
+	"douyin/pkg/constant"
+	"douyin/pkg/errno"
 	"github.com/cloudwego/hertz/pkg/common/hlog"
 	"net/http"
 	"time"
 
-	"douyin/constant"
-	"douyin/errno"
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/common/utils"
 	"github.com/hertz-contrib/jwt"
@@ -33,8 +33,8 @@ func InitJWT() {
 			//	ID: int64(claims[constant.IdentityKey].(float64)),
 			//}
 			// 这里的返回值可以通过 c.Get() 或者 c.GetInt64() 去取到
-			hlog.Infof("jwt %d", int64(claims[constant.IdentityKey].(float64)))
-			return int64(claims[constant.IdentityKey].(float64))
+			hlog.Infof("jwt %d", uint64(claims[constant.IdentityKey].(float64)))
+			return uint64(claims[constant.IdentityKey].(float64))
 		},
 		// 用于设置登陆成功后为向 token 中添加自定义负载信息的函数
 		PayloadFunc: func(data interface{}) jwt.MapClaims {

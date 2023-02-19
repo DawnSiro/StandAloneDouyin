@@ -1,15 +1,16 @@
 package db
 
 import (
-	"douyin/constant"
-	"gorm.io/gorm"
+	"douyin/pkg/constant"
+	"time"
 )
 
 type Message struct {
-	gorm.Model
-	ToUserID   uint64 `json:"to_user_id"`
-	FromUserID uint64 `json:"from_user_id"`
-	Content    string `json:"content"`
+	ID         uint64    `json:"id"`
+	ToUserID   uint64    `gorm:"not null" json:"to_user_id"`
+	FromUserID uint64    `gorm:"not null" json:"from_user_id"`
+	Content    string    `gorm:"type:varchar(255);not null" json:"content"`
+	SendTime   time.Time `gorm:"not null" json:"send_time" `
 }
 
 func (n *Message) TableName() string {
@@ -18,7 +19,7 @@ func (n *Message) TableName() string {
 
 type FriendMessageResp struct {
 	Content string
-	MsgType uint64
+	MsgType uint8
 }
 
 func CreateMessage(fromUserID, toUserID uint64, content string) error {
@@ -27,11 +28,11 @@ func CreateMessage(fromUserID, toUserID uint64, content string) error {
 
 func GetMessagesByUserID(userID, oppositeID uint64) ([]*Message, error) {
 	res := make([]*Message, 0)
-
+	message := &Message{}
 	// 使用 Union 来避免使用 or 导致不走索引的问题
-	err := DB.Raw("? UNION ? ORDER BY id DESC",
-		DB.Where("to_user_id = ? AND from_user_id = ?", userID, oppositeID).Model(&Message{}),
-		DB.Where("to_user_id = ? AND from_user_id = ?", oppositeID, userID).Model(&Message{}),
+	err := DB.Raw("? UNION ? ORDER BY send_time ASC",
+		DB.Where("to_user_id = ? AND from_user_id = ?", userID, oppositeID).Model(message),
+		DB.Where("to_user_id = ? AND from_user_id = ?", oppositeID, userID).Model(message),
 	).Scan(&res).Error
 	if err != nil {
 		return nil, err
@@ -42,11 +43,10 @@ func GetMessagesByUserID(userID, oppositeID uint64) ([]*Message, error) {
 
 func GetLatestMsg(userID uint64, toUserID uint64) (*FriendMessageResp, error) {
 	message := &Message{}
-
 	// 使用 Union 来避免使用 or 导致不走索引的问题
-	err := DB.Raw("? UNION ? ORDER BY id DESC LIMIT 1",
-		DB.Where("to_user_id = ? AND from_user_id = ?", userID, toUserID).Model(&Message{}),
-		DB.Where("to_user_id = ? AND from_user_id = ?", toUserID, userID).Model(&Message{}),
+	err := DB.Raw("? UNION ? ORDER BY send_time DESC LIMIT 1",
+		DB.Where("to_user_id = ? AND from_user_id = ?", userID, toUserID).Model(message),
+		DB.Where("to_user_id = ? AND from_user_id = ?", toUserID, userID).Model(message),
 	).Scan(&message).Error
 	if err != nil {
 		return nil, err
@@ -64,5 +64,4 @@ func GetLatestMsg(userID uint64, toUserID uint64) (*FriendMessageResp, error) {
 			MsgType: constant.ReceivedMessage,
 		}, nil
 	}
-
 }

@@ -5,7 +5,7 @@ package main
 import (
 	"douyin/biz/mw"
 	"douyin/dal/db"
-	"douyin/util"
+	"douyin/pkg/util"
 	"github.com/cloudwego/hertz/pkg/app/server"
 )
 
@@ -16,7 +16,7 @@ func Init() {
 
 func main() {
 	h := server.Default(
-		server.WithHostPorts("0.0.0.0:38088"),
+		server.WithHostPorts("192.168.18.6:30000"),
 		server.WithExitWaitTime(0),
 	)
 

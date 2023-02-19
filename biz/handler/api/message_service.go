@@ -5,7 +5,8 @@ package api
 import (
 	"context"
 	"douyin/biz/service"
-	"douyin/constant"
+	"douyin/pkg/constant"
+	"errors"
 	"github.com/cloudwego/hertz/pkg/common/hlog"
 
 	api "douyin/biz/model/api"
@@ -26,10 +27,17 @@ func SendMessage(ctx context.Context, c *app.RequestContext) {
 
 	hlog.Info(req)
 
-	fromUserID := c.GetInt64(constant.IdentityKey)
-	resp, err := service.SendMessage(uint64(fromUserID), uint64(req.ToUserID), req.ActionType, req.Content)
+	fromUserID := c.GetUint64(constant.IdentityKey)
+	resp := new(api.DouyinMessageActionResponse)
+	if req.ActionType == constant.SendMessageAction {
+		resp, err = service.SendMessage(fromUserID, uint64(req.ToUserID), req.Content)
+	} else {
+		err = errors.New("action type error")
+	}
+
 	if err != nil {
 		c.JSON(consts.StatusOK, err)
+		return
 	}
 
 	c.JSON(consts.StatusOK, resp)
@@ -49,10 +57,11 @@ func GetMessageChat(ctx context.Context, c *app.RequestContext) {
 
 	hlog.Info(req)
 
-	userID := c.GetInt64(constant.IdentityKey)
-	resp, err := service.GetMessageChat(uint64(userID), uint64(req.ToUserID))
+	userID := c.GetUint64(constant.IdentityKey)
+	resp, err := service.GetMessageChat(userID, uint64(req.ToUserID))
 	if err != nil {
 		c.JSON(consts.StatusOK, err)
+		return
 	}
 
 	c.JSON(consts.StatusOK, resp)

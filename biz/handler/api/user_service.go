@@ -6,6 +6,7 @@ import (
 	"context"
 	"douyin/biz/mw"
 	"douyin/biz/service"
+	"douyin/pkg/constant"
 	"github.com/cloudwego/hertz/pkg/common/hlog"
 
 	api "douyin/biz/model/api"
@@ -55,12 +56,8 @@ func GetUserInfo(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
-	hlog.Info("userinfo")
-
-	resp, err := service.GetUserInfo(&api.DouyinUserRequest{
-		UserID: req.UserID,
-		Token:  req.Token,
-	})
+	userID := c.GetUint64(constant.IdentityKey)
+	resp, err := service.GetUserInfo(userID, uint64(req.UserID))
 	hlog.Info(resp)
 	if err != nil {
 		c.JSON(consts.StatusOK, err)

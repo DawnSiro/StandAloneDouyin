@@ -1,7 +1,7 @@
 package db
 
 import (
-	"douyin/constant"
+	"douyin/pkg/constant"
 
 	"github.com/go-redis/redis"
 
@@ -25,9 +25,10 @@ func Init() {
 	}
 
 	RDB = redis.NewClient(&redis.Options{
-		Addr:     "127.0.0.1:6379",
-		Password: "123456",
-		DB:       0,
+		//Addr: "172.17.0.1:6379",
+		Addr: "127.0.0.1:6379",
+		//Password: "123456",
+		DB: 0,
 	})
 	_, err = RDB.Ping().Result()
 	if err != nil {

@@ -25,10 +25,10 @@ func (p *DouyinCommentActionRequest) IsValid() error {
 	if p.VideoID <= int64(0) {
 		return fmt.Errorf("field VideoID gt rule failed, current value: %v", p.VideoID)
 	}
-	_src := []int32{int32(1), int32(2)}
+	_src := []int8{int8(1), int8(2)}
 	var _exist bool
 	for _, src := range _src {
-		if p.ActionType == int32(src) {
+		if p.ActionType == int8(src) {
 			_exist = true
 			break
 		}
@@ -86,10 +86,10 @@ func (p *DouyinFavoriteActionRequest) IsValid() error {
 	if p.VideoID <= int64(0) {
 		return fmt.Errorf("field VideoID gt rule failed, current value: %v", p.VideoID)
 	}
-	_src := []int32{int32(1), int32(2)}
+	_src := []int8{int8(1), int8(2)}
 	var _exist bool
 	for _, src := range _src {
-		if p.ActionType == int32(src) {
+		if p.ActionType == int8(src) {
 			_exist = true
 			break
 		}
@@ -156,10 +156,10 @@ func (p *DouyinMessageActionRequest) IsValid() error {
 	if p.ToUserID <= int64(0) {
 		return fmt.Errorf("field ToUserID gt rule failed, current value: %v", p.ToUserID)
 	}
-	_src := []int32{int32(1)}
+	_src := []int8{int8(1)}
 	var _exist bool
 	for _, src := range _src {
-		if p.ActionType == int32(src) {
+		if p.ActionType == int8(src) {
 			_exist = true
 			break
 		}
@@ -191,10 +191,10 @@ func (p *DouyinRelationActionRequest) IsValid() error {
 	if p.ToUserID <= int64(0) {
 		return fmt.Errorf("field ToUserID gt rule failed, current value: %v", p.ToUserID)
 	}
-	_src := []int32{int32(1), int32(2)}
+	_src := []int8{int8(1), int8(2)}
 	var _exist bool
 	for _, src := range _src {
-		if p.ActionType == int32(src) {
+		if p.ActionType == int8(src) {
 			_exist = true
 			break
 		}
@@ -248,10 +248,10 @@ func (p *FriendUser) IsValid() error {
 			return fmt.Errorf("field FollowerCount gt rule failed, current value: %v", *p.FollowerCount)
 		}
 	}
-	_src := []int64{int64(0), int64(1)}
+	_src := []int8{int8(0), int8(1)}
 	var _exist bool
 	for _, src := range _src {
-		if p.MsgType == int64(src) {
+		if p.MsgType == int8(src) {
 			_exist = true
 			break
 		}
@@ -317,6 +317,32 @@ func (p *DouyinUserResponse) IsValid() error {
 	if p.User != nil {
 		if err := p.User.IsValid(); err != nil {
 			return fmt.Errorf("filed User not valid, %w", err)
+		}
+	}
+	return nil
+}
+func (p *UserInfo) IsValid() error {
+	if p.ID <= int64(0) {
+		return fmt.Errorf("field ID gt rule failed, current value: %v", p.ID)
+	}
+	if p.FollowCount != nil {
+		if *p.FollowCount <= int64(0) {
+			return fmt.Errorf("field FollowCount gt rule failed, current value: %v", *p.FollowCount)
+		}
+	}
+	if p.FollowerCount != nil {
+		if *p.FollowerCount <= int64(0) {
+			return fmt.Errorf("field FollowerCount gt rule failed, current value: %v", *p.FollowerCount)
+		}
+	}
+	if p.WorkCount != nil {
+		if *p.WorkCount <= int64(0) {
+			return fmt.Errorf("field WorkCount gt rule failed, current value: %v", *p.WorkCount)
+		}
+	}
+	if p.FavoriteCount != nil {
+		if *p.FavoriteCount <= int64(0) {
+			return fmt.Errorf("field FavoriteCount gt rule failed, current value: %v", *p.FavoriteCount)
 		}
 	}
 	return nil

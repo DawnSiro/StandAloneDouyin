@@ -2,97 +2,98 @@ package service
 
 import (
 	"douyin/biz/model/api"
-	"douyin/constant"
 	"douyin/dal/db"
+	"douyin/dal/pack"
 	"errors"
-	"github.com/cloudwego/hertz/pkg/app"
-	"strconv"
 )
 
-func Follow(req api.DouyinRelationActionRequest, c *app.RequestContext) (api.DouyinRelationActionResponse, error) {
-	//先获取到userID
-	userID := c.GetInt64(constant.IdentityKey)
+func Follow(userID, toUserID uint64) (*api.DouyinRelationActionResponse, error) {
 	errorText := "请勿重复操作"
 	errorText2 := "不能自己关注自己哦"
 
-	if uint64(userID) == uint64(req.ToUserID) {
-		return api.DouyinRelationActionResponse{
-			StatusCode: int64(api.ErrCode_ParamErrCode),
-			StatusMsg:  &errorText2,
-		}, errors.New(strconv.FormatInt(int64(api.ErrCode_ParamErrCode), 10))
+	if userID == toUserID {
+		return nil, errors.New(errorText2)
 	}
-	isFollow := db.IsFollow(uint64(userID), uint64(req.ToUserID))
-	if !isFollow && req.ActionType == constant.Follow {
-		//关注操作
-		err := db.AddFollow(uint64(userID), uint64(req.ToUserID))
-		if err != nil {
-			return api.DouyinRelationActionResponse{
-				StatusCode: int64(api.ErrCode_ServiceErrCode),
-			}, nil
-		}
-	} else if isFollow && req.ActionType == constant.CancelFavorite {
-		//取消关注
-		err := db.DelFollow(uint64(userID), uint64(req.ToUserID))
-		if err != nil {
-			return api.DouyinRelationActionResponse{
-				StatusCode: int64(api.ErrCode_ServiceErrCode),
-			}, nil
-		}
+	isFollow := db.IsFollow(userID, toUserID)
+	if isFollow {
+		return nil, errors.New(errorText)
+	}
 
-	} else {
-		return api.DouyinRelationActionResponse{
-			StatusCode: int64(api.ErrCode_ParamErrCode),
-			StatusMsg:  &errorText,
-		}, errors.New(strconv.FormatInt(int64(api.ErrCode_ParamErrCode), 10))
+	//关注操作
+	err := db.Follow(userID, toUserID)
+	if err != nil {
+		return nil, err
 	}
-	return api.DouyinRelationActionResponse{
+	return &api.DouyinRelationActionResponse{
 		StatusCode: int64(api.ErrCode_SuccessCode),
+	}, nil
+}
+
+func CancelFollow(userID, toUserID uint64) (*api.DouyinRelationActionResponse, error) {
+	errorText := "不能自己关注自己哦"
+
+	if userID == toUserID {
+		return nil, errors.New(errorText)
+	}
+	//取消关注
+	err := db.CancelFollow(userID, toUserID)
+	if err != nil {
+		return nil, err
+	}
+	return &api.DouyinRelationActionResponse{
+		StatusCode: int64(api.ErrCode_SuccessCode),
+	}, nil
+}
+
+func GetFollowList(userID uint64) (*api.DouyinRelationFollowListResponse, error) {
+	dbUserList, err := db.GetFollowList(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	// 提前申请好数组大小来避免后续扩容
+	userList := make([]*api.User, 0, len(dbUserList))
+	for _, v := range dbUserList {
+		// 这里要查的是，关注列表的人是否关注了自己
+		userList = append(userList, pack.User(v, db.IsFollow(v.ID, userID)))
+	}
+
+	return &api.DouyinRelationFollowListResponse{
+		StatusCode: int64(api.ErrCode_SuccessCode),
+		StatusMsg:  nil,
+		UserList:   userList,
 	}, nil
 
 }
 
-func GetFollowList(req api.DouyinRelationFollowListRequest) (api.DouyinRelationFollowListResponse, error) {
-	resp := api.DouyinRelationFollowListResponse{}
-
-	resultList, err := db.GetFollowList(uint64(req.UserID))
+func GetFollowerList(userID uint64) (*api.DouyinRelationFollowerListResponse, error) {
+	dbUserList, err := db.GetFollowerList(userID)
 	if err != nil {
-		return api.DouyinRelationFollowListResponse{
-			StatusCode: int64(api.ErrCode_ServiceErrCode),
-		}, err
+		return nil, err
 	}
 
-	resp.StatusCode = int64(api.ErrCode_SuccessCode)
-	resp.UserList = resultList
-	return resp, nil
-
-}
-
-func GetFollowerList(req api.DouyinRelationFollowerListRequest) (api.DouyinRelationFollowerListResponse, error) {
-	resp := api.DouyinRelationFollowerListResponse{}
-
-	resultList, err := db.GetFollowerList(uint64(req.UserID))
-	if err != nil {
-		return api.DouyinRelationFollowerListResponse{
-			StatusCode: int64(api.ErrCode_ServiceErrCode),
-		}, err
+	// 提前申请好数组大小来避免后续扩容
+	userList := make([]*api.User, 0, len(dbUserList))
+	for _, v := range dbUserList {
+		// 这里要查的是，自己是否关注了粉丝列表的人
+		userList = append(userList, pack.User(v, db.IsFollow(userID, v.ID)))
 	}
-
-	resp.StatusCode = int64(api.ErrCode_SuccessCode)
-	resp.UserList = resultList
-	return resp, nil
+	return &api.DouyinRelationFollowerListResponse{
+		StatusCode: 0,
+		StatusMsg:  nil,
+		UserList:   userList,
+	}, nil
 }
 
-func GetFriendList(req api.DouyinRelationFriendListRequest) (api.DouyinRelationFriendListResponse, error) {
-	resp := api.DouyinRelationFriendListResponse{}
-
+func GetFriendList(req *api.DouyinRelationFriendListRequest) (*api.DouyinRelationFriendListResponse, error) {
 	resultList, err := db.GetFriendList(uint64(req.UserID))
 	if err != nil {
-		return api.DouyinRelationFriendListResponse{
-			StatusCode: int64(api.ErrCode_ServiceErrCode),
-		}, err
+		return nil, err
 	}
 
-	resp.StatusCode = int64(api.ErrCode_SuccessCode)
-	resp.UserList = resultList
-	return resp, nil
+	return &api.DouyinRelationFriendListResponse{
+		StatusCode: 0,
+		StatusMsg:  nil,
+		UserList:   resultList,
+	}, nil
 }

@@ -5,9 +5,8 @@ import (
 	"douyin/biz/model/api"
 	"douyin/dal/db"
 	"douyin/dal/pack"
-	"douyin/util"
+	"douyin/pkg/util"
 	"errors"
-	"github.com/cloudwego/hertz/pkg/common/hlog"
 	"github.com/gofrs/uuid"
 	"io"
 )
@@ -30,21 +29,17 @@ func PublishAction(title string, videoData []byte, userID int64) error {
 		return err
 	}
 
-	// 封装video
-	video := &db.Video{
+	return db.CreateVideo(&db.Video{
 		AuthorID:      uint64(userID),
 		PlayURL:       playURL,
 		CoverURL:      coverURL,
 		FavoriteCount: 0,
 		CommentCount:  0,
 		Title:         title,
-	}
-
-	return db.CreateVideo(video)
+	})
 }
 
 func GetPublishVideos(userID uint64) (*api.DouyinPublishListResponse, error) {
-	res := new(api.DouyinPublishListResponse)
 	videoList := make([]*api.Video, 0)
 
 	videos, err := db.GetVideosByAuthorID(userID)
@@ -52,24 +47,23 @@ func GetPublishVideos(userID uint64) (*api.DouyinPublishListResponse, error) {
 		return nil, err
 	}
 
-	// find author and pack data
 	for i := 0; i < len(videos); i++ {
-		u, err := db.SelectUserByID(uint(videos[i].AuthorID))
+		u, err := db.SelectUserByID(videos[i].AuthorID)
 		if err != nil {
 			return nil, err
 		}
 
-		video, err := pack.Videos(videos[i], u,
-			db.IsFollow(userID, uint64(u.ID)), db.IsFavorite(userID, uint64(videos[i].ID)))
+		video := pack.Video(videos[i], u,
+			db.IsFollow(userID, u.ID), db.IsFavoriteVideo(userID, videos[i].ID))
 		if err != nil {
 			return nil, err
 		}
 		videoList = append(videoList, video)
 	}
 
-	res.VideoList = videoList
-
-	hlog.Info("pack over")
-
-	return res, nil
+	return &api.DouyinPublishListResponse{
+		StatusCode: 0,
+		StatusMsg:  nil,
+		VideoList:  videoList,
+	}, nil
 }

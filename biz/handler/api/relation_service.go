@@ -6,6 +6,8 @@ import (
 	"context"
 	api "douyin/biz/model/api"
 	"douyin/biz/service"
+	"douyin/pkg/constant"
+	"errors"
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/common/hlog"
 	"github.com/cloudwego/hertz/pkg/protocol/consts"
@@ -24,9 +26,18 @@ func Follow(ctx context.Context, c *app.RequestContext) {
 
 	hlog.Info(req)
 
-	resp, err := service.Follow(req, c)
+	userID := c.GetUint64(constant.IdentityKey)
+	resp := new(api.DouyinRelationActionResponse)
+	if req.ActionType == constant.Follow {
+		resp, err = service.Follow(userID, uint64(req.ToUserID))
+	} else if req.ActionType == constant.CancelFollow {
+		resp, err = service.CancelFollow(userID, uint64(req.ToUserID))
+	} else {
+		err = errors.New("action type error")
+	}
+
 	if err != nil {
-		c.JSON(consts.StatusOK, resp)
+		c.JSON(consts.StatusOK, err)
 		return
 	}
 
@@ -46,9 +57,9 @@ func GetFollowList(ctx context.Context, c *app.RequestContext) {
 
 	hlog.Info(req)
 
-	resp, err := service.GetFollowList(req)
+	resp, err := service.GetFollowList(uint64(req.UserID))
 	if err != nil {
-		c.String(consts.StatusBadRequest, err.Error())
+		c.JSON(consts.StatusOK, err)
 		return
 	}
 
@@ -68,9 +79,9 @@ func GetFollowerList(ctx context.Context, c *app.RequestContext) {
 
 	hlog.Info(req)
 
-	resp, err := service.GetFollowerList(req)
+	resp, err := service.GetFollowerList(uint64(req.UserID))
 	if err != nil {
-		c.String(consts.StatusBadRequest, err.Error())
+		c.JSON(consts.StatusOK, err)
 		return
 	}
 
@@ -90,9 +101,9 @@ func GetFriendList(ctx context.Context, c *app.RequestContext) {
 
 	hlog.Info(req)
 
-	resp, err := service.GetFriendList(req)
+	resp, err := service.GetFriendList(&req)
 	if err != nil {
-		c.String(consts.StatusBadRequest, err.Error())
+		c.JSON(consts.StatusOK, err)
 		return
 	}
 
