@@ -3,8 +3,9 @@ package service
 import (
 	"douyin/biz/model/api"
 	"douyin/dal/db"
-	"douyin/errno"
-	"douyin/util"
+	"douyin/dal/pack"
+	"douyin/pkg/errno"
+	"douyin/pkg/util"
 )
 
 func Register(req *api.DouyinUserRegisterRequest) (*api.DouyinUserRegisterResponse, error) {
@@ -50,16 +51,17 @@ func Login(req *api.DouyinUserLoginRequest) (userID int64, err error) {
 	return int64(u.ID), nil
 }
 
-func GetUserInfo(req *api.DouyinUserRequest) (*api.DouyinUserResponse, error) {
-	u, err := db.SelectUserByUserID(uint(req.UserID))
+func GetUserInfo(userID, infoUserID uint64) (*api.DouyinUserResponse, error) {
+	u, err := db.SelectUserByID(infoUserID)
 	if err != nil {
 		return nil, err
 	}
 
 	// pack
+	userInfo := pack.UserInfo(u, db.IsFollow(userID, infoUserID))
 	return &api.DouyinUserResponse{
 		StatusCode: 0,
 		StatusMsg:  nil,
-		User:       u,
+		User:       userInfo,
 	}, nil
 }

@@ -2,13 +2,12 @@ package service
 
 import (
 	"douyin/biz/model/api"
-	"douyin/constant"
 	"douyin/dal/db"
 	"douyin/dal/pack"
+	"douyin/pkg/constant"
 )
 
-func GetFeed(latestTime *int64, userID int64) (*api.DouyinFeedResponse, error) {
-	res := new(api.DouyinFeedResponse)
+func GetFeed(latestTime *int64, userID uint64) (*api.DouyinFeedResponse, error) {
 	videoList := make([]*api.Video, 0)
 
 	videos, err := db.MGetVideos(constant.MaxVideoNum, latestTime)
@@ -16,22 +15,23 @@ func GetFeed(latestTime *int64, userID int64) (*api.DouyinFeedResponse, error) {
 		return nil, err
 	}
 
-	// find author and pack data
 	for i := 0; i < len(videos); i++ {
-		u, err := db.SelectUserByID(uint(videos[i].AuthorID))
+		u, err := db.SelectUserByID(videos[i].AuthorID)
 		if err != nil {
 			return nil, err
 		}
 
-		video, err := pack.Videos(videos[i], u,
-			db.IsFollow(uint64(userID), uint64(u.ID)), db.IsFavorite(uint64(userID), uint64(videos[i].ID)))
-		if err != nil {
-			return nil, err
-		}
+		video := pack.Video(videos[i], u,
+			db.IsFollow(userID, u.ID), db.IsFavoriteVideo(userID, videos[i].ID))
 		videoList = append(videoList, video)
 	}
 
-	res.VideoList = videoList
+	nextTime := int64(videos[len(videos)-1].PublishTime.Second())
 
-	return res, nil
+	return &api.DouyinFeedResponse{
+		StatusCode: 0,
+		StatusMsg:  nil,
+		VideoList:  videoList,
+		NextTime:   &nextTime,
+	}, nil
 }

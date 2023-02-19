@@ -19,15 +19,15 @@ func _douyinMw() []app.HandlerFunc {
 
 func _commentMw() []app.HandlerFunc {
 	// your code...
-	return []app.HandlerFunc{
-		// use jwt mw
-		mw.JwtMiddleware.MiddlewareFunc(),
-	}
+	return nil
 }
 
 func _actionMw() []app.HandlerFunc {
 	// your code...
-	return nil
+	return []app.HandlerFunc{
+		// use jwt mw
+		mw.JwtMiddleware.MiddlewareFunc(),
+	}
 }
 
 func _comment_ctionMw() []app.HandlerFunc {
@@ -37,6 +37,7 @@ func _comment_ctionMw() []app.HandlerFunc {
 
 func _listMw() []app.HandlerFunc {
 	// your code...
+	// 未登录可以查看评论
 	return nil
 }
 

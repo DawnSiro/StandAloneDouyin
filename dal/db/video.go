@@ -1,21 +1,20 @@
 package db
 
 import (
-	"douyin/constant"
-	"errors"
+	"douyin/pkg/constant"
 	"gorm.io/gorm"
 	"time"
 )
 
 type Video struct {
-	gorm.Model
-	UpdatedAt     time.Time `gorm:"column:update_time;not null;index:idx_update" `
-	AuthorID      uint64    `gorm:"index:idx_authorid;not null"`
-	PlayURL       string    `gorm:"type:varchar(255);not null"`
-	CoverURL      string    `gorm:"type:varchar(255)"`
-	FavoriteCount int64     `gorm:"default:0"`
-	CommentCount  int64     `gorm:"default:0"`
-	Title         string    `gorm:"type:varchar(50);not null"`
+	ID            uint64    `json:"id"`
+	PublishTime   time.Time `gorm:"not null" json:"publish_time"`
+	AuthorID      uint64    `gorm:"not null" json:"author_id"`
+	PlayURL       string    `gorm:"type:varchar(255);not null" json:"play_url"`
+	CoverURL      string    `gorm:"type:varchar(255);not null" json:"cover_url"`
+	FavoriteCount uint64    `gorm:"default:0;not null" json:"favorite_count"`
+	CommentCount  uint64    `gorm:"default:0;not null" json:"comment_count"`
+	Title         string    `gorm:"type:varchar(63);not null" json:"title"`
 }
 
 func (n *Video) TableName() string {
@@ -23,7 +22,24 @@ func (n *Video) TableName() string {
 }
 
 func CreateVideo(video *Video) error {
-	return DB.Create(&video).Error
+	return DB.Transaction(func(tx *gorm.DB) error {
+		//从这里开始，应该使用 tx 而不是 db（tx 是 Transaction 的简写）
+		u := &User{ID: video.AuthorID}
+		err := tx.Select("work_count").First(u).Error
+		if err != nil {
+			return err
+		}
+		err = tx.Model(u).Update("work_count", u.WorkCount+1).Error
+		if err != nil {
+			return err
+		}
+		err = tx.Create(video).Error
+		if err != nil {
+			return err
+		}
+		// 返回 nil 提交事务
+		return nil
+	})
 }
 
 // MGetVideos multiple get list of videos info
@@ -35,8 +51,10 @@ func MGetVideos(maxVideoNum int, latestTime *int64) ([]*Video, error) {
 		latestTime = &currentTime
 	}
 
-	if err := DB.Where("update_time < ?", time.UnixMilli(*latestTime)).Limit(maxVideoNum).
-		Order("update_time desc").Find(&res).Error; err != nil {
+	// TODO 设计简单的推荐算法，比如关注的 UP 发了视频，会优先推送
+
+	if err := DB.Where("publish_time < ?", time.UnixMilli(*latestTime)).Limit(maxVideoNum).
+		Order("publish_time desc").Find(&res).Error; err != nil {
 		return nil, err
 	}
 	return res, nil
@@ -51,25 +69,21 @@ func GetVideosByAuthorID(userID uint64) ([]*Video, error) {
 	return res, nil
 }
 
-func SelectAuthorIDByVideoID(videoID int64) (uint64, error) {
+func SelectAuthorIDByVideoID(videoID uint64) (uint64, error) {
 	video := &Video{
-		Model: gorm.Model{
-			ID: uint(videoID),
-		},
+		ID: videoID,
 	}
 
-	result := DB.First(&video)
-	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-		return 0, nil
+	err := DB.First(&video).Error
+	if err != nil {
+		return 0, err
 	}
 	return video.AuthorID, nil
 }
 
-func UpdateFavoriteCount(videoID uint64, favoriteCount int64) (int64, error) {
+func UpdateVideoFavoriteCount(videoID uint64, favoriteCount uint64) (uint64, error) {
 	video := &Video{
-		Model: gorm.Model{
-			ID: uint(videoID),
-		},
+		ID: videoID,
 	}
 
 	if err := DB.Model(&video).Update("favorite_count", favoriteCount).Error; err != nil {
@@ -78,62 +92,99 @@ func UpdateFavoriteCount(videoID uint64, favoriteCount int64) (int64, error) {
 	return video.FavoriteCount, nil
 }
 
-// IncreaseFavoriteCount increase 1
-func IncreaseFavoriteCount(videoID uint64) (int64, error) {
+// IncreaseVideoFavoriteCount increase 1
+func IncreaseVideoFavoriteCount(videoID uint64) (uint64, error) {
 	video := &Video{
-		Model: gorm.Model{
-			ID: uint(videoID),
-		},
+		ID: videoID,
 	}
-	if err := DB.Find(&video).Error; err != nil {
+	err := DB.First(&video).Error
+	if err != nil {
 		return 0, err
 	}
-	if err := DB.Model(&video).Update("comment_count", video.CommentCount+1).Error; err != nil {
+	if err := DB.Model(&video).Update("favorite_count", video.FavoriteCount+1).Error; err != nil {
+		return 0, err
+	}
+	return video.CommentCount, nil
+}
+
+// DecreaseVideoFavoriteCount decrease 1
+func DecreaseVideoFavoriteCount(videoID uint64) (uint64, error) {
+	video := &Video{
+		ID: videoID,
+	}
+	err := DB.First(&video).Error
+	if err != nil {
+		return 0, err
+	}
+	if err := DB.Model(&video).Update("favorite_count", video.FavoriteCount-1).Error; err != nil {
+		return 0, err
+	}
+	return video.CommentCount, nil
+}
+
+func UpdateCommentCount(videoID uint64, commentCount uint64) (uint64, error) {
+	video := &Video{
+		ID: videoID,
+	}
+
+	if err := DB.Model(&video).Update("comment_count", commentCount).Error; err != nil {
 		return 0, err
 	}
 	return video.FavoriteCount, nil
 }
 
-// ReduceFavoriteCount reduce 1
-func ReduceFavoriteCount(videoID uint64) (int64, error) {
+// IncreaseCommentCount increase 1
+func IncreaseCommentCount(videoID uint64) (uint64, error) {
 	video := &Video{
-		Model: gorm.Model{
-			ID: uint(videoID),
-		},
+		ID: videoID,
 	}
-	if err := DB.Find(&video).Error; err != nil {
+
+	err := DB.First(&video).Error
+	if err != nil {
+		return 0, err
+	}
+
+	if err := DB.Model(&video).Update("comment_count", video.CommentCount+1).Error; err != nil {
+		return 0, err
+	}
+	return video.CommentCount, nil
+}
+
+// DecreaseCommentCount decrease  1
+func DecreaseCommentCount(videoID uint64) (uint64, error) {
+	video := &Video{
+		ID: videoID,
+	}
+	err := DB.First(&video).Error
+	if err != nil {
 		return 0, err
 	}
 	if err := DB.Model(&video).Update("comment_count", video.CommentCount-1).Error; err != nil {
 		return 0, err
 	}
+	return video.CommentCount, nil
+}
+
+func SelectVideoFavoriteCountByVideoID(videoID uint64) (uint64, error) {
+	video := &Video{
+		ID: videoID,
+	}
+
+	err := DB.First(&video).Error
+	if err != nil {
+		return 0, err
+	}
 	return video.FavoriteCount, nil
 }
 
-func SelectFavoriteCountByVideoID(videoID int64) (int64, error) {
+func SelectCommentCountByVideoID(videoID uint64) (uint64, error) {
 	video := &Video{
-		Model: gorm.Model{
-			ID: uint(videoID),
-		},
+		ID: videoID,
 	}
 
-	result := DB.First(&video)
-	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-		return 0, nil
-	}
-	return video.FavoriteCount, nil
-}
-
-func SelectCommentCountByVideoID(videoID int64) (int64, error) {
-	video := &Video{
-		Model: gorm.Model{
-			ID: uint(videoID),
-		},
-	}
-
-	result := DB.First(&video)
-	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-		return 0, nil
+	err := DB.First(&video).Error
+	if err != nil {
+		return 0, err
 	}
 	return video.CommentCount, nil
 }

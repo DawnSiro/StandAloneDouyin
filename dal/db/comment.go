@@ -1,17 +1,18 @@
 package db
 
 import (
-	"douyin/biz/model/api"
-	"douyin/constant"
+	"douyin/pkg/constant"
 	"errors"
-	"gorm.io/gorm"
+	"time"
 )
 
 type Comment struct {
-	gorm.Model
-	VideoID uint64 `json:"video_id"`
-	UserID  uint64 `json:"user_id"`
-	Content string `json:"content"`
+	ID          uint64    `json:"id"`
+	IsDeleted   uint8     `gorm:"default:0;not null" json:"is_deleted"`
+	VideoID     uint64    `gorm:"not null" json:"video_id"`
+	UserID      uint64    `gorm:"not null" json:"user_id"`
+	Content     string    `gorm:"type:varchar(255);not null" json:"content"`
+	CreatedTime time.Time `gorm:"not null" json:"created_time"`
 }
 
 func (n *Comment) TableName() string {
@@ -20,69 +21,57 @@ func (n *Comment) TableName() string {
 
 func CreateComment(videoID uint64, content string, userID uint64) (*Comment, error) {
 	comment := &Comment{
-		Model:   gorm.Model{},
-		VideoID: videoID,
-		UserID:  userID,
-		Content: content,
+		VideoID:     videoID,
+		UserID:      userID,
+		Content:     content,
+		CreatedTime: time.Now(),
 	}
 	//
-	if err := DB.Select("user_id", "video_id", "Content").Create(comment).Error; err != nil {
+	if err := DB.Create(comment).Error; err != nil {
 		return nil, err
 	}
 	return comment, nil
 }
 
-func DeleteCommentByCommentID(commentID int64) (*Comment, error) {
+// DeleteCommentByID 通过评论ID 删除评论，默认使用软删除，提高性能
+func DeleteCommentByID(commentID uint64) (*Comment, error) {
 	comment := &Comment{
-		Model: gorm.Model{
-			ID: uint(commentID),
-		},
+		ID: commentID,
 	}
-	if err := DB.Delete(comment).Error; err != nil {
-		return nil, err
+	// 先查询是否存在评论
+	result := DB.Where("is_deleted = ?", constant.DataNotDeleted).Limit(1).Find(&comment)
+	if result.RowsAffected == 0 {
+		return nil, errors.New("delete data failed")
 	}
+
+	result = DB.Model(&comment).Update("is_deleted", constant.DataDeleted)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	if result.RowsAffected == 0 {
+		return nil, errors.New("delete data failed")
+	}
+
 	return comment, nil
 }
 
-func SelectCommentListByUserID(userID uint64, videoID uint64) ([]*api.Comment, error) {
-	commentResult := new([]*Comment)
-	err := DB.Where("video_id = ?", videoID).Find(&commentResult).Error
-	if errors.Is(err, gorm.ErrRecordNotFound) {
+func SelectCommentListByVideoID(videoID uint64) ([]*Comment, error) {
+	res := make([]*Comment, 0)
+
+	err := DB.Where("video_id = ? AND is_deleted = ?", videoID, constant.DataNotDeleted).Find(&res).Error
+	if err != nil {
 		return nil, err
 	}
 
-	results := make([]*api.Comment, 0)
-	for i := 0; i < len(*commentResult); i++ {
-
-		con1, err := SelectUserByUserID(uint((*commentResult)[i].UserID))
-		if err != nil {
-			return nil, err
-		}
-		con2, err := SelectAuthorIDByVideoID(int64(videoID))
-		if err != nil || con2 == 0 {
-			return nil, err
-		}
-		if userID == 0 {
-			con1.IsFollow = false
-		} else {
-			con1.IsFollow = IsFollow(userID, con2)
-		}
-		commentTemp := &api.Comment{
-			ID:         int64((*commentResult)[i].ID),
-			User:       con1,
-			Content:    (*commentResult)[i].Content,
-			CreateDate: (*commentResult)[i].CreatedAt.String(),
-		}
-		results = append(results, commentTemp)
-	}
-	return results, nil
+	return res, nil
 }
 
-func IsCommentCreatedByMyself(userId uint64, commentId int64) (bool, error) {
-	commentResult := &Comment{}
-	result := DB.Where("user_id = ?", userId).Where("id = ?", commentId).Find(&commentResult)
-	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-		return false, result.Error
+func IsCommentCreatedByMyself(userID uint64, commentID uint64) bool {
+	result := DB.Where("id = ? AND user_id = ? AND is_deleted = ?", commentID, userID, constant.DataNotDeleted).
+		Find(&Comment{})
+	if result.RowsAffected == 0 {
+		return false
 	}
-	return true, nil
+
+	return true
 }

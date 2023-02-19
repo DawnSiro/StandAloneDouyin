@@ -2,157 +2,165 @@ package db
 
 import (
 	"douyin/biz/model/api"
-	"douyin/constant"
-	"gorm.io/gorm"
+	"douyin/pkg/constant"
+	"errors"
 )
 
 type Relation struct {
-	gorm.Model
-	UserID   uint64 `json:"user_id"`
-	ToUserID uint64 `json:"to_user_id"`
+	ID        uint64 `json:"id"`
+	IsDeleted uint8  `gorm:"default:0;not null" json:"is_deleted"`
+	UserID    uint64 `gorm:"not null" json:"user_id"`
+	ToUserID  uint64 `gorm:"not null" json:"to_user_id"`
 }
 
 func (n *Relation) TableName() string {
 	return constant.RelationTableName
 }
 
-func IsFollow(userId uint64, toUserId uint64) bool {
-	relation := &Relation{
-		UserID:   userId,
-		ToUserID: toUserId,
+func IsFollow(userID uint64, toUserID uint64) bool {
+	// 未登录默认未关注
+	if userID == 0 || toUserID == 0 {
+		return false
 	}
 
-	//follow by myself put false
-	if userId == toUserId {
+	// 默认自己关注自己，看自己的视频时头像上没有关注的那个加号按钮
+	if userID == toUserID {
 		return true
 	}
 
-	//other
-	result := DB.Find(&relation, "user_id = ? and to_user_id = ?", userId, toUserId)
-
-	if result.RowsAffected == 0 {
-		return false
+	// 查不到关注记录则为未关注
+	result := DB.Where("user_id = ? AND to_user_id = ? AND is_deleted = ?",
+		userID, toUserID, constant.DataNotDeleted).Limit(1).Find(&Relation{})
+	if result.RowsAffected == 1 {
+		return true
 	}
-	return true
+	// 查询出错和没有数据都返回 false
+	return false
 }
 
-func AddFollow(userId uint64, toUserId uint64) error {
+func Follow(userID uint64, toUserID uint64) error {
+	if userID == 0 || toUserID == 0 {
+		return errors.New("follow failed")
+	}
 	relation := &Relation{
-		UserID:   userId,
-		ToUserID: toUserId,
+		UserID:   userID,
+		ToUserID: toUserID,
 	}
-	err := DB.Create(relation).Error
-	return err
+	// 先查询是否存在软删除的关注数据
+	result := DB.Where("user_id = ? AND to_user_id = ? AND AND is_deleted = ?",
+		userID, toUserID, constant.DataNotDeleted).Limit(1).Find(relation)
+	// 如果有则修改为未删除
+	if result.RowsAffected == 1 {
+		return DB.Model(relation).Update("is_deleted", constant.DataDeleted).Error
+	}
+	// 没有则新建
+	return DB.Create(relation).Error
 }
 
-func DelFollow(userId uint64, toUserId uint64) error {
+func CancelFollow(userID uint64, toUserID uint64) error {
+	if userID == 0 || toUserID == 0 {
+		return errors.New("delete data failed")
+	}
+
 	relation := &Relation{
-		UserID:   userId,
-		ToUserID: toUserId,
+		UserID:   userID,
+		ToUserID: toUserID,
 	}
-
-	err := DB.Unscoped().Where("user_id = ? and to_user_id = ?", userId, toUserId).Delete(relation).Error
-	return err
+	result := DB.Where("is_deleted = ?", constant.DataNotDeleted).Limit(1).Find(relation)
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected == 0 {
+		return errors.New("cancel favorite failed")
+	}
+	return DB.Model(relation).Where("user_id = ? AND to_user_id = ? AND is_deleted = ?",
+		userID, toUserID, constant.DataNotDeleted).Update("is_deleted", constant.DataDeleted).Error
 }
 
-func GetFollowList(userID uint64) ([]*api.User, error) {
-	commonResult := new([]*Relation)
+func GetFollowList(userID uint64) ([]*User, error) {
+	relations := make([]*Relation, 0)
+	res := make([]*User, 0)
 
-	result := DB.Where("user_id = ?", userID).Find(&commonResult)
-
-	results := make([]*api.User, 0)
-
+	result := DB.Where("user_id = ? AND is_deleted = ?", userID, constant.DataNotDeleted).Find(&relations)
 	if result.RowsAffected == 0 {
-		return results, nil
+		return res, nil
 	}
-	for i := 0; i < len(*commonResult); i++ {
-		con1, err := SelectUserByUserID(uint((*commonResult)[i].ToUserID))
+
+	for i := 0; i < len(relations); i++ {
+		u, err := SelectUserByID(relations[i].ToUserID)
 		if err != nil {
 			return nil, err
 		}
 
-		results = append(results,
-			&api.User{
-				ID:            con1.ID,
-				Name:          con1.Name,
-				FollowCount:   con1.FollowCount,
-				FollowerCount: con1.FollowerCount,
-				IsFollow:      IsFollow((*commonResult)[i].ToUserID, userID),
-				Avatar:        con1.Avatar,
-			})
+		res = append(res, u)
 	}
-	return results, nil
+
+	return res, nil
 }
 
-func GetFollowerList(userID uint64) ([]*api.User, error) {
-	commonResult := new([]*Relation)
+func GetFollowerList(userID uint64) ([]*User, error) {
+	relations := make([]*Relation, 0)
+	res := make([]*User, 0)
 
-	result := DB.Where("to_user_id = ?", userID).Find(&commonResult)
-
-	results := make([]*api.User, 0)
-
+	result := DB.Where("to_user_id = ? AND is_deleted = ?", userID, constant.DataNotDeleted).Find(&relations)
 	if result.RowsAffected == 0 {
-		return results, nil
+		return res, nil
 	}
-	for i := 0; i < len(*commonResult); i++ {
-		con1, err := SelectUserByUserID(uint((*commonResult)[i].ToUserID))
+
+	for i := 0; i < len(relations); i++ {
+		u, err := SelectUserByID(relations[i].UserID)
 		if err != nil {
 			return nil, err
 		}
 
-		results = append(results,
-			&api.User{
-				ID:            con1.ID,
-				Name:          con1.Name,
-				FollowCount:   con1.FollowCount,
-				FollowerCount: con1.FollowerCount,
-				IsFollow:      IsFollow((*commonResult)[i].ToUserID, userID),
-				Avatar:        con1.Avatar,
-			})
+		res = append(res, u)
 	}
-	return results, nil
+
+	return res, nil
 }
 
 func GetFriendList(userID uint64) ([]*api.FriendUser, error) {
-	commonResult := new([]*Relation)
-
-	result := DB.Where("user_id = ?", userID).Find(&commonResult)
-
+	rs := make([]*Relation, 0)
 	results := make([]*api.FriendUser, 0)
-	messageResult := &FriendMessageResp{}
 
+	result := DB.Where("user_id = ? AND is_deleted = ?", userID, constant.DataNotDeleted).Find(&rs)
 	if result.RowsAffected == 0 {
 		return results, nil
 	}
-	for i := 0; i < len(*commonResult); i++ {
+
+	for i := 0; i < len(rs); i++ {
 		//查看对方是否是自己的粉丝
-		commonResult2 := new([]*Relation)
-		con0 := DB.Where("user_id = ? and to_user_id = ?", (*commonResult)[i].ToUserID, userID).First(&commonResult2)
-		if con0.RowsAffected == 0 {
+		rs2 := make([]*Relation, 0)
+		result := DB.Where("user_id = ? AND to_user_id = ? AND is_deleted = ?",
+			rs[i].ToUserID, userID, constant.DataNotDeleted).Limit(1).Find(&rs2)
+		if result.RowsAffected == 0 {
 			continue
 		}
 
-		con1, err := SelectUserByUserID(uint((*commonResult)[i].ToUserID))
+		u, err := SelectUserByID(rs[i].ToUserID)
 		if err != nil {
 			return nil, err
 		}
 
-		messageResult, err = GetLatestMsg(userID, (*commonResult)[i].ToUserID)
+		messageResult, err := GetLatestMsg(userID, rs[i].ToUserID)
 		if err != nil {
 			return nil, err
 		}
 
+		followCount := int64(u.FollowingCount)
+		followerCount := int64(u.FollowerCount)
 		results = append(results,
 			&api.FriendUser{
-				ID:            con1.ID,
-				Name:          con1.Name,
-				FollowCount:   con1.FollowCount,
-				FollowerCount: con1.FollowerCount,
-				IsFollow:      IsFollow((*commonResult)[i].ToUserID, userID),
-				Avatar:        con1.Avatar,
+				ID:            int64(u.ID),
+				Name:          u.Username,
+				FollowCount:   &followCount,
+				FollowerCount: &followerCount,
+				IsFollow:      IsFollow(rs[i].ToUserID, userID),
+				Avatar:        u.Avatar,
 				Message:       &messageResult.Content,
-				MsgType:       int64(messageResult.MsgType),
+				MsgType:       int8(messageResult.MsgType),
 			})
 	}
+
 	return results, nil
 }

@@ -14,12 +14,12 @@ func Messages(messages []*db.Message) []*api.Message {
 }
 
 func Message(message *db.Message) *api.Message {
-	res := new(api.Message)
-	res.ID = int64(message.ID)
-	res.ToUserID = int64(message.ToUserID)
-	res.FromUserID = int64(message.FromUserID)
-	res.Content = message.Content
-	createTime := message.CreatedAt.Unix()
-	res.CreateTime = &createTime
-	return res
+	createTime := message.SendTime.Unix()
+	return &api.Message{
+		ID:         int64(message.ID),
+		ToUserID:   int64(message.ToUserID),
+		FromUserID: int64(message.FromUserID),
+		Content:    message.Content,
+		CreateTime: &createTime,
+	}
 }
