@@ -2,22 +2,44 @@ package service
 
 import (
 	"douyin/biz/model/api"
+	"douyin/dal/db"
 	"reflect"
 	"testing"
 )
 
 func TestCommentList(t *testing.T) {
+	db.Init()
 	type args struct {
 		userID  uint64
 		videoID uint64
 	}
+	v1 := int64(0)
 	tests := []struct {
 		name    string
 		args    args
 		want    *api.DouyinCommentListResponse
 		wantErr bool
 	}{
-		// TODO: Add test cases.
+		{"Normal", args{
+			userID:  101,
+			videoID: 6,
+		}, &api.DouyinCommentListResponse{StatusCode: 0, StatusMsg: nil, CommentList: []*api.Comment{{
+			ID: 39,
+			User: &api.User{
+				ID:            101,
+				Name:          "ceshi1",
+				FollowCount:   &v1,
+				FollowerCount: &v1,
+				IsFollow:      true,
+				Avatar:        "",
+			},
+			Content:    "测试啦",
+			CreateDate: "02-20",
+		}}}, false},
+		{"videoId_err", args{
+			userID:  101,
+			videoID: 10000,
+		}, &api.DouyinCommentListResponse{StatusCode: 0, StatusMsg: nil, CommentList: []*api.Comment{}}, false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -34,6 +56,8 @@ func TestCommentList(t *testing.T) {
 }
 
 func TestDeleteComment(t *testing.T) {
+	db.Init()
+	v1 := int64(0)
 	type args struct {
 		userID    uint64
 		videoID   uint64
@@ -45,7 +69,34 @@ func TestDeleteComment(t *testing.T) {
 		want    *api.DouyinCommentActionResponse
 		wantErr bool
 	}{
-		// TODO: Add test cases.
+		{"Normal", args{
+			userID:    101,
+			videoID:   6,
+			commentID: 39,
+		}, &api.DouyinCommentActionResponse{StatusCode: 0, StatusMsg: nil, Comment: &api.Comment{
+			ID: 39,
+			User: &api.User{
+				ID:            101,
+				Name:          "ceshi1",
+				FollowCount:   &v1,
+				FollowerCount: &v1,
+				IsFollow:      false,
+				Avatar:        "",
+			},
+			Content:    "测试啦",
+			CreateDate: "02-20",
+		}}, false},
+		//TODO: 这里出现问题了！
+		{"video_id_err", args{
+			userID:    101,
+			videoID:   10000,
+			commentID: 38,
+		}, &api.DouyinCommentActionResponse{StatusCode: 0, StatusMsg: nil, Comment: nil}, true},
+		{"comment_id_err", args{
+			userID:    101,
+			videoID:   6,
+			commentID: 10000,
+		}, &api.DouyinCommentActionResponse{StatusCode: 0, StatusMsg: nil, Comment: nil}, true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -62,6 +113,9 @@ func TestDeleteComment(t *testing.T) {
 }
 
 func TestPostComment(t *testing.T) {
+	db.Init()
+	v1 := int64(0)
+	//v2 := "评论不能为空"
 	type args struct {
 		userID      uint64
 		videoID     uint64
@@ -74,6 +128,28 @@ func TestPostComment(t *testing.T) {
 		wantErr bool
 	}{
 		// TODO: Add test cases.
+		{"Normal", args{
+			userID:      101,
+			videoID:     6,
+			commentText: "测试啦",
+		}, &api.DouyinCommentActionResponse{StatusCode: 0, StatusMsg: nil, Comment: &api.Comment{
+			ID: 43,
+			User: &api.User{
+				ID:            101,
+				Name:          "ceshi1",
+				FollowCount:   &v1,
+				FollowerCount: &v1,
+				IsFollow:      false,
+				Avatar:        "",
+			},
+			Content:    "测试啦",
+			CreateDate: "02-20",
+		}}, false},
+		{"commentText_err", args{
+			userID:      101,
+			videoID:     6,
+			commentText: "",
+		}, &api.DouyinCommentActionResponse{StatusCode: 0, StatusMsg: nil, Comment: nil}, true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
