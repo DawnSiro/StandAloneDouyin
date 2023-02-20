@@ -85,10 +85,8 @@ func CancelFavoriteVideo(userID uint64, videoID uint64) error {
 func SelectFavoriteVideoListByUserID(toUserID uint64) ([]*Video, error) {
 	res := make([]*Video, 0)
 
-	err := DB.Where("author_id = ?", toUserID).Find(&res).Error
-	if err != nil {
-		return nil, err
-	}
+	DB.Raw("SELECT * FROM video WHERE id IN (SELECT video_id FROM user_favorite_video WHERE user_id = ?)", toUserID).Scan(&res)
+
 	return res, nil
 }
 

@@ -33,6 +33,10 @@ func PostComment(userID, videoID uint64, commentText string) (*api.DouyinComment
 	}
 
 	//publish comment
+	//检测了评论是否为空
+	if commentText == "" {
+		return nil, errors.New("评论不能为空")
+	}
 	//检测是否带有敏感词
 	if util.IsWordsFilter(commentText) {
 		return nil, errors.New(filterErr)
