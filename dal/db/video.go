@@ -2,6 +2,7 @@ package db
 
 import (
 	"douyin/pkg/constant"
+	"github.com/cloudwego/hertz/pkg/common/hlog"
 	"gorm.io/gorm"
 	"time"
 )
@@ -47,12 +48,13 @@ func MGetVideos(maxVideoNum int, latestTime *int64) ([]*Video, error) {
 	res := make([]*Video, 0)
 
 	if latestTime == nil || *latestTime == 0 {
+		// 这里和文档里说得不一样，实际客户端传的是毫秒
 		currentTime := time.Now().UnixMilli()
 		latestTime = &currentTime
 	}
 
 	// TODO 设计简单的推荐算法，比如关注的 UP 发了视频，会优先推送
-
+	hlog.Info(*latestTime)
 	if err := DB.Where("publish_time < ?", time.UnixMilli(*latestTime)).Limit(maxVideoNum).
 		Order("publish_time desc").Find(&res).Error; err != nil {
 		return nil, err

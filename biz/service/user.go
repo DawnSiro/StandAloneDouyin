@@ -34,7 +34,7 @@ func Register(username, password string) error {
 }
 
 // Login check user info
-func Login(username, password string) (userID int64, err error) {
+func Login(username, password string) (userID uint64, err error) {
 	users, err := db.SelectUserByName(username)
 	if err != nil {
 		hlog.Error("service.user.Login err:", err.Error())
@@ -50,7 +50,7 @@ func Login(username, password string) (userID int64, err error) {
 		hlog.Error("service.user.Login err:", errno.UserPasswordError.Error())
 		return 0, errno.UserPasswordError
 	}
-	return int64(u.ID), nil
+	return u.ID, nil
 }
 
 func GetUserInfo(userID, infoUserID uint64) (*api.DouyinUserResponse, error) {

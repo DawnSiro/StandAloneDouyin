@@ -34,7 +34,6 @@ func InitJWT() {
 		},
 		// 用于设置登陆成功后为向 token 中添加自定义负载信息的函数
 		PayloadFunc: func(data interface{}) jwt.MapClaims {
-			// 注意这里的数据类型要和下面的 LoginResponse 函数中的类型一致
 			if v, ok := data.(uint64); ok {
 				return jwt.MapClaims{
 					constant.IdentityKey: v,
@@ -65,7 +64,7 @@ func InitJWT() {
 		LoginResponse: func(ctx context.Context, c *app.RequestContext, code int, token string, expire time.Time) {
 			// 可以通过 Get 去取放在 请求上下文 的数据
 			userID := c.GetUint64(constant.IdentityKey)
-			hlog.Info(userID, " ", token)
+			hlog.Info("info", userID, " ", token)
 			c.JSON(http.StatusOK, api.DouyinUserLoginResponse{
 				StatusCode: errno.Success.ErrCode,
 				UserID:     int64(userID),
