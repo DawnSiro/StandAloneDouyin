@@ -32,9 +32,9 @@ func GetMessagesByUserIDAndPreMsgTime(userID, oppositeID uint64, preMsgTime int6
 	// 使用 Union 来避免使用 or 导致不走索引的问题
 	err := DB.Raw("? UNION ? ORDER BY create_time ASC",
 		DB.Where("to_user_id = ? AND from_user_id = ? AND `create_time` > ?",
-			userID, oppositeID, time.Unix(preMsgTime, 0)).Model(message),
+			userID, oppositeID, time.UnixMilli(preMsgTime+100)).Model(message),
 		DB.Where("to_user_id = ? AND from_user_id = ? AND `create_time` > ?",
-			oppositeID, userID, time.Unix(preMsgTime, 0)).Model(message),
+			oppositeID, userID, time.UnixMilli(preMsgTime+100)).Model(message),
 	).Scan(&res).Error
 	if err != nil {
 		return nil, err
