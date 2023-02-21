@@ -86,7 +86,6 @@ func TestDeleteComment(t *testing.T) {
 			Content:    "测试啦",
 			CreateDate: "02-20",
 		}}, false},
-		//TODO: 这里出现问题了！
 		{"video_id_err", args{
 			userID:    101,
 			videoID:   10000,
