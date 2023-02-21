@@ -14,7 +14,7 @@ func Messages(messages []*db.Message) []*api.Message {
 }
 
 func Message(message *db.Message) *api.Message {
-	createTime := message.SendTime.Unix()
+	createTime := message.CreateTime.Unix()
 	return &api.Message{
 		ID:         int64(message.ID),
 		ToUserID:   int64(message.ToUserID),

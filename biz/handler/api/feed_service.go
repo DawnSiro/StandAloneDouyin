@@ -4,10 +4,12 @@ package api
 
 import (
 	"context"
-	api "douyin/biz/model/api"
+	"douyin/biz/model/api"
 	"douyin/biz/service"
 	"douyin/pkg/constant"
+	"douyin/pkg/errno"
 	"github.com/cloudwego/hertz/pkg/app"
+	"github.com/cloudwego/hertz/pkg/common/hlog"
 	"github.com/cloudwego/hertz/pkg/protocol/consts"
 )
 
@@ -22,10 +24,16 @@ func GetFeed(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
+	hlog.Infof("handler.feed_service.GetFeed Request: %#v", req)
 	userID := c.GetUint64(constant.IdentityKey)
+	hlog.Info("handler.feed_service.GetFeed GetUserID:", userID)
 	resp, err := service.GetFeed(req.LatestTime, userID)
 	if err != nil {
-		c.JSON(consts.StatusOK, err)
+		errNo := errno.ConvertErr(err)
+		c.JSON(consts.StatusOK, &api.DouyinFeedResponse{
+			StatusCode: errNo.ErrCode,
+			StatusMsg:  &errNo.ErrMsg,
+		})
 		return
 	}
 

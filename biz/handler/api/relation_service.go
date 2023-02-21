@@ -27,7 +27,7 @@ func Follow(ctx context.Context, c *app.RequestContext) {
 	hlog.Info(req)
 
 	userID := c.GetUint64(constant.IdentityKey)
-	resp := new(api.DouyinRelationActionResponse)
+	var resp *api.DouyinRelationActionResponse
 	if req.ActionType == constant.Follow {
 		resp, err = service.Follow(userID, uint64(req.ToUserID))
 	} else if req.ActionType == constant.CancelFollow {

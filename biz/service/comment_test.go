@@ -27,7 +27,7 @@ func TestCommentList(t *testing.T) {
 			ID: 39,
 			User: &api.User{
 				ID:            101,
-				Name:          "ceshi1",
+				Name:          "testUser1",
 				FollowCount:   &v1,
 				FollowerCount: &v1,
 				IsFollow:      true,

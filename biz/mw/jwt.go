@@ -29,16 +29,13 @@ func InitJWT() {
 		// 用于设置获取身份信息的函数，默认与 IdentityKey 配合使用
 		IdentityHandler: func(ctx context.Context, c *app.RequestContext) interface{} {
 			claims := jwt.ExtractClaims(ctx, c)
-			//return &api.User{
-			//	ID: int64(claims[constant.IdentityKey].(float64)),
-			//}
 			// 这里的返回值可以通过 c.Get() 或者 c.GetInt64() 去取到
-			hlog.Infof("jwt %d", uint64(claims[constant.IdentityKey].(float64)))
 			return uint64(claims[constant.IdentityKey].(float64))
 		},
 		// 用于设置登陆成功后为向 token 中添加自定义负载信息的函数
 		PayloadFunc: func(data interface{}) jwt.MapClaims {
-			if v, ok := data.(int64); ok {
+			// 注意这里的数据类型要和下面的 LoginResponse 函数中的类型一致
+			if v, ok := data.(uint64); ok {
 				return jwt.MapClaims{
 					constant.IdentityKey: v,
 				}
@@ -55,32 +52,30 @@ func InitJWT() {
 			if len(req.Username) == 0 || len(req.Password) == 0 {
 				return "", jwt.ErrMissingLoginValues
 			}
-			userID, err := service.Login(&api.DouyinUserLoginRequest{
-				Username: req.Username,
-				Password: req.Password,
-			})
+			userID, err := service.Login(req.Username, req.Password)
 			if err != nil {
 				return 0, err
 			}
+			hlog.Info(userID)
+			// 设置 userID 到请求上下文
 			c.Set(constant.IdentityKey, userID)
 			return userID, nil
 		},
 		// 用于设置登录的响应函数
 		LoginResponse: func(ctx context.Context, c *app.RequestContext, code int, token string, expire time.Time) {
-			hlog.Info("loginResponse")
 			// 可以通过 Get 去取放在 请求上下文 的数据
-			userID := c.GetInt64(constant.IdentityKey)
+			userID := c.GetUint64(constant.IdentityKey)
+			hlog.Info(userID, " ", token)
 			c.JSON(http.StatusOK, api.DouyinUserLoginResponse{
 				StatusCode: errno.Success.ErrCode,
-				StatusMsg:  nil,
-				UserID:     userID,
+				UserID:     int64(userID),
 				Token:      token,
 			})
 		},
 		Unauthorized: func(ctx context.Context, c *app.RequestContext, code int, message string) {
 			c.JSON(http.StatusOK, utils.H{
-				"status_code": errno.AuthorizationFailedErr.ErrCode,
-				"status_msg":  message,
+				"status_code": errno.UserIdentityVerificationFailedError.ErrCode,
+				"status_msg":  errno.UserIdentityVerificationFailedError.Error(),
 			})
 		},
 		HTTPStatusMessageFunc: func(e error, ctx context.Context, c *app.RequestContext) string {

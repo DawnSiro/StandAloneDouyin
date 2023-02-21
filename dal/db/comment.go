@@ -26,7 +26,6 @@ func CreateComment(videoID uint64, content string, userID uint64) (*Comment, err
 		Content:     content,
 		CreatedTime: time.Now(),
 	}
-	//
 	if err := DB.Create(comment).Error; err != nil {
 		return nil, err
 	}
@@ -39,30 +38,27 @@ func DeleteCommentByID(commentID uint64) (*Comment, error) {
 		ID: commentID,
 	}
 	// 先查询是否存在评论
-	result := DB.Where("is_deleted = ?", constant.DataNotDeleted).Limit(1).Find(&comment)
+	result := DB.Where("is_deleted = ?", constant.DataNotDeleted).Limit(1).Find(comment)
 	if result.RowsAffected == 0 {
 		return nil, errors.New("delete data failed")
 	}
 
-	result = DB.Model(&comment).Update("is_deleted", constant.DataDeleted)
+	result = DB.Model(comment).Update("is_deleted", constant.DataDeleted)
 	if result.Error != nil {
 		return nil, result.Error
 	}
 	if result.RowsAffected == 0 {
 		return nil, errors.New("delete data failed")
 	}
-
 	return comment, nil
 }
 
 func SelectCommentListByVideoID(videoID uint64) ([]*Comment, error) {
 	res := make([]*Comment, 0)
-
 	err := DB.Where("video_id = ? AND is_deleted = ?", videoID, constant.DataNotDeleted).Find(&res).Error
 	if err != nil {
 		return nil, err
 	}
-
 	return res, nil
 }
 
@@ -72,6 +68,5 @@ func IsCommentCreatedByMyself(userID uint64, commentID uint64) bool {
 	if result.RowsAffected == 0 {
 		return false
 	}
-
 	return true
 }

@@ -4,6 +4,7 @@ import (
 	"douyin/biz/model/api"
 	"douyin/dal/db"
 	"douyin/dal/pack"
+	"douyin/pkg/errno"
 	"errors"
 )
 
@@ -25,7 +26,7 @@ func Follow(userID, toUserID uint64) (*api.DouyinRelationActionResponse, error) 
 		return nil, err
 	}
 	return &api.DouyinRelationActionResponse{
-		StatusCode: int64(api.ErrCode_SuccessCode),
+		StatusCode: int64(api.ErrCode_Success),
 	}, nil
 }
 
@@ -41,7 +42,7 @@ func CancelFollow(userID, toUserID uint64) (*api.DouyinRelationActionResponse, e
 		return nil, err
 	}
 	return &api.DouyinRelationActionResponse{
-		StatusCode: int64(api.ErrCode_SuccessCode),
+		StatusCode: int64(api.ErrCode_Success),
 	}, nil
 }
 
@@ -59,8 +60,7 @@ func GetFollowList(userID uint64) (*api.DouyinRelationFollowListResponse, error)
 	}
 
 	return &api.DouyinRelationFollowListResponse{
-		StatusCode: int64(api.ErrCode_SuccessCode),
-		StatusMsg:  nil,
+		StatusCode: errno.Success.ErrCode,
 		UserList:   userList,
 	}, nil
 

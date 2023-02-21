@@ -13,41 +13,226 @@ import (
 type ErrCode int64
 
 const (
-	ErrCode_SuccessCode                ErrCode = 0
-	ErrCode_ServiceErrCode             ErrCode = 10001
-	ErrCode_ParamErrCode               ErrCode = 10002
-	ErrCode_UserAlreadyExistErrCode    ErrCode = 10003
-	ErrCode_AuthorizationFailedErrCode ErrCode = 10004
+	ErrCode_Success                                  ErrCode = 0
+	ErrCode_Client                                   ErrCode = 10001
+	ErrCode_UserRegistration                         ErrCode = 10100
+	ErrCode_UsernameVerificationFailed               ErrCode = 10110
+	ErrCode_UsernameAlreadyExists                    ErrCode = 10111
+	ErrCode_PasswordVerificationFailed               ErrCode = 10120
+	ErrCode_PasswordLengthNotEnough                  ErrCode = 10121
+	ErrCode_PasswordStrengthNotEnough                ErrCode = 10122
+	ErrCode_UserLogin                                ErrCode = 10200
+	ErrCode_UserAccountDoesNotExist                  ErrCode = 10201
+	ErrCode_UserPassword                             ErrCode = 10210
+	ErrCode_PasswordNumberOfTimesExceeds             ErrCode = 10211
+	ErrCode_UserIdentityVerificationFailed           ErrCode = 10220
+	ErrCode_UserLoginHasExpired                      ErrCode = 10230
+	ErrCode_AccessPermission                         ErrCode = 10300
+	ErrCode_DeletePermission                         ErrCode = 10310
+	ErrCode_UserRequestParameter                     ErrCode = 10400
+	ErrCode_IllegalUserInput                         ErrCode = 10430
+	ErrCode_ContainsProhibitedSensitiveWords         ErrCode = 10431
+	ErrCode_UserUploadFile                           ErrCode = 10500
+	ErrCode_FileTypeUploadedNotMatch                 ErrCode = 10501
+	ErrCode_VideoUploadedTooLarge                    ErrCode = 10504
+	ErrCode_Service                                  ErrCode = 20000
+	ErrCode_SystemExecution                          ErrCode = 20001
+	ErrCode_SystemExecutionTimeout                   ErrCode = 20100
+	ErrCode_SystemDisasterToleranceFunctionTriggered ErrCode = 20200
+	ErrCode_SystemResource                           ErrCode = 20300
+	ErrCode_CallingThirdPartyService                 ErrCode = 30001
+	ErrCode_MiddlewareService                        ErrCode = 30100
+	ErrCode_RPCService                               ErrCode = 30110
+	ErrCode_RPCServiceNotFind                        ErrCode = 30111
+	ErrCode_RPCServiceNotRegistered                  ErrCode = 30112
+	ErrCode_InterfaceNotExist                        ErrCode = 30113
+	ErrCode_CacheService                             ErrCode = 30120
+	ErrCode_KeyLengthExceedsLimit                    ErrCode = 30121
+	ErrCode_ValueLengthExceedsLimit                  ErrCode = 30122
+	ErrCode_StorageCapacityFull                      ErrCode = 30123
+	ErrCode_UnsupportedDataFormat                    ErrCode = 30124
+	ErrCode_DatabaseService                          ErrCode = 30200
+	ErrCode_TableDoesNotExist                        ErrCode = 30211
+	ErrCode_ColumnDoesNotExist                       ErrCode = 30212
+	ErrCode_DatabaseDeadlock                         ErrCode = 30231
 )
 
 func (p ErrCode) String() string {
 	switch p {
-	case ErrCode_SuccessCode:
-		return "SuccessCode"
-	case ErrCode_ServiceErrCode:
-		return "ServiceErrCode"
-	case ErrCode_ParamErrCode:
-		return "ParamErrCode"
-	case ErrCode_UserAlreadyExistErrCode:
-		return "UserAlreadyExistErrCode"
-	case ErrCode_AuthorizationFailedErrCode:
-		return "AuthorizationFailedErrCode"
+	case ErrCode_Success:
+		return "Success"
+	case ErrCode_Client:
+		return "Client"
+	case ErrCode_UserRegistration:
+		return "UserRegistration"
+	case ErrCode_UsernameVerificationFailed:
+		return "UsernameVerificationFailed"
+	case ErrCode_UsernameAlreadyExists:
+		return "UsernameAlreadyExists"
+	case ErrCode_PasswordVerificationFailed:
+		return "PasswordVerificationFailed"
+	case ErrCode_PasswordLengthNotEnough:
+		return "PasswordLengthNotEnough"
+	case ErrCode_PasswordStrengthNotEnough:
+		return "PasswordStrengthNotEnough"
+	case ErrCode_UserLogin:
+		return "UserLogin"
+	case ErrCode_UserAccountDoesNotExist:
+		return "UserAccountDoesNotExist"
+	case ErrCode_UserPassword:
+		return "UserPassword"
+	case ErrCode_PasswordNumberOfTimesExceeds:
+		return "PasswordNumberOfTimesExceeds"
+	case ErrCode_UserIdentityVerificationFailed:
+		return "UserIdentityVerificationFailed"
+	case ErrCode_UserLoginHasExpired:
+		return "UserLoginHasExpired"
+	case ErrCode_AccessPermission:
+		return "AccessPermission"
+	case ErrCode_DeletePermission:
+		return "DeletePermission"
+	case ErrCode_UserRequestParameter:
+		return "UserRequestParameter"
+	case ErrCode_IllegalUserInput:
+		return "IllegalUserInput"
+	case ErrCode_ContainsProhibitedSensitiveWords:
+		return "ContainsProhibitedSensitiveWords"
+	case ErrCode_UserUploadFile:
+		return "UserUploadFile"
+	case ErrCode_FileTypeUploadedNotMatch:
+		return "FileTypeUploadedNotMatch"
+	case ErrCode_VideoUploadedTooLarge:
+		return "VideoUploadedTooLarge"
+	case ErrCode_Service:
+		return "Service"
+	case ErrCode_SystemExecution:
+		return "SystemExecution"
+	case ErrCode_SystemExecutionTimeout:
+		return "SystemExecutionTimeout"
+	case ErrCode_SystemDisasterToleranceFunctionTriggered:
+		return "SystemDisasterToleranceFunctionTriggered"
+	case ErrCode_SystemResource:
+		return "SystemResource"
+	case ErrCode_CallingThirdPartyService:
+		return "CallingThirdPartyService"
+	case ErrCode_MiddlewareService:
+		return "MiddlewareService"
+	case ErrCode_RPCService:
+		return "RPCService"
+	case ErrCode_RPCServiceNotFind:
+		return "RPCServiceNotFind"
+	case ErrCode_RPCServiceNotRegistered:
+		return "RPCServiceNotRegistered"
+	case ErrCode_InterfaceNotExist:
+		return "InterfaceNotExist"
+	case ErrCode_CacheService:
+		return "CacheService"
+	case ErrCode_KeyLengthExceedsLimit:
+		return "KeyLengthExceedsLimit"
+	case ErrCode_ValueLengthExceedsLimit:
+		return "ValueLengthExceedsLimit"
+	case ErrCode_StorageCapacityFull:
+		return "StorageCapacityFull"
+	case ErrCode_UnsupportedDataFormat:
+		return "UnsupportedDataFormat"
+	case ErrCode_DatabaseService:
+		return "DatabaseService"
+	case ErrCode_TableDoesNotExist:
+		return "TableDoesNotExist"
+	case ErrCode_ColumnDoesNotExist:
+		return "ColumnDoesNotExist"
+	case ErrCode_DatabaseDeadlock:
+		return "DatabaseDeadlock"
 	}
 	return "<UNSET>"
 }
 
 func ErrCodeFromString(s string) (ErrCode, error) {
 	switch s {
-	case "SuccessCode":
-		return ErrCode_SuccessCode, nil
-	case "ServiceErrCode":
-		return ErrCode_ServiceErrCode, nil
-	case "ParamErrCode":
-		return ErrCode_ParamErrCode, nil
-	case "UserAlreadyExistErrCode":
-		return ErrCode_UserAlreadyExistErrCode, nil
-	case "AuthorizationFailedErrCode":
-		return ErrCode_AuthorizationFailedErrCode, nil
+	case "Success":
+		return ErrCode_Success, nil
+	case "Client":
+		return ErrCode_Client, nil
+	case "UserRegistration":
+		return ErrCode_UserRegistration, nil
+	case "UsernameVerificationFailed":
+		return ErrCode_UsernameVerificationFailed, nil
+	case "UsernameAlreadyExists":
+		return ErrCode_UsernameAlreadyExists, nil
+	case "PasswordVerificationFailed":
+		return ErrCode_PasswordVerificationFailed, nil
+	case "PasswordLengthNotEnough":
+		return ErrCode_PasswordLengthNotEnough, nil
+	case "PasswordStrengthNotEnough":
+		return ErrCode_PasswordStrengthNotEnough, nil
+	case "UserLogin":
+		return ErrCode_UserLogin, nil
+	case "UserAccountDoesNotExist":
+		return ErrCode_UserAccountDoesNotExist, nil
+	case "UserPassword":
+		return ErrCode_UserPassword, nil
+	case "PasswordNumberOfTimesExceeds":
+		return ErrCode_PasswordNumberOfTimesExceeds, nil
+	case "UserIdentityVerificationFailed":
+		return ErrCode_UserIdentityVerificationFailed, nil
+	case "UserLoginHasExpired":
+		return ErrCode_UserLoginHasExpired, nil
+	case "AccessPermission":
+		return ErrCode_AccessPermission, nil
+	case "DeletePermission":
+		return ErrCode_DeletePermission, nil
+	case "UserRequestParameter":
+		return ErrCode_UserRequestParameter, nil
+	case "IllegalUserInput":
+		return ErrCode_IllegalUserInput, nil
+	case "ContainsProhibitedSensitiveWords":
+		return ErrCode_ContainsProhibitedSensitiveWords, nil
+	case "UserUploadFile":
+		return ErrCode_UserUploadFile, nil
+	case "FileTypeUploadedNotMatch":
+		return ErrCode_FileTypeUploadedNotMatch, nil
+	case "VideoUploadedTooLarge":
+		return ErrCode_VideoUploadedTooLarge, nil
+	case "Service":
+		return ErrCode_Service, nil
+	case "SystemExecution":
+		return ErrCode_SystemExecution, nil
+	case "SystemExecutionTimeout":
+		return ErrCode_SystemExecutionTimeout, nil
+	case "SystemDisasterToleranceFunctionTriggered":
+		return ErrCode_SystemDisasterToleranceFunctionTriggered, nil
+	case "SystemResource":
+		return ErrCode_SystemResource, nil
+	case "CallingThirdPartyService":
+		return ErrCode_CallingThirdPartyService, nil
+	case "MiddlewareService":
+		return ErrCode_MiddlewareService, nil
+	case "RPCService":
+		return ErrCode_RPCService, nil
+	case "RPCServiceNotFind":
+		return ErrCode_RPCServiceNotFind, nil
+	case "RPCServiceNotRegistered":
+		return ErrCode_RPCServiceNotRegistered, nil
+	case "InterfaceNotExist":
+		return ErrCode_InterfaceNotExist, nil
+	case "CacheService":
+		return ErrCode_CacheService, nil
+	case "KeyLengthExceedsLimit":
+		return ErrCode_KeyLengthExceedsLimit, nil
+	case "ValueLengthExceedsLimit":
+		return ErrCode_ValueLengthExceedsLimit, nil
+	case "StorageCapacityFull":
+		return ErrCode_StorageCapacityFull, nil
+	case "UnsupportedDataFormat":
+		return ErrCode_UnsupportedDataFormat, nil
+	case "DatabaseService":
+		return ErrCode_DatabaseService, nil
+	case "TableDoesNotExist":
+		return ErrCode_TableDoesNotExist, nil
+	case "ColumnDoesNotExist":
+		return ErrCode_ColumnDoesNotExist, nil
+	case "DatabaseDeadlock":
+		return ErrCode_DatabaseDeadlock, nil
 	}
 	return ErrCode(0), fmt.Errorf("not a valid ErrCode string")
 }
@@ -70,9 +255,9 @@ func (p *ErrCode) Value() (driver.Value, error) {
 type DouyinCommentActionRequest struct {
 	Token       string  `thrift:"token,1,required" form:"token,required" json:"token,required" query:"token,required"`
 	VideoID     int64   `thrift:"video_id,2,required" form:"video_id,required" json:"video_id,required" query:"video_id,required" vd:"$>0"`
-	ActionType  int8    `thrift:"action_type,3,required" form:"action_type,required" json:"action_type,required" query:"action_type,required"`
-	CommentText *string `thrift:"comment_text,4,optional" form:"comment_text" json:"comment_text,omitempty" query:"comment_text"`
-	CommentID   *int64  `thrift:"comment_id,5,optional" form:"comment_id" json:"comment_id,omitempty" query:"comment_id"`
+	ActionType  int8    `thrift:"action_type,3,required" form:"action_type,required" json:"action_type,required" query:"action_type,required" vd:"$==1||$==2"`
+	CommentText *string `thrift:"comment_text,4,optional" form:"comment_text" json:"comment_text,omitempty" query:"comment_text" vd:"$=nil||(len($)>0&&len($)<256)"`
+	CommentID   *int64  `thrift:"comment_id,5,optional" form:"comment_id" json:"comment_id,omitempty" query:"comment_id" vd:"$=nil||$>0"`
 }
 
 func NewDouyinCommentActionRequest() *DouyinCommentActionRequest {
@@ -1156,7 +1341,7 @@ func (p *DouyinCommentListResponse) String() string {
 }
 
 type Comment struct {
-	ID         int64  `thrift:"id,1,required" form:"id,required" json:"id,required" query:"id,required" vd:"$>0"`
+	ID         int64  `thrift:"id,1,required" form:"id,required" json:"id,required" query:"id,required"`
 	User       *User  `thrift:"user,2,required" form:"user,required" json:"user,required" query:"user,required"`
 	Content    string `thrift:"content,3,required" form:"content,required" json:"content,required" query:"content,required"`
 	CreateDate string `thrift:"create_date,4,required" form:"create_date,required" json:"create_date,required" query:"create_date,required"`
@@ -1468,7 +1653,7 @@ func (p *Comment) String() string {
 }
 
 type User struct {
-	ID            int64  `thrift:"id,1,required" form:"id,required" json:"id,required" query:"id,required" vd:"$>0"`
+	ID            int64  `thrift:"id,1,required" form:"id,required" json:"id,required" query:"id,required"`
 	Name          string `thrift:"name,2,required" form:"name,required" json:"name,required" query:"name,required"`
 	FollowCount   *int64 `thrift:"follow_count,3,optional" form:"follow_count" json:"follow_count,omitempty" query:"follow_count"`
 	FollowerCount *int64 `thrift:"follower_count,4,optional" form:"follower_count" json:"follower_count,omitempty" query:"follower_count"`
@@ -2804,14 +2989,14 @@ func (p *DouyinFavoriteListResponse) String() string {
 }
 
 type Video struct {
-	ID            int64  `thrift:"id,1,required" form:"id,required" json:"id,required" query:"id,required"`
-	Author        *User  `thrift:"author,2,required" form:"author,required" json:"author,required" query:"author,required"`
-	PlayURL       string `thrift:"play_url,3,required" form:"play_url,required" json:"play_url,required" query:"play_url,required"`
-	CoverURL      string `thrift:"cover_url,4,required" form:"cover_url,required" json:"cover_url,required" query:"cover_url,required"`
-	FavoriteCount int64  `thrift:"favorite_count,5,required" form:"favorite_count,required" json:"favorite_count,required" query:"favorite_count,required"`
-	CommentCount  int64  `thrift:"comment_count,6,required" form:"comment_count,required" json:"comment_count,required" query:"comment_count,required"`
-	IsFavorite    bool   `thrift:"is_favorite,7,required" form:"is_favorite,required" json:"is_favorite,required" query:"is_favorite,required"`
-	Title         string `thrift:"title,8,required" form:"title,required" json:"title,required" query:"title,required"`
+	ID            int64     `thrift:"id,1,required" form:"id,required" json:"id,required" query:"id,required"`
+	Author        *UserInfo `thrift:"author,2,required" form:"author,required" json:"author,required" query:"author,required"`
+	PlayURL       string    `thrift:"play_url,3,required" form:"play_url,required" json:"play_url,required" query:"play_url,required"`
+	CoverURL      string    `thrift:"cover_url,4,required" form:"cover_url,required" json:"cover_url,required" query:"cover_url,required"`
+	FavoriteCount int64     `thrift:"favorite_count,5,required" form:"favorite_count,required" json:"favorite_count,required" query:"favorite_count,required"`
+	CommentCount  int64     `thrift:"comment_count,6,required" form:"comment_count,required" json:"comment_count,required" query:"comment_count,required"`
+	IsFavorite    bool      `thrift:"is_favorite,7,required" form:"is_favorite,required" json:"is_favorite,required" query:"is_favorite,required"`
+	Title         string    `thrift:"title,8,required" form:"title,required" json:"title,required" query:"title,required"`
 }
 
 func NewVideo() *Video {
@@ -2822,9 +3007,9 @@ func (p *Video) GetID() (v int64) {
 	return p.ID
 }
 
-var Video_Author_DEFAULT *User
+var Video_Author_DEFAULT *UserInfo
 
-func (p *Video) GetAuthor() (v *User) {
+func (p *Video) GetAuthor() (v *UserInfo) {
 	if !p.IsSetAuthor() {
 		return Video_Author_DEFAULT
 	}
@@ -3066,7 +3251,7 @@ func (p *Video) ReadField1(iprot thrift.TProtocol) error {
 }
 
 func (p *Video) ReadField2(iprot thrift.TProtocol) error {
-	p.Author = NewUser()
+	p.Author = NewUserInfo()
 	if err := p.Author.Read(iprot); err != nil {
 		return err
 	}
@@ -3857,8 +4042,9 @@ func (p *DouyinFeedResponse) String() string {
 }
 
 type DouyinMessageChatRequest struct {
-	Token    string `thrift:"token,1,required" form:"token,required" json:"token,required" query:"token,required"`
-	ToUserID int64  `thrift:"to_user_id,2,required" form:"to_user_id,required" json:"to_user_id,required" query:"to_user_id,required" vd:"$>0"`
+	Token      string `thrift:"token,1,required" form:"token,required" json:"token,required" query:"token,required"`
+	ToUserID   int64  `thrift:"to_user_id,2,required" form:"to_user_id,required" json:"to_user_id,required" query:"to_user_id,required" vd:"$>0"`
+	PreMsgTime *int64 `thrift:"pre_msg_time,3,optional" form:"pre_msg_time" json:"pre_msg_time,omitempty" query:"pre_msg_time"`
 }
 
 func NewDouyinMessageChatRequest() *DouyinMessageChatRequest {
@@ -3873,9 +4059,23 @@ func (p *DouyinMessageChatRequest) GetToUserID() (v int64) {
 	return p.ToUserID
 }
 
+var DouyinMessageChatRequest_PreMsgTime_DEFAULT int64
+
+func (p *DouyinMessageChatRequest) GetPreMsgTime() (v int64) {
+	if !p.IsSetPreMsgTime() {
+		return DouyinMessageChatRequest_PreMsgTime_DEFAULT
+	}
+	return *p.PreMsgTime
+}
+
 var fieldIDToName_DouyinMessageChatRequest = map[int16]string{
 	1: "token",
 	2: "to_user_id",
+	3: "pre_msg_time",
+}
+
+func (p *DouyinMessageChatRequest) IsSetPreMsgTime() bool {
+	return p.PreMsgTime != nil
 }
 
 func (p *DouyinMessageChatRequest) Read(iprot thrift.TProtocol) (err error) {
@@ -3916,6 +4116,16 @@ func (p *DouyinMessageChatRequest) Read(iprot thrift.TProtocol) (err error) {
 					goto ReadFieldError
 				}
 				issetToUserID = true
+			} else {
+				if err = iprot.Skip(fieldTypeId); err != nil {
+					goto SkipFieldError
+				}
+			}
+		case 3:
+			if fieldTypeId == thrift.I64 {
+				if err = p.ReadField3(iprot); err != nil {
+					goto ReadFieldError
+				}
 			} else {
 				if err = iprot.Skip(fieldTypeId); err != nil {
 					goto SkipFieldError
@@ -3980,6 +4190,15 @@ func (p *DouyinMessageChatRequest) ReadField2(iprot thrift.TProtocol) error {
 	return nil
 }
 
+func (p *DouyinMessageChatRequest) ReadField3(iprot thrift.TProtocol) error {
+	if v, err := iprot.ReadI64(); err != nil {
+		return err
+	} else {
+		p.PreMsgTime = &v
+	}
+	return nil
+}
+
 func (p *DouyinMessageChatRequest) Write(oprot thrift.TProtocol) (err error) {
 	var fieldId int16
 	if err = oprot.WriteStructBegin("douyin_message_chat_request"); err != nil {
@@ -3992,6 +4211,10 @@ func (p *DouyinMessageChatRequest) Write(oprot thrift.TProtocol) (err error) {
 		}
 		if err = p.writeField2(oprot); err != nil {
 			fieldId = 2
+			goto WriteFieldError
+		}
+		if err = p.writeField3(oprot); err != nil {
+			fieldId = 3
 			goto WriteFieldError
 		}
 
@@ -4045,6 +4268,25 @@ WriteFieldBeginError:
 	return thrift.PrependError(fmt.Sprintf("%T write field 2 begin error: ", p), err)
 WriteFieldEndError:
 	return thrift.PrependError(fmt.Sprintf("%T write field 2 end error: ", p), err)
+}
+
+func (p *DouyinMessageChatRequest) writeField3(oprot thrift.TProtocol) (err error) {
+	if p.IsSetPreMsgTime() {
+		if err = oprot.WriteFieldBegin("pre_msg_time", thrift.I64, 3); err != nil {
+			goto WriteFieldBeginError
+		}
+		if err := oprot.WriteI64(*p.PreMsgTime); err != nil {
+			return err
+		}
+		if err = oprot.WriteFieldEnd(); err != nil {
+			goto WriteFieldEndError
+		}
+	}
+	return nil
+WriteFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 3 begin error: ", p), err)
+WriteFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 3 end error: ", p), err)
 }
 
 func (p *DouyinMessageChatRequest) String() string {
@@ -4686,7 +4928,7 @@ type DouyinMessageActionRequest struct {
 	Token      string `thrift:"token,1,required" form:"token,required" json:"token,required" query:"token,required"`
 	ToUserID   int64  `thrift:"to_user_id,2,required" form:"to_user_id,required" json:"to_user_id,required" query:"to_user_id,required" vd:"$>0"`
 	ActionType int8   `thrift:"action_type,3,required" form:"action_type,required" json:"action_type,required" query:"action_type,required" vd:"$==1"`
-	Content    string `thrift:"content,4,required" form:"content,required" json:"content,required" query:"content,required"`
+	Content    string `thrift:"content,4,required" form:"content,required" json:"content,required" query:"content,required" vd:"len($)>0&&len($)<256"`
 }
 
 func NewDouyinMessageActionRequest() *DouyinMessageActionRequest {
@@ -5191,7 +5433,7 @@ func (p *DouyinMessageActionResponse) String() string {
 type DouyinPublishActionRequest struct {
 	Token string `thrift:"token,1,required" form:"token,required" json:"token,required" query:"token,required"`
 	//  2: optional binary data // 视频数据
-	Title string `thrift:"title,2,required" form:"title,required" json:"title,required" query:"title,required"`
+	Title string `thrift:"title,2,required" form:"title,required" json:"title,required" query:"title,required" vd:"len($)>0&&len($)<64"`
 }
 
 func NewDouyinPublishActionRequest() *DouyinPublishActionRequest {
@@ -6057,7 +6299,7 @@ func (p *DouyinPublishListResponse) String() string {
 type DouyinRelationActionRequest struct {
 	Token      string `thrift:"token,1,required" form:"token,required" json:"token,required" query:"token,required"`
 	ToUserID   int64  `thrift:"to_user_id,2,required" form:"to_user_id,required" json:"to_user_id,required" query:"to_user_id,required" vd:"$>0"`
-	ActionType int8   `thrift:"action_type,3,required" form:"action_type,required" json:"action_type,required" query:"action_type,required"`
+	ActionType int8   `thrift:"action_type,3,required" form:"action_type,required" json:"action_type,required" query:"action_type,required" vd:"$==1||$==2"`
 }
 
 func NewDouyinRelationActionRequest() *DouyinRelationActionRequest {
@@ -8937,8 +9179,8 @@ func (p *DouyinUserRegisterResponse) String() string {
 }
 
 type DouyinUserLoginRequest struct {
-	Username string `thrift:"username,1,required" form:"username,required" json:"username,required" query:"username,required" vd:"len($)>2 && len($)<32"`
-	Password string `thrift:"password,2,required" form:"password,required" json:"password,required" query:"password,required" vd:"len($)>2 && len($)<32"`
+	Username string `thrift:"username,1,required" form:"username,required" json:"username,required" query:"username,required" vd:"len($)>1 && len($)<33"`
+	Password string `thrift:"password,2,required" form:"password,required" json:"password,required" query:"password,required" vd:"len($)>5 && len($)<33"`
 }
 
 func NewDouyinUserLoginRequest() *DouyinUserLoginRequest {
@@ -9904,14 +10146,17 @@ func (p *DouyinUserResponse) String() string {
 }
 
 type UserInfo struct {
-	ID            int64  `thrift:"id,1,required" form:"id,required" json:"id,required" query:"id,required" vd:"$>0"`
-	Name          string `thrift:"name,2,required" form:"name,required" json:"name,required" query:"name,required"`
-	FollowCount   *int64 `thrift:"follow_count,3,optional" form:"follow_count" json:"follow_count,omitempty" query:"follow_count"`
-	FollowerCount *int64 `thrift:"follower_count,4,optional" form:"follower_count" json:"follower_count,omitempty" query:"follower_count"`
-	IsFollow      bool   `thrift:"is_follow,5,required" form:"is_follow,required" json:"is_follow,required" query:"is_follow,required"`
-	Avatar        string `thrift:"avatar,6,required" form:"avatar,required" json:"avatar,required" query:"avatar,required"`
-	WorkCount     *int64 `thrift:"work_count,7,optional" form:"work_count" json:"work_count,omitempty" query:"work_count"`
-	FavoriteCount *int64 `thrift:"favorite_count,8,optional" form:"favorite_count" json:"favorite_count,omitempty" query:"favorite_count"`
+	ID              int64  `thrift:"id,1,required" form:"id,required" json:"id,required" query:"id,required"`
+	Name            string `thrift:"name,2,required" form:"name,required" json:"name,required" query:"name,required"`
+	FollowCount     int64  `thrift:"follow_count,3,required" form:"follow_count,required" json:"follow_count,required" query:"follow_count,required"`
+	FollowerCount   int64  `thrift:"follower_count,4,required" form:"follower_count,required" json:"follower_count,required" query:"follower_count,required"`
+	IsFollow        bool   `thrift:"is_follow,5,required" form:"is_follow,required" json:"is_follow,required" query:"is_follow,required"`
+	Avatar          string `thrift:"avatar,6,required" form:"avatar,required" json:"avatar,required" query:"avatar,required"`
+	BackgroundImage string `thrift:"background_image,8,required" form:"background_image,required" json:"background_image,required" query:"background_image,required"`
+	Signature       string `thrift:"signature,9,required" form:"signature,required" json:"signature,required" query:"signature,required"`
+	TotalFavorited  int64  `thrift:"total_favorited,10,required" form:"total_favorited,required" json:"total_favorited,required" query:"total_favorited,required"`
+	WorkCount       int64  `thrift:"work_count,11,required" form:"work_count,required" json:"work_count,required" query:"work_count,required"`
+	FavoriteCount   int64  `thrift:"favorite_count,12,required" form:"favorite_count,required" json:"favorite_count,required" query:"favorite_count,required"`
 }
 
 func NewUserInfo() *UserInfo {
@@ -9926,22 +10171,12 @@ func (p *UserInfo) GetName() (v string) {
 	return p.Name
 }
 
-var UserInfo_FollowCount_DEFAULT int64
-
 func (p *UserInfo) GetFollowCount() (v int64) {
-	if !p.IsSetFollowCount() {
-		return UserInfo_FollowCount_DEFAULT
-	}
-	return *p.FollowCount
+	return p.FollowCount
 }
 
-var UserInfo_FollowerCount_DEFAULT int64
-
 func (p *UserInfo) GetFollowerCount() (v int64) {
-	if !p.IsSetFollowerCount() {
-		return UserInfo_FollowerCount_DEFAULT
-	}
-	return *p.FollowerCount
+	return p.FollowerCount
 }
 
 func (p *UserInfo) GetIsFollow() (v bool) {
@@ -9952,49 +10187,38 @@ func (p *UserInfo) GetAvatar() (v string) {
 	return p.Avatar
 }
 
-var UserInfo_WorkCount_DEFAULT int64
-
-func (p *UserInfo) GetWorkCount() (v int64) {
-	if !p.IsSetWorkCount() {
-		return UserInfo_WorkCount_DEFAULT
-	}
-	return *p.WorkCount
+func (p *UserInfo) GetBackgroundImage() (v string) {
+	return p.BackgroundImage
 }
 
-var UserInfo_FavoriteCount_DEFAULT int64
+func (p *UserInfo) GetSignature() (v string) {
+	return p.Signature
+}
+
+func (p *UserInfo) GetTotalFavorited() (v int64) {
+	return p.TotalFavorited
+}
+
+func (p *UserInfo) GetWorkCount() (v int64) {
+	return p.WorkCount
+}
 
 func (p *UserInfo) GetFavoriteCount() (v int64) {
-	if !p.IsSetFavoriteCount() {
-		return UserInfo_FavoriteCount_DEFAULT
-	}
-	return *p.FavoriteCount
+	return p.FavoriteCount
 }
 
 var fieldIDToName_UserInfo = map[int16]string{
-	1: "id",
-	2: "name",
-	3: "follow_count",
-	4: "follower_count",
-	5: "is_follow",
-	6: "avatar",
-	7: "work_count",
-	8: "favorite_count",
-}
-
-func (p *UserInfo) IsSetFollowCount() bool {
-	return p.FollowCount != nil
-}
-
-func (p *UserInfo) IsSetFollowerCount() bool {
-	return p.FollowerCount != nil
-}
-
-func (p *UserInfo) IsSetWorkCount() bool {
-	return p.WorkCount != nil
-}
-
-func (p *UserInfo) IsSetFavoriteCount() bool {
-	return p.FavoriteCount != nil
+	1:  "id",
+	2:  "name",
+	3:  "follow_count",
+	4:  "follower_count",
+	5:  "is_follow",
+	6:  "avatar",
+	8:  "background_image",
+	9:  "signature",
+	10: "total_favorited",
+	11: "work_count",
+	12: "favorite_count",
 }
 
 func (p *UserInfo) Read(iprot thrift.TProtocol) (err error) {
@@ -10003,8 +10227,15 @@ func (p *UserInfo) Read(iprot thrift.TProtocol) (err error) {
 	var fieldId int16
 	var issetID bool = false
 	var issetName bool = false
+	var issetFollowCount bool = false
+	var issetFollowerCount bool = false
 	var issetIsFollow bool = false
 	var issetAvatar bool = false
+	var issetBackgroundImage bool = false
+	var issetSignature bool = false
+	var issetTotalFavorited bool = false
+	var issetWorkCount bool = false
+	var issetFavoriteCount bool = false
 
 	if _, err = iprot.ReadStructBegin(); err != nil {
 		goto ReadStructBeginError
@@ -10047,6 +10278,7 @@ func (p *UserInfo) Read(iprot thrift.TProtocol) (err error) {
 				if err = p.ReadField3(iprot); err != nil {
 					goto ReadFieldError
 				}
+				issetFollowCount = true
 			} else {
 				if err = iprot.Skip(fieldTypeId); err != nil {
 					goto SkipFieldError
@@ -10057,6 +10289,7 @@ func (p *UserInfo) Read(iprot thrift.TProtocol) (err error) {
 				if err = p.ReadField4(iprot); err != nil {
 					goto ReadFieldError
 				}
+				issetFollowerCount = true
 			} else {
 				if err = iprot.Skip(fieldTypeId); err != nil {
 					goto SkipFieldError
@@ -10084,21 +10317,56 @@ func (p *UserInfo) Read(iprot thrift.TProtocol) (err error) {
 					goto SkipFieldError
 				}
 			}
-		case 7:
-			if fieldTypeId == thrift.I64 {
-				if err = p.ReadField7(iprot); err != nil {
+		case 8:
+			if fieldTypeId == thrift.STRING {
+				if err = p.ReadField8(iprot); err != nil {
 					goto ReadFieldError
 				}
+				issetBackgroundImage = true
 			} else {
 				if err = iprot.Skip(fieldTypeId); err != nil {
 					goto SkipFieldError
 				}
 			}
-		case 8:
-			if fieldTypeId == thrift.I64 {
-				if err = p.ReadField8(iprot); err != nil {
+		case 9:
+			if fieldTypeId == thrift.STRING {
+				if err = p.ReadField9(iprot); err != nil {
 					goto ReadFieldError
 				}
+				issetSignature = true
+			} else {
+				if err = iprot.Skip(fieldTypeId); err != nil {
+					goto SkipFieldError
+				}
+			}
+		case 10:
+			if fieldTypeId == thrift.I64 {
+				if err = p.ReadField10(iprot); err != nil {
+					goto ReadFieldError
+				}
+				issetTotalFavorited = true
+			} else {
+				if err = iprot.Skip(fieldTypeId); err != nil {
+					goto SkipFieldError
+				}
+			}
+		case 11:
+			if fieldTypeId == thrift.I64 {
+				if err = p.ReadField11(iprot); err != nil {
+					goto ReadFieldError
+				}
+				issetWorkCount = true
+			} else {
+				if err = iprot.Skip(fieldTypeId); err != nil {
+					goto SkipFieldError
+				}
+			}
+		case 12:
+			if fieldTypeId == thrift.I64 {
+				if err = p.ReadField12(iprot); err != nil {
+					goto ReadFieldError
+				}
+				issetFavoriteCount = true
 			} else {
 				if err = iprot.Skip(fieldTypeId); err != nil {
 					goto SkipFieldError
@@ -10128,6 +10396,16 @@ func (p *UserInfo) Read(iprot thrift.TProtocol) (err error) {
 		goto RequiredFieldNotSetError
 	}
 
+	if !issetFollowCount {
+		fieldId = 3
+		goto RequiredFieldNotSetError
+	}
+
+	if !issetFollowerCount {
+		fieldId = 4
+		goto RequiredFieldNotSetError
+	}
+
 	if !issetIsFollow {
 		fieldId = 5
 		goto RequiredFieldNotSetError
@@ -10135,6 +10413,31 @@ func (p *UserInfo) Read(iprot thrift.TProtocol) (err error) {
 
 	if !issetAvatar {
 		fieldId = 6
+		goto RequiredFieldNotSetError
+	}
+
+	if !issetBackgroundImage {
+		fieldId = 8
+		goto RequiredFieldNotSetError
+	}
+
+	if !issetSignature {
+		fieldId = 9
+		goto RequiredFieldNotSetError
+	}
+
+	if !issetTotalFavorited {
+		fieldId = 10
+		goto RequiredFieldNotSetError
+	}
+
+	if !issetWorkCount {
+		fieldId = 11
+		goto RequiredFieldNotSetError
+	}
+
+	if !issetFavoriteCount {
+		fieldId = 12
 		goto RequiredFieldNotSetError
 	}
 	return nil
@@ -10177,7 +10480,7 @@ func (p *UserInfo) ReadField3(iprot thrift.TProtocol) error {
 	if v, err := iprot.ReadI64(); err != nil {
 		return err
 	} else {
-		p.FollowCount = &v
+		p.FollowCount = v
 	}
 	return nil
 }
@@ -10186,7 +10489,7 @@ func (p *UserInfo) ReadField4(iprot thrift.TProtocol) error {
 	if v, err := iprot.ReadI64(); err != nil {
 		return err
 	} else {
-		p.FollowerCount = &v
+		p.FollowerCount = v
 	}
 	return nil
 }
@@ -10209,20 +10512,47 @@ func (p *UserInfo) ReadField6(iprot thrift.TProtocol) error {
 	return nil
 }
 
-func (p *UserInfo) ReadField7(iprot thrift.TProtocol) error {
-	if v, err := iprot.ReadI64(); err != nil {
+func (p *UserInfo) ReadField8(iprot thrift.TProtocol) error {
+	if v, err := iprot.ReadString(); err != nil {
 		return err
 	} else {
-		p.WorkCount = &v
+		p.BackgroundImage = v
 	}
 	return nil
 }
 
-func (p *UserInfo) ReadField8(iprot thrift.TProtocol) error {
+func (p *UserInfo) ReadField9(iprot thrift.TProtocol) error {
+	if v, err := iprot.ReadString(); err != nil {
+		return err
+	} else {
+		p.Signature = v
+	}
+	return nil
+}
+
+func (p *UserInfo) ReadField10(iprot thrift.TProtocol) error {
 	if v, err := iprot.ReadI64(); err != nil {
 		return err
 	} else {
-		p.FavoriteCount = &v
+		p.TotalFavorited = v
+	}
+	return nil
+}
+
+func (p *UserInfo) ReadField11(iprot thrift.TProtocol) error {
+	if v, err := iprot.ReadI64(); err != nil {
+		return err
+	} else {
+		p.WorkCount = v
+	}
+	return nil
+}
+
+func (p *UserInfo) ReadField12(iprot thrift.TProtocol) error {
+	if v, err := iprot.ReadI64(); err != nil {
+		return err
+	} else {
+		p.FavoriteCount = v
 	}
 	return nil
 }
@@ -10257,12 +10587,24 @@ func (p *UserInfo) Write(oprot thrift.TProtocol) (err error) {
 			fieldId = 6
 			goto WriteFieldError
 		}
-		if err = p.writeField7(oprot); err != nil {
-			fieldId = 7
-			goto WriteFieldError
-		}
 		if err = p.writeField8(oprot); err != nil {
 			fieldId = 8
+			goto WriteFieldError
+		}
+		if err = p.writeField9(oprot); err != nil {
+			fieldId = 9
+			goto WriteFieldError
+		}
+		if err = p.writeField10(oprot); err != nil {
+			fieldId = 10
+			goto WriteFieldError
+		}
+		if err = p.writeField11(oprot); err != nil {
+			fieldId = 11
+			goto WriteFieldError
+		}
+		if err = p.writeField12(oprot); err != nil {
+			fieldId = 12
 			goto WriteFieldError
 		}
 
@@ -10319,16 +10661,14 @@ WriteFieldEndError:
 }
 
 func (p *UserInfo) writeField3(oprot thrift.TProtocol) (err error) {
-	if p.IsSetFollowCount() {
-		if err = oprot.WriteFieldBegin("follow_count", thrift.I64, 3); err != nil {
-			goto WriteFieldBeginError
-		}
-		if err := oprot.WriteI64(*p.FollowCount); err != nil {
-			return err
-		}
-		if err = oprot.WriteFieldEnd(); err != nil {
-			goto WriteFieldEndError
-		}
+	if err = oprot.WriteFieldBegin("follow_count", thrift.I64, 3); err != nil {
+		goto WriteFieldBeginError
+	}
+	if err := oprot.WriteI64(p.FollowCount); err != nil {
+		return err
+	}
+	if err = oprot.WriteFieldEnd(); err != nil {
+		goto WriteFieldEndError
 	}
 	return nil
 WriteFieldBeginError:
@@ -10338,16 +10678,14 @@ WriteFieldEndError:
 }
 
 func (p *UserInfo) writeField4(oprot thrift.TProtocol) (err error) {
-	if p.IsSetFollowerCount() {
-		if err = oprot.WriteFieldBegin("follower_count", thrift.I64, 4); err != nil {
-			goto WriteFieldBeginError
-		}
-		if err := oprot.WriteI64(*p.FollowerCount); err != nil {
-			return err
-		}
-		if err = oprot.WriteFieldEnd(); err != nil {
-			goto WriteFieldEndError
-		}
+	if err = oprot.WriteFieldBegin("follower_count", thrift.I64, 4); err != nil {
+		goto WriteFieldBeginError
+	}
+	if err := oprot.WriteI64(p.FollowerCount); err != nil {
+		return err
+	}
+	if err = oprot.WriteFieldEnd(); err != nil {
+		goto WriteFieldEndError
 	}
 	return nil
 WriteFieldBeginError:
@@ -10390,42 +10728,89 @@ WriteFieldEndError:
 	return thrift.PrependError(fmt.Sprintf("%T write field 6 end error: ", p), err)
 }
 
-func (p *UserInfo) writeField7(oprot thrift.TProtocol) (err error) {
-	if p.IsSetWorkCount() {
-		if err = oprot.WriteFieldBegin("work_count", thrift.I64, 7); err != nil {
-			goto WriteFieldBeginError
-		}
-		if err := oprot.WriteI64(*p.WorkCount); err != nil {
-			return err
-		}
-		if err = oprot.WriteFieldEnd(); err != nil {
-			goto WriteFieldEndError
-		}
-	}
-	return nil
-WriteFieldBeginError:
-	return thrift.PrependError(fmt.Sprintf("%T write field 7 begin error: ", p), err)
-WriteFieldEndError:
-	return thrift.PrependError(fmt.Sprintf("%T write field 7 end error: ", p), err)
-}
-
 func (p *UserInfo) writeField8(oprot thrift.TProtocol) (err error) {
-	if p.IsSetFavoriteCount() {
-		if err = oprot.WriteFieldBegin("favorite_count", thrift.I64, 8); err != nil {
-			goto WriteFieldBeginError
-		}
-		if err := oprot.WriteI64(*p.FavoriteCount); err != nil {
-			return err
-		}
-		if err = oprot.WriteFieldEnd(); err != nil {
-			goto WriteFieldEndError
-		}
+	if err = oprot.WriteFieldBegin("background_image", thrift.STRING, 8); err != nil {
+		goto WriteFieldBeginError
+	}
+	if err := oprot.WriteString(p.BackgroundImage); err != nil {
+		return err
+	}
+	if err = oprot.WriteFieldEnd(); err != nil {
+		goto WriteFieldEndError
 	}
 	return nil
 WriteFieldBeginError:
 	return thrift.PrependError(fmt.Sprintf("%T write field 8 begin error: ", p), err)
 WriteFieldEndError:
 	return thrift.PrependError(fmt.Sprintf("%T write field 8 end error: ", p), err)
+}
+
+func (p *UserInfo) writeField9(oprot thrift.TProtocol) (err error) {
+	if err = oprot.WriteFieldBegin("signature", thrift.STRING, 9); err != nil {
+		goto WriteFieldBeginError
+	}
+	if err := oprot.WriteString(p.Signature); err != nil {
+		return err
+	}
+	if err = oprot.WriteFieldEnd(); err != nil {
+		goto WriteFieldEndError
+	}
+	return nil
+WriteFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 9 begin error: ", p), err)
+WriteFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 9 end error: ", p), err)
+}
+
+func (p *UserInfo) writeField10(oprot thrift.TProtocol) (err error) {
+	if err = oprot.WriteFieldBegin("total_favorited", thrift.I64, 10); err != nil {
+		goto WriteFieldBeginError
+	}
+	if err := oprot.WriteI64(p.TotalFavorited); err != nil {
+		return err
+	}
+	if err = oprot.WriteFieldEnd(); err != nil {
+		goto WriteFieldEndError
+	}
+	return nil
+WriteFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 10 begin error: ", p), err)
+WriteFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 10 end error: ", p), err)
+}
+
+func (p *UserInfo) writeField11(oprot thrift.TProtocol) (err error) {
+	if err = oprot.WriteFieldBegin("work_count", thrift.I64, 11); err != nil {
+		goto WriteFieldBeginError
+	}
+	if err := oprot.WriteI64(p.WorkCount); err != nil {
+		return err
+	}
+	if err = oprot.WriteFieldEnd(); err != nil {
+		goto WriteFieldEndError
+	}
+	return nil
+WriteFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 11 begin error: ", p), err)
+WriteFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 11 end error: ", p), err)
+}
+
+func (p *UserInfo) writeField12(oprot thrift.TProtocol) (err error) {
+	if err = oprot.WriteFieldBegin("favorite_count", thrift.I64, 12); err != nil {
+		goto WriteFieldBeginError
+	}
+	if err := oprot.WriteI64(p.FavoriteCount); err != nil {
+		return err
+	}
+	if err = oprot.WriteFieldEnd(); err != nil {
+		goto WriteFieldEndError
+	}
+	return nil
+WriteFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 12 begin error: ", p), err)
+WriteFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 12 end error: ", p), err)
 }
 
 func (p *UserInfo) String() string {

@@ -6,9 +6,10 @@ import (
 	"context"
 	"douyin/biz/service"
 	"douyin/pkg/constant"
+	"douyin/pkg/errno"
 	"github.com/cloudwego/hertz/pkg/common/hlog"
 
-	api "douyin/biz/model/api"
+	"douyin/biz/model/api"
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/protocol/consts"
 )
@@ -25,25 +26,24 @@ func CommentAction(ctx context.Context, c *app.RequestContext) {
 	}
 
 	hlog.Infof("%#v comment action", req)
-
 	userID := c.GetUint64(constant.IdentityKey)
 	hlog.Info(userID)
 
-	resp := new(api.DouyinCommentActionResponse)
+	var resp *api.DouyinCommentActionResponse
 	// 这里注意走 ActionType 对应的逻辑的时候要注意判断相关字段是否为空
 	if req.ActionType == constant.PostComment && req.CommentText != nil {
 		resp, err = service.PostComment(userID, uint64(req.VideoID), *req.CommentText)
 	} else if req.ActionType == constant.DeleteComment && req.CommentID != nil {
 		resp, err = service.DeleteComment(userID, uint64(req.VideoID), uint64(*req.CommentID))
 	} else {
-		resp.StatusCode = 1
-		msg := "actionType Error"
-		resp.StatusMsg = &msg
+		err = errno.UserRequestParameterError
 	}
 	if err != nil {
-		resp.StatusCode = 1
 		msg := err.Error()
-		resp.StatusMsg = &msg
+		resp = &api.DouyinCommentActionResponse{
+			StatusCode: 1,
+			StatusMsg:  &msg,
+		}
 	}
 
 	c.JSON(consts.StatusOK, resp)

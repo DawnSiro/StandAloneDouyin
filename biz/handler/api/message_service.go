@@ -6,7 +6,7 @@ import (
 	"context"
 	"douyin/biz/service"
 	"douyin/pkg/constant"
-	"errors"
+	"douyin/pkg/errno"
 	"github.com/cloudwego/hertz/pkg/common/hlog"
 
 	api "douyin/biz/model/api"
@@ -25,21 +25,24 @@ func SendMessage(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
-	hlog.Info(req)
-
+	hlog.Info("handler.message_service.SendMessage Request:", req)
 	fromUserID := c.GetUint64(constant.IdentityKey)
-	resp := new(api.DouyinMessageActionResponse)
+	hlog.Info("handler.message_service.SendMessage GetFromUserID:", fromUserID)
+	var resp *api.DouyinMessageActionResponse
 	if req.ActionType == constant.SendMessageAction {
 		resp, err = service.SendMessage(fromUserID, uint64(req.ToUserID), req.Content)
 	} else {
-		err = errors.New("action type error")
+		err = errno.UserRequestParameterError
 	}
 
 	if err != nil {
-		c.JSON(consts.StatusOK, err)
+		errNo := errno.ConvertErr(err)
+		c.JSON(consts.StatusOK, &api.DouyinMessageActionResponse{
+			StatusCode: errNo.ErrCode,
+			StatusMsg:  &errNo.ErrMsg,
+		})
 		return
 	}
-
 	c.JSON(consts.StatusOK, resp)
 }
 
@@ -55,12 +58,23 @@ func GetMessageChat(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
-	hlog.Info(req)
-
+	hlog.Info("handler.message_service.GetMessageChat Request:", req)
 	userID := c.GetUint64(constant.IdentityKey)
-	resp, err := service.GetMessageChat(userID, uint64(req.ToUserID))
+	hlog.Info("handler.message_service.GetMessageChat GetUserID:", userID)
+	if req.PreMsgTime == nil {
+		req.PreMsgTime = new(int64)
+		// 先尝试从缓存中取值
+		// 取不到再赋默认值
+		*req.PreMsgTime = 0
+	}
+	hlog.Info(*req.PreMsgTime)
+	resp, err := service.GetMessageChat(userID, uint64(req.ToUserID), *req.PreMsgTime)
 	if err != nil {
-		c.JSON(consts.StatusOK, err)
+		errNo := errno.ConvertErr(err)
+		c.JSON(consts.StatusOK, &api.DouyinMessageChatResponse{
+			StatusCode: errNo.ErrCode,
+			StatusMsg:  &errNo.ErrMsg,
+		})
 		return
 	}
 

@@ -7,6 +7,7 @@ import (
 	"context"
 	"douyin/biz/service"
 	"douyin/pkg/constant"
+	"douyin/pkg/errno"
 	"github.com/cloudwego/hertz/pkg/common/hlog"
 	"io"
 	"mime/multipart"
@@ -27,41 +28,55 @@ func PublishAction(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
-	hlog.Infof("%#v de", req)
-
+	hlog.Info("handler.publish_service.PublishAction Request:", req)
 	fileHeader, err := c.FormFile("data")
 	if err != nil {
-		c.JSON(consts.StatusOK, err)
+		msg := err.Error()
+		c.JSON(consts.StatusOK, &api.DouyinPublishActionResponse{
+			StatusCode: errno.UserRequestParameterError.ErrCode,
+			StatusMsg:  &msg,
+		})
 		return
 	}
-	hlog.Infof("filename = %#v", fileHeader.Filename)
 
+	hlog.Info("handler.publish_service.PublishAction Filename:", fileHeader.Filename)
 	file, err := fileHeader.Open()
-
 	defer func(file multipart.File) {
 		err := file.Close()
 		if err != nil {
+			hlog.Error("handler.publish_service.PublishAction err:", err)
+			errNo := errno.ConvertErr(err)
+			c.JSON(consts.StatusOK, &api.DouyinPublishActionResponse{
+				StatusCode: errNo.ErrCode,
+				StatusMsg:  &errNo.ErrMsg,
+			})
 			return
 		}
 	}(file)
-
+	// 将文件转化为字节流
 	buf := bytes.NewBuffer(nil)
 	if _, err := io.Copy(buf, file); err != nil {
-		c.JSON(consts.StatusOK, err)
+		errNo := errno.ConvertErr(err)
+		c.JSON(consts.StatusOK, &api.DouyinPublishActionResponse{
+			StatusCode: errNo.ErrCode,
+			StatusMsg:  &errNo.ErrMsg,
+		})
 		return
 	}
 
-	userID := c.GetInt64(constant.IdentityKey)
+	userID := c.GetUint64(constant.IdentityKey)
+	hlog.Info("handler.feed_service.GetFeed GetUserID:", userID)
 	err = service.PublishAction(req.Title, buf.Bytes(), userID)
 	if err != nil {
-		c.JSON(consts.StatusOK, err)
+		errNo := errno.ConvertErr(err)
+		c.JSON(consts.StatusOK, &api.DouyinPublishActionResponse{
+			StatusCode: errNo.ErrCode,
+			StatusMsg:  &errNo.ErrMsg,
+		})
 		return
 	}
 
-	c.JSON(consts.StatusOK, &api.DouyinPublishActionResponse{
-		StatusCode: 0,
-		StatusMsg:  nil,
-	})
+	c.JSON(consts.StatusOK, &api.DouyinPublishActionResponse{StatusCode: 0})
 }
 
 // GetPublishVideos .
@@ -75,11 +90,15 @@ func GetPublishVideos(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
-	hlog.Infof("%#v", req)
-
+	hlog.Info("handler.publish_service.GetPublishVideos Request:", req)
 	resp, err := service.GetPublishVideos(uint64(req.UserID))
 	if err != nil {
-		c.JSON(consts.StatusOK, err)
+		errNo := errno.ConvertErr(err)
+		c.JSON(consts.StatusOK, &api.DouyinPublishListResponse{
+			StatusCode: errNo.ErrCode,
+			StatusMsg:  &errNo.ErrMsg,
+		})
+		return
 	}
 
 	c.JSON(consts.StatusOK, resp)
