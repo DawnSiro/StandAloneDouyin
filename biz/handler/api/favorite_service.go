@@ -27,7 +27,7 @@ func FavoriteVideo(ctx context.Context, c *app.RequestContext) {
 
 	hlog.Infof("%#v", req)
 	userID := c.GetUint64(constant.IdentityKey)
-	resp := new(api.DouyinFavoriteActionResponse)
+	var resp *api.DouyinFavoriteActionResponse
 	if req.ActionType == constant.Favorite {
 		resp, err = service.FavoriteVideo(userID, uint64(req.VideoID))
 	} else if req.ActionType == constant.CancelFavorite {

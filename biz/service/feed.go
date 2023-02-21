@@ -5,6 +5,7 @@ import (
 	"douyin/dal/db"
 	"douyin/dal/pack"
 	"douyin/pkg/constant"
+	"github.com/cloudwego/hertz/pkg/common/hlog"
 )
 
 func GetFeed(latestTime *int64, userID uint64) (*api.DouyinFeedResponse, error) {
@@ -12,12 +13,14 @@ func GetFeed(latestTime *int64, userID uint64) (*api.DouyinFeedResponse, error) 
 
 	videos, err := db.MGetVideos(constant.MaxVideoNum, latestTime)
 	if err != nil {
+		hlog.Error("service.feed.GetFeed err:", err.Error())
 		return nil, err
 	}
 
 	for i := 0; i < len(videos); i++ {
 		u, err := db.SelectUserByID(videos[i].AuthorID)
 		if err != nil {
+			hlog.Error("service.feed.GetFeed err:", err.Error())
 			return nil, err
 		}
 
@@ -26,12 +29,16 @@ func GetFeed(latestTime *int64, userID uint64) (*api.DouyinFeedResponse, error) 
 		videoList = append(videoList, video)
 	}
 
-	nextTime := int64(videos[len(videos)-1].PublishTime.Second())
+	var nextTime *int64
+	// 没有视频的时候 nextTime 为 nil，会重置时间
+	if len(videos) != 0 {
+		nextTime = new(int64)
+		*nextTime = int64(videos[len(videos)-1].PublishTime.Second())
+	}
 
 	return &api.DouyinFeedResponse{
 		StatusCode: 0,
-		StatusMsg:  nil,
 		VideoList:  videoList,
-		NextTime:   &nextTime,
+		NextTime:   nextTime,
 	}, nil
 }

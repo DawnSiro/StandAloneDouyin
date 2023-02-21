@@ -120,29 +120,29 @@ func GetFollowerList(userID uint64) ([]*User, error) {
 }
 
 func GetFriendList(userID uint64) ([]*api.FriendUser, error) {
-	rs := make([]*Relation, 0)
+	relations := make([]*Relation, 0)
 	results := make([]*api.FriendUser, 0)
 
-	result := DB.Where("user_id = ? AND is_deleted = ?", userID, constant.DataNotDeleted).Find(&rs)
+	result := DB.Where("user_id = ? AND is_deleted = ?", userID, constant.DataNotDeleted).Find(&relations)
 	if result.RowsAffected == 0 {
 		return results, nil
 	}
 
-	for i := 0; i < len(rs); i++ {
+	for i := 0; i < len(relations); i++ {
 		//查看对方是否是自己的粉丝
 		rs2 := make([]*Relation, 0)
 		result := DB.Where("user_id = ? AND to_user_id = ? AND is_deleted = ?",
-			rs[i].ToUserID, userID, constant.DataNotDeleted).Limit(1).Find(&rs2)
+			relations[i].ToUserID, userID, constant.DataNotDeleted).Limit(1).Find(&rs2)
 		if result.RowsAffected == 0 {
 			continue
 		}
 
-		u, err := SelectUserByID(rs[i].ToUserID)
+		u, err := SelectUserByID(relations[i].ToUserID)
 		if err != nil {
 			return nil, err
 		}
 
-		messageResult, err := GetLatestMsg(userID, rs[i].ToUserID)
+		messageResult, err := GetLatestMsg(userID, relations[i].ToUserID)
 		if err != nil {
 			return nil, err
 		}
@@ -155,7 +155,7 @@ func GetFriendList(userID uint64) ([]*api.FriendUser, error) {
 				Name:          u.Username,
 				FollowCount:   &followCount,
 				FollowerCount: &followerCount,
-				IsFollow:      IsFollow(rs[i].ToUserID, userID),
+				IsFollow:      IsFollow(relations[i].ToUserID, userID),
 				Avatar:        u.Avatar,
 				Message:       &messageResult.Content,
 				MsgType:       int8(messageResult.MsgType),

@@ -7,6 +7,7 @@ import (
 	"douyin/biz/mw"
 	"douyin/biz/service"
 	"douyin/pkg/constant"
+	"douyin/pkg/errno"
 	"github.com/cloudwego/hertz/pkg/common/hlog"
 
 	api "douyin/biz/model/api"
@@ -25,15 +26,17 @@ func Register(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
-	hlog.Infof("Register Request: %s", req)
-
-	resp, err := service.Register(&req)
-
+	err = service.Register(req.Username, req.Password)
 	if err != nil {
-		c.JSON(consts.StatusOK, resp)
+		errNo := errno.ConvertErr(err)
+		c.JSON(consts.StatusOK, &api.DouyinUserRegisterResponse{
+			StatusCode: errNo.ErrCode,
+			StatusMsg:  &errNo.ErrMsg,
+		})
 		return
 	}
 
+	// 注册完后直接登录
 	// 实际调用的是初始化 JWT 时传递的 func
 	mw.JwtMiddleware.LoginHandler(ctx, c)
 }
@@ -56,11 +59,17 @@ func GetUserInfo(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
+	hlog.Info("handler.user_service.GetUserInfo Request:", req)
 	userID := c.GetUint64(constant.IdentityKey)
+	hlog.Info("handler.user_service.GetUserInfo GetUserID:", userID)
 	resp, err := service.GetUserInfo(userID, uint64(req.UserID))
 	hlog.Info(resp)
 	if err != nil {
-		c.JSON(consts.StatusOK, err)
+		errNo := errno.ConvertErr(err)
+		c.JSON(consts.StatusOK, &api.DouyinUserResponse{
+			StatusCode: errNo.ErrCode,
+			StatusMsg:  &errNo.ErrMsg,
+		})
 		return
 	}
 

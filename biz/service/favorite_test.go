@@ -18,7 +18,6 @@ func TestCancelFavoriteVideo(t *testing.T) {
 		want    *api.DouyinFavoriteActionResponse
 		wantErr bool
 	}{
-		// TODO: Add test cases.
 		// TODO: 这里取消点赞不行
 		{"Normal", args{
 			userID:  101,
@@ -68,11 +67,11 @@ func TestFavoriteList(t *testing.T) {
 				VideoList: []*api.Video{
 					{
 						ID: 6,
-						Author: &api.User{
+						Author: &api.UserInfo{
 							ID:            3,
 							Name:          "user01",
-							FollowCount:   &v1,
-							FollowerCount: &v1,
+							FollowCount:   v1,
+							FollowerCount: v1,
 							IsFollow:      true,
 							Avatar:        "https://picture-bucket-01.oss-cn-beijing.aliyuncs.com/DouYin/cover/%E6%B5%8B%E8%AF%95%E5%9B%BE%E7%89%871.png",
 						},
@@ -86,7 +85,7 @@ func TestFavoriteList(t *testing.T) {
 				},
 			},
 			false},
-		{"userId_err",
+		{"userID_err",
 			args{
 				userID:       101,
 				selectUserID: 1000000,

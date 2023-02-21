@@ -5,8 +5,11 @@ import (
 	"testing"
 )
 
-func TestCreateUser(t *testing.T) {
+func TestMain(m *testing.M) {
 	Init()
+}
+
+func TestCreateUser(t *testing.T) {
 	type args struct {
 		user *User
 	}

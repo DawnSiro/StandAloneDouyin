@@ -36,6 +36,19 @@ func (p *DouyinCommentActionRequest) IsValid() error {
 	if !_exist {
 		return fmt.Errorf("field ActionType in rule failed, current value: %v", p.ActionType)
 	}
+	if p.CommentText != nil {
+		if len(*p.CommentText) < int(1) {
+			return fmt.Errorf("field CommentText min_len rule failed, current value: %d", len(*p.CommentText))
+		}
+		if len(*p.CommentText) > int(255) {
+			return fmt.Errorf("field CommentText max_len rule failed, current value: %d", len(*p.CommentText))
+		}
+	}
+	if p.CommentID != nil {
+		if *p.CommentID <= int64(0) {
+			return fmt.Errorf("field CommentID gt rule failed, current value: %v", *p.CommentID)
+		}
+	}
 	return nil
 }
 func (p *DouyinCommentActionResponse) IsValid() error {
@@ -56,9 +69,6 @@ func (p *DouyinCommentListResponse) IsValid() error {
 	return nil
 }
 func (p *Comment) IsValid() error {
-	if p.ID <= int64(0) {
-		return fmt.Errorf("field ID gt rule failed, current value: %v", p.ID)
-	}
 	if p.User != nil {
 		if err := p.User.IsValid(); err != nil {
 			return fmt.Errorf("filed User not valid, %w", err)
@@ -67,19 +77,6 @@ func (p *Comment) IsValid() error {
 	return nil
 }
 func (p *User) IsValid() error {
-	if p.ID <= int64(0) {
-		return fmt.Errorf("field ID gt rule failed, current value: %v", p.ID)
-	}
-	if p.FollowCount != nil {
-		if *p.FollowCount <= int64(0) {
-			return fmt.Errorf("field FollowCount gt rule failed, current value: %v", *p.FollowCount)
-		}
-	}
-	if p.FollowerCount != nil {
-		if *p.FollowerCount <= int64(0) {
-			return fmt.Errorf("field FollowerCount gt rule failed, current value: %v", *p.FollowerCount)
-		}
-	}
 	return nil
 }
 func (p *DouyinFavoriteActionRequest) IsValid() error {
@@ -112,16 +109,10 @@ func (p *DouyinFavoriteListResponse) IsValid() error {
 	return nil
 }
 func (p *Video) IsValid() error {
-	if p.ID <= int64(0) {
-		return fmt.Errorf("field ID gt rule failed, current value: %v", p.ID)
-	}
 	if p.Author != nil {
 		if err := p.Author.IsValid(); err != nil {
 			return fmt.Errorf("filed Author not valid, %w", err)
 		}
-	}
-	if len(p.Title) > int(60) {
-		return fmt.Errorf("field Title max_len rule failed, current value: %d", len(p.Title))
 	}
 	return nil
 }
@@ -141,15 +132,6 @@ func (p *DouyinMessageChatResponse) IsValid() error {
 	return nil
 }
 func (p *Message) IsValid() error {
-	if p.ID <= int64(0) {
-		return fmt.Errorf("field ID gt rule failed, current value: %v", p.ID)
-	}
-	if p.ToUserID <= int64(0) {
-		return fmt.Errorf("field ToUserID gt rule failed, current value: %v", p.ToUserID)
-	}
-	if p.FromUserID <= int64(0) {
-		return fmt.Errorf("field FromUserID gt rule failed, current value: %v", p.FromUserID)
-	}
 	return nil
 }
 func (p *DouyinMessageActionRequest) IsValid() error {
@@ -167,12 +149,24 @@ func (p *DouyinMessageActionRequest) IsValid() error {
 	if !_exist {
 		return fmt.Errorf("field ActionType in rule failed, current value: %v", p.ActionType)
 	}
+	if len(p.Content) < int(1) {
+		return fmt.Errorf("field Content min_len rule failed, current value: %d", len(p.Content))
+	}
+	if len(p.Content) > int(255) {
+		return fmt.Errorf("field Content max_len rule failed, current value: %d", len(p.Content))
+	}
 	return nil
 }
 func (p *DouyinMessageActionResponse) IsValid() error {
 	return nil
 }
 func (p *DouyinPublishActionRequest) IsValid() error {
+	if len(p.Title) < int(1) {
+		return fmt.Errorf("field Title min_len rule failed, current value: %d", len(p.Title))
+	}
+	if len(p.Title) > int(63) {
+		return fmt.Errorf("field Title max_len rule failed, current value: %d", len(p.Title))
+	}
 	return nil
 }
 func (p *DouyinPublishActionResponse) IsValid() error {
@@ -235,30 +229,6 @@ func (p *DouyinRelationFriendListResponse) IsValid() error {
 	return nil
 }
 func (p *FriendUser) IsValid() error {
-	if p.ID <= int64(0) {
-		return fmt.Errorf("field ID gt rule failed, current value: %v", p.ID)
-	}
-	if p.FollowCount != nil {
-		if *p.FollowCount <= int64(0) {
-			return fmt.Errorf("field FollowCount gt rule failed, current value: %v", *p.FollowCount)
-		}
-	}
-	if p.FollowerCount != nil {
-		if *p.FollowerCount <= int64(0) {
-			return fmt.Errorf("field FollowerCount gt rule failed, current value: %v", *p.FollowerCount)
-		}
-	}
-	_src := []int8{int8(0), int8(1)}
-	var _exist bool
-	for _, src := range _src {
-		if p.MsgType == int8(src) {
-			_exist = true
-			break
-		}
-	}
-	if !_exist {
-		return fmt.Errorf("field MsgType in rule failed, current value: %v", p.MsgType)
-	}
 	return nil
 }
 func (p *DouyinUserRegisterRequest) IsValid() error {
@@ -281,9 +251,6 @@ func (p *DouyinUserRegisterRequest) IsValid() error {
 	return nil
 }
 func (p *DouyinUserRegisterResponse) IsValid() error {
-	if p.UserID <= int64(0) {
-		return fmt.Errorf("field UserID gt rule failed, current value: %v", p.UserID)
-	}
 	return nil
 }
 func (p *DouyinUserLoginRequest) IsValid() error {
@@ -302,9 +269,6 @@ func (p *DouyinUserLoginRequest) IsValid() error {
 	return nil
 }
 func (p *DouyinUserLoginResponse) IsValid() error {
-	if p.UserID <= int64(0) {
-		return fmt.Errorf("field UserID gt rule failed, current value: %v", p.UserID)
-	}
 	return nil
 }
 func (p *DouyinUserRequest) IsValid() error {
@@ -322,28 +286,5 @@ func (p *DouyinUserResponse) IsValid() error {
 	return nil
 }
 func (p *UserInfo) IsValid() error {
-	if p.ID <= int64(0) {
-		return fmt.Errorf("field ID gt rule failed, current value: %v", p.ID)
-	}
-	if p.FollowCount != nil {
-		if *p.FollowCount <= int64(0) {
-			return fmt.Errorf("field FollowCount gt rule failed, current value: %v", *p.FollowCount)
-		}
-	}
-	if p.FollowerCount != nil {
-		if *p.FollowerCount <= int64(0) {
-			return fmt.Errorf("field FollowerCount gt rule failed, current value: %v", *p.FollowerCount)
-		}
-	}
-	if p.WorkCount != nil {
-		if *p.WorkCount <= int64(0) {
-			return fmt.Errorf("field WorkCount gt rule failed, current value: %v", *p.WorkCount)
-		}
-	}
-	if p.FavoriteCount != nil {
-		if *p.FavoriteCount <= int64(0) {
-			return fmt.Errorf("field FavoriteCount gt rule failed, current value: %v", *p.FavoriteCount)
-		}
-	}
 	return nil
 }

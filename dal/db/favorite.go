@@ -84,9 +84,11 @@ func CancelFavoriteVideo(userID uint64, videoID uint64) error {
 
 func SelectFavoriteVideoListByUserID(toUserID uint64) ([]*Video, error) {
 	res := make([]*Video, 0)
-
-	DB.Raw("SELECT * FROM video WHERE id IN (SELECT video_id FROM user_favorite_video WHERE user_id = ?)", toUserID).Scan(&res)
-
+	// 使用子查询避免循环查询DB
+	selectVideoIDSQL := DB.Select(`video_id`).
+		Table("user_favorite_video").
+		Where("user_id = ? AND is_deleted = ?", toUserID, constant.DataNotDeleted)
+	DB.Where("id IN (?)", selectVideoIDSQL).Find(&res)
 	return res, nil
 }
 
