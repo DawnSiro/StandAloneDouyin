@@ -3,7 +3,10 @@ package db
 import (
 	"douyin/biz/model/api"
 	"douyin/pkg/constant"
+	"douyin/pkg/errno"
 	"errors"
+	"github.com/cloudwego/hertz/pkg/common/hlog"
+	"gorm.io/gorm"
 )
 
 type Relation struct {
@@ -40,21 +43,51 @@ func IsFollow(userID uint64, toUserID uint64) bool {
 
 func Follow(userID uint64, toUserID uint64) error {
 	if userID == 0 || toUserID == 0 {
-		return errors.New("follow failed")
+		hlog.Error("db.relation.Follow err:", errno.UserRequestParameterError)
+		return errno.UserRequestParameterError
 	}
 	relation := &Relation{
 		UserID:   userID,
 		ToUserID: toUserID,
 	}
-	// 先查询是否存在软删除的关注数据
-	result := DB.Where("user_id = ? AND to_user_id = ? AND AND is_deleted = ?",
-		userID, toUserID, constant.DataNotDeleted).Limit(1).Find(relation)
-	// 如果有则修改为未删除
-	if result.RowsAffected == 1 {
-		return DB.Model(relation).Update("is_deleted", constant.DataDeleted).Error
-	}
-	// 没有则新建
-	return DB.Create(relation).Error
+
+	return DB.Transaction(func(tx *gorm.DB) error {
+		// 新增自己的关注数
+		self := &User{ID: userID}
+		err := tx.Select("following_count").First(self).Error
+		if err != nil {
+			hlog.Error("db.relation.Follow err:", err.Error())
+			return err
+		}
+		err = tx.Model(self).Update("following_count", self.FollowingCount+1).Error
+		if err != nil {
+			hlog.Error("db.relation.Follow err:", err.Error())
+			return err
+		}
+		// 新增关注用户的粉丝数
+		opposite := &User{ID: toUserID}
+		err = tx.Select("follower_count").First(opposite).Error
+		if err != nil {
+			hlog.Error("db.relation.Follow err:", err.Error())
+			return err
+		}
+		err = tx.Model(opposite).Update("follower_count", opposite.FollowerCount+1).Error
+		if err != nil {
+			hlog.Error("db.relation.Follow err:", err.Error())
+			return err
+		}
+
+		// 更新关注的关系
+		// 先查询是否存在软删除的关注数据
+		result := tx.Where("user_id = ? AND to_user_id = ? AND is_deleted = ?",
+			userID, toUserID, constant.DataNotDeleted).Limit(1).Find(relation)
+		// 如果有则修改为未删除
+		if result.RowsAffected == 1 {
+			return tx.Model(relation).Update("is_deleted", constant.DataDeleted).Error
+		}
+		// 没有则新建
+		return tx.Create(relation).Error
+	})
 }
 
 func CancelFollow(userID uint64, toUserID uint64) error {
@@ -73,8 +106,38 @@ func CancelFollow(userID uint64, toUserID uint64) error {
 	if result.RowsAffected == 0 {
 		return errors.New("cancel favorite failed")
 	}
-	return DB.Model(relation).Where("user_id = ? AND to_user_id = ? AND is_deleted = ?",
-		userID, toUserID, constant.DataNotDeleted).Update("is_deleted", constant.DataDeleted).Error
+
+	return DB.Transaction(func(tx *gorm.DB) error {
+		// 减少自己的关注数
+		self := &User{ID: userID}
+		err := tx.Select("following_count").First(self).Error
+		if err != nil {
+			hlog.Error("db.relation.CancelFollow err:", err.Error())
+			return err
+		}
+		err = tx.Model(self).Update("following_count", self.FollowingCount-1).Error
+		if err != nil {
+			hlog.Error("db.relation.CancelFollow err:", err.Error())
+			return err
+		}
+		// 减少关注用户的粉丝数
+		opposite := &User{ID: toUserID}
+		err = tx.Select("follower_count").First(opposite).Error
+		if err != nil {
+			hlog.Error("db.relation.CancelFollow err:", err.Error())
+			return err
+		}
+		err = tx.Model(opposite).Update("follower_count", opposite.FollowerCount-1).Error
+		if err != nil {
+			hlog.Error("db.relation.CancelFollow err:", err.Error())
+			return err
+		}
+
+		// 去除关注的关系
+		return DB.Model(relation).Where("user_id = ? AND to_user_id = ? AND is_deleted = ?",
+			userID, toUserID, constant.DataNotDeleted).Update("is_deleted", constant.DataDeleted).Error
+	})
+
 }
 
 func GetFollowList(userID uint64) ([]*User, error) {
