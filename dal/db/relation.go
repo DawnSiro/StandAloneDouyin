@@ -1,10 +1,12 @@
 package db
 
 import (
+	"errors"
+
 	"douyin/biz/model/api"
 	"douyin/pkg/constant"
 	"douyin/pkg/errno"
-	"errors"
+
 	"github.com/cloudwego/hertz/pkg/common/hlog"
 	"gorm.io/gorm"
 )

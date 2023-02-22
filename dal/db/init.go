@@ -1,16 +1,16 @@
 package db
 
 import (
-	"douyin/pkg/constant"
-	"gorm.io/gorm/logger"
 	"log"
 	"os"
 	"time"
 
-	"github.com/go-redis/redis"
+	"douyin/pkg/constant"
 
+	"github.com/go-redis/redis"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 )
 
 var DB *gorm.DB

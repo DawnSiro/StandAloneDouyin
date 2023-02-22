@@ -4,11 +4,11 @@ package api
 
 import (
 	"context"
-	api "douyin/biz/model/api"
+	"douyin/biz/model/api"
 	"douyin/biz/service"
 	"douyin/pkg/constant"
 	"douyin/pkg/errno"
-	"errors"
+
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/common/hlog"
 	"github.com/cloudwego/hertz/pkg/protocol/consts"
@@ -25,16 +25,17 @@ func Follow(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
-	hlog.Info(req)
-
+	hlog.Info("handler.relation_service.Follow Request:", req)
 	userID := c.GetUint64(constant.IdentityKey)
+	hlog.Info("handler.relation_service.Follow GetUserID:", userID)
 	var resp *api.DouyinRelationActionResponse
 	if req.ActionType == constant.Follow {
 		resp, err = service.Follow(userID, uint64(req.ToUserID))
 	} else if req.ActionType == constant.CancelFollow {
 		resp, err = service.CancelFollow(userID, uint64(req.ToUserID))
 	} else {
-		err = errors.New("action type error")
+		err = errno.UserRequestParameterError
+		hlog.Error("handler.relation_service.Follow err:", err.Error())
 	}
 
 	if err != nil {
@@ -60,11 +61,14 @@ func GetFollowList(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
-	hlog.Info(req)
-
+	hlog.Info("handler.relation_service.GetFollowList Request:", req)
 	resp, err := service.GetFollowList(uint64(req.UserID))
 	if err != nil {
-		c.JSON(consts.StatusOK, err)
+		errNo := errno.ConvertErr(err)
+		c.JSON(consts.StatusOK, &api.DouyinRelationFollowListResponse{
+			StatusCode: errNo.ErrCode,
+			StatusMsg:  &errNo.ErrMsg,
+		})
 		return
 	}
 
@@ -82,11 +86,14 @@ func GetFollowerList(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
-	hlog.Info(req)
-
+	hlog.Info("handler.relation_service.GetFollowerList Request:", req)
 	resp, err := service.GetFollowerList(uint64(req.UserID))
 	if err != nil {
-		c.JSON(consts.StatusOK, err)
+		errNo := errno.ConvertErr(err)
+		c.JSON(consts.StatusOK, &api.DouyinRelationFollowerListResponse{
+			StatusCode: errNo.ErrCode,
+			StatusMsg:  &errNo.ErrMsg,
+		})
 		return
 	}
 
@@ -104,11 +111,14 @@ func GetFriendList(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
-	hlog.Info(req)
-
-	resp, err := service.GetFriendList(&req)
+	hlog.Info("handler.relation_service.GetFollowerList Request:", req)
+	resp, err := service.GetFriendList(uint64(req.UserID))
 	if err != nil {
-		c.JSON(consts.StatusOK, err)
+		errNo := errno.ConvertErr(err)
+		c.JSON(consts.StatusOK, &api.DouyinRelationFriendListResponse{
+			StatusCode: errNo.ErrCode,
+			StatusMsg:  &errNo.ErrMsg,
+		})
 		return
 	}
 

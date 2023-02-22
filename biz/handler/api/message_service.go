@@ -4,13 +4,14 @@ package api
 
 import (
 	"context"
+
+	"douyin/biz/model/api"
 	"douyin/biz/service"
 	"douyin/pkg/constant"
 	"douyin/pkg/errno"
-	"github.com/cloudwego/hertz/pkg/common/hlog"
 
-	api "douyin/biz/model/api"
 	"github.com/cloudwego/hertz/pkg/app"
+	"github.com/cloudwego/hertz/pkg/common/hlog"
 	"github.com/cloudwego/hertz/pkg/protocol/consts"
 )
 
@@ -33,6 +34,7 @@ func SendMessage(ctx context.Context, c *app.RequestContext) {
 		resp, err = service.SendMessage(fromUserID, uint64(req.ToUserID), req.Content)
 	} else {
 		err = errno.UserRequestParameterError
+		hlog.Info("handler.message_service.SendMessage err:", err.Error())
 	}
 
 	if err != nil {
@@ -62,12 +64,9 @@ func GetMessageChat(ctx context.Context, c *app.RequestContext) {
 	userID := c.GetUint64(constant.IdentityKey)
 	hlog.Info("handler.message_service.GetMessageChat GetUserID:", userID)
 	if req.PreMsgTime == nil {
-		req.PreMsgTime = new(int64)
-		// 先尝试从缓存中取值
-		// 取不到再赋默认值
-		*req.PreMsgTime = 0
+		preMsgTime := int64(0)
+		req.PreMsgTime = &preMsgTime
 	}
-	hlog.Info(*req.PreMsgTime)
 	resp, err := service.GetMessageChat(userID, uint64(req.ToUserID), *req.PreMsgTime)
 	if err != nil {
 		errNo := errno.ConvertErr(err)

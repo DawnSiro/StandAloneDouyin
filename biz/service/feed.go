@@ -5,6 +5,7 @@ import (
 	"douyin/dal/db"
 	"douyin/dal/pack"
 	"douyin/pkg/constant"
+
 	"github.com/cloudwego/hertz/pkg/common/hlog"
 )
 
@@ -17,6 +18,7 @@ func GetFeed(latestTime *int64, userID uint64) (*api.DouyinFeedResponse, error) 
 		return nil, err
 	}
 
+	// TODO 使用预处理等进行优化
 	for i := 0; i < len(videos); i++ {
 		u, err := db.SelectUserByID(videos[i].AuthorID)
 		if err != nil {

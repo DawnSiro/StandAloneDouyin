@@ -4,13 +4,14 @@ package api
 
 import (
 	"context"
+
+	"douyin/biz/model/api"
 	"douyin/biz/service"
 	"douyin/pkg/constant"
 	"douyin/pkg/errno"
-	"github.com/cloudwego/hertz/pkg/common/hlog"
 
-	"douyin/biz/model/api"
 	"github.com/cloudwego/hertz/pkg/app"
+	"github.com/cloudwego/hertz/pkg/common/hlog"
 	"github.com/cloudwego/hertz/pkg/protocol/consts"
 )
 
@@ -25,10 +26,9 @@ func CommentAction(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
-	hlog.Infof("%#v comment action", req)
+	hlog.Info("handler.comment_service.CommentAction Request:", req)
 	userID := c.GetUint64(constant.IdentityKey)
-	hlog.Info(userID)
-
+	hlog.Info("handler.comment_service.CommentAction GetUserID:", userID)
 	var resp *api.DouyinCommentActionResponse
 	// 这里注意走 ActionType 对应的逻辑的时候要注意判断相关字段是否为空
 	if req.ActionType == constant.PostComment && req.CommentText != nil {
@@ -37,13 +37,15 @@ func CommentAction(ctx context.Context, c *app.RequestContext) {
 		resp, err = service.DeleteComment(userID, uint64(req.VideoID), uint64(*req.CommentID))
 	} else {
 		err = errno.UserRequestParameterError
+		hlog.Error("handler.comment_service.CommentAction err:", err.Error())
 	}
 	if err != nil {
-		msg := err.Error()
-		resp = &api.DouyinCommentActionResponse{
-			StatusCode: 1,
-			StatusMsg:  &msg,
-		}
+		errNo := errno.ConvertErr(err)
+		c.JSON(consts.StatusOK, &api.DouyinCommentActionResponse{
+			StatusCode: errNo.ErrCode,
+			StatusMsg:  &errNo.ErrMsg,
+		})
+		return
 	}
 
 	c.JSON(consts.StatusOK, resp)
@@ -60,11 +62,16 @@ func GetCommentList(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
-	hlog.Infof("%#v", req)
+	hlog.Info("handler.comment_service.GetCommentList Request:", req)
 	userID := c.GetUint64(constant.IdentityKey)
+	hlog.Info("handler.comment_service.GetCommentList GetUserID:", userID)
 	resp, err := service.CommentList(userID, uint64(req.VideoID))
 	if err != nil {
-		c.JSON(consts.StatusOK, err)
+		errNo := errno.ConvertErr(err)
+		c.JSON(consts.StatusOK, &api.DouyinCommentListResponse{
+			StatusCode: errNo.ErrCode,
+			StatusMsg:  &errNo.ErrMsg,
+		})
 		return
 	}
 

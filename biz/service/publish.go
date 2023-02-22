@@ -2,14 +2,16 @@ package service
 
 import (
 	"bytes"
+	"errors"
+	"io"
+
 	"douyin/biz/model/api"
 	"douyin/dal/db"
 	"douyin/dal/pack"
 	"douyin/pkg/util"
-	"errors"
+
 	"github.com/cloudwego/hertz/pkg/common/hlog"
 	"github.com/gofrs/uuid"
-	"io"
 )
 
 func PublishAction(title string, videoData []byte, userID uint64) error {

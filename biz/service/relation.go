@@ -1,11 +1,12 @@
 package service
 
 import (
+	"errors"
+
 	"douyin/biz/model/api"
 	"douyin/dal/db"
 	"douyin/dal/pack"
 	"douyin/pkg/errno"
-	"errors"
 )
 
 func Follow(userID, toUserID uint64) (*api.DouyinRelationActionResponse, error) {
@@ -79,21 +80,19 @@ func GetFollowerList(userID uint64) (*api.DouyinRelationFollowerListResponse, er
 		userList = append(userList, pack.User(v, db.IsFollow(userID, v.ID)))
 	}
 	return &api.DouyinRelationFollowerListResponse{
-		StatusCode: 0,
-		StatusMsg:  nil,
+		StatusCode: errno.Success.ErrCode,
 		UserList:   userList,
 	}, nil
 }
 
-func GetFriendList(req *api.DouyinRelationFriendListRequest) (*api.DouyinRelationFriendListResponse, error) {
-	resultList, err := db.GetFriendList(uint64(req.UserID))
+func GetFriendList(userID uint64) (*api.DouyinRelationFriendListResponse, error) {
+	resultList, err := db.GetFriendList(userID)
 	if err != nil {
 		return nil, err
 	}
 
 	return &api.DouyinRelationFriendListResponse{
-		StatusCode: 0,
-		StatusMsg:  nil,
+		StatusCode: errno.Success.ErrCode,
 		UserList:   resultList,
 	}, nil
 }

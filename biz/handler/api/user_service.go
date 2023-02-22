@@ -4,14 +4,15 @@ package api
 
 import (
 	"context"
+
+	"douyin/biz/model/api"
 	"douyin/biz/mw"
 	"douyin/biz/service"
 	"douyin/pkg/constant"
 	"douyin/pkg/errno"
-	"github.com/cloudwego/hertz/pkg/common/hlog"
 
-	api "douyin/biz/model/api"
 	"github.com/cloudwego/hertz/pkg/app"
+	"github.com/cloudwego/hertz/pkg/common/hlog"
 	"github.com/cloudwego/hertz/pkg/protocol/consts"
 )
 

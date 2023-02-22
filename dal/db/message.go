@@ -1,8 +1,9 @@
 package db
 
 import (
-	"douyin/pkg/constant"
 	"time"
+
+	"douyin/pkg/constant"
 )
 
 type Message struct {

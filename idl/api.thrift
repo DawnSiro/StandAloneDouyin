@@ -286,11 +286,11 @@ struct UserInfo {
   4: required i64 follower_count  // 粉丝总数
   5: required bool is_follow  // true-已关注，false-未关注
   6: required string avatar  // 用户头像Url
-  8: required string background_image //用户个人页顶部大图
-  9: required string signature //个人简介
-  10: required i64 total_favorited //获赞数量
-  11: required i64 work_count  // 用户作品数
-  12: required i64 favorite_count  // 用户点赞的视频数
+  7: required string background_image //用户个人页顶部大图
+  8: required string signature //个人简介
+  9: required i64 total_favorited //获赞数量
+  10: required i64 work_count  // 用户作品数
+  11: required i64 favorite_count  // 用户点赞的视频数
 }
 
 

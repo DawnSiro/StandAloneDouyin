@@ -1,9 +1,10 @@
 package db
 
 import (
-	"douyin/pkg/constant"
 	"errors"
 	"time"
+
+	"douyin/pkg/constant"
 )
 
 type Comment struct {
