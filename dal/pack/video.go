@@ -3,9 +3,16 @@ package pack
 import (
 	"douyin/biz/model/api"
 	"douyin/dal/db"
+	"douyin/pkg/errno"
+
+	"github.com/cloudwego/hertz/pkg/common/hlog"
 )
 
 func Video(v *db.Video, u *db.User, isFollow, isFavorite bool) *api.Video {
+	if v == nil || u == nil {
+		hlog.Error("pack.video.Video err:", errno.ServiceError)
+		return nil
+	}
 	author := &api.UserInfo{
 		ID:              int64(u.ID),
 		Name:            u.Username,
