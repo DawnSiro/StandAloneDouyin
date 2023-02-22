@@ -2,13 +2,13 @@ package service
 
 import (
 	"bytes"
-	"errors"
-	"io"
-
 	"douyin/biz/model/api"
 	"douyin/dal/db"
 	"douyin/dal/pack"
 	"douyin/pkg/util"
+	"errors"
+	"io"
+	"time"
 
 	"github.com/cloudwego/hertz/pkg/common/hlog"
 	"github.com/gofrs/uuid"
@@ -37,6 +37,7 @@ func PublishAction(title string, videoData []byte, userID uint64) error {
 	}
 
 	return db.CreateVideo(&db.Video{
+		PublishTime:   time.Now(),
 		AuthorID:      userID,
 		PlayURL:       playURL,
 		CoverURL:      coverURL,
