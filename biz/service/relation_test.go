@@ -206,10 +206,7 @@ func TestGetFriendList(t *testing.T) {
 		want    *api.DouyinRelationFriendListResponse
 		wantErr bool
 	}{
-		{"Normal", args{req: &api.DouyinRelationFriendListRequest{
-			UserID: 5,
-			Token:  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2NzcwMjcyMTksImlkIjozLCJvcmlnX2lhdCI6MTY3Njk4NDAxOX0.gB03mv5TB2QxZrqPfNG8uIgc1ToUKAbmTvAnkHNxens",
-		}},
+		{"Normal", args{userID: 5},
 			&api.DouyinRelationFriendListResponse{
 				StatusCode: 0,
 				StatusMsg:  nil,
@@ -227,10 +224,7 @@ func TestGetFriendList(t *testing.T) {
 				},
 			}, false},
 		{"userID_not_exist",
-			args{req: &api.DouyinRelationFriendListRequest{
-				UserID: 500000,
-				Token:  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2NzcwMjcyMTksImlkIjozLCJvcmlnX2lhdCI6MTY3Njk4NDAxOX0.gB03mv5TB2QxZrqPfNG8uIgc1ToUKAbmTvAnkHNxens",
-			}}, &api.DouyinRelationFriendListResponse{
+			args{userID: 500000}, &api.DouyinRelationFriendListResponse{
 				StatusCode: 0,
 				StatusMsg:  nil,
 				UserList:   []*api.FriendUser{},

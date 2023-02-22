@@ -23,7 +23,8 @@ func (u *User) TableName() string {
 }
 
 func CreateUser(user *User) (userID int64, err error) {
-	if err := DB.Create(user).Error; err != nil {
+	// 这里不指明更新的字段的话，会全部赋零值，就无法使用数据库的默认值了
+	if err := DB.Select("username", "password").Create(user).Error; err != nil {
 		return 0, err
 	}
 	return int64(user.ID), nil
