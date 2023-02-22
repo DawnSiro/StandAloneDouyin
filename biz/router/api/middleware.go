@@ -43,10 +43,7 @@ func _listMw() []app.HandlerFunc {
 
 func _getcommentlistMw() []app.HandlerFunc {
 	// your code...
-	return []app.HandlerFunc{
-		// use jwt mw
-		mw.JwtMiddleware.MiddlewareFunc(),
-	}
+	return nil
 }
 
 func _favoriteMw() []app.HandlerFunc {

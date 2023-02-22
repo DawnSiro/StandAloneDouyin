@@ -46,6 +46,7 @@ var (
 	AccessPermissionError                         = NewErrNo(int64(api.ErrCode_AccessPermission), "访问权限异常")
 	DeletePermissionError                         = NewErrNo(int64(api.ErrCode_DeletePermission), "删除权限异常")
 	UserRequestParameterError                     = NewErrNo(int64(api.ErrCode_UserRequestParameter), "用户请求参数错误")
+	RepeatOperationError                          = NewErrNo(int64(api.ErrCode_RepeatOperationError), "用户重复操作")
 	IllegalUserInputError                         = NewErrNo(int64(api.ErrCode_IllegalUserInput), "用户输入内容非法")
 	ContainsProhibitedSensitiveWordsError         = NewErrNo(int64(api.ErrCode_ContainsProhibitedSensitiveWords), "包含违禁敏感词")
 	UserUploadFileError                           = NewErrNo(int64(api.ErrCode_UserUploadFile), "用户上传文件异常")

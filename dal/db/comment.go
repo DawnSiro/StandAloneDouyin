@@ -5,6 +5,9 @@ import (
 	"time"
 
 	"douyin/pkg/constant"
+	"douyin/pkg/errno"
+
+	"gorm.io/gorm"
 )
 
 type Comment struct {
@@ -27,14 +30,32 @@ func CreateComment(videoID uint64, content string, userID uint64) (*Comment, err
 		Content:     content,
 		CreatedTime: time.Now(),
 	}
-	if err := DB.Create(comment).Error; err != nil {
+	// DB 层开事务来保证原子性
+	err := DB.Transaction(func(tx *gorm.DB) error {
+		// 创建评论
+		err := DB.Create(comment).Error
+		if err != nil {
+			return err
+		}
+		// 增加视频评论数
+		video := &Video{
+			ID: videoID,
+		}
+		err = DB.First(&video).Error
+		if err != nil {
+			return err
+		}
+		return DB.Model(&video).Update("comment_count", video.CommentCount+1).Error
+	})
+	if err != nil {
 		return nil, err
 	}
+
 	return comment, nil
 }
 
 // DeleteCommentByID 通过评论ID 删除评论，默认使用软删除，提高性能
-func DeleteCommentByID(commentID uint64) (*Comment, error) {
+func DeleteCommentByID(videoID, commentID uint64) (*Comment, error) {
 	comment := &Comment{
 		ID: commentID,
 	}
@@ -44,13 +65,30 @@ func DeleteCommentByID(commentID uint64) (*Comment, error) {
 		return nil, errors.New("delete data failed")
 	}
 
-	result = DB.Model(comment).Update("is_deleted", constant.DataDeleted)
-	if result.Error != nil {
-		return nil, result.Error
+	// DB 层开事务来保证原子性
+	err := DB.Transaction(func(tx *gorm.DB) error {
+		// 删除评论
+		result = DB.Model(comment).Update("is_deleted", constant.DataDeleted)
+		if result.Error != nil {
+			return result.Error
+		}
+		if result.RowsAffected == 0 {
+			return errno.UserRequestParameterError
+		}
+		// 减少视频评论数
+		video := &Video{
+			ID: videoID,
+		}
+		err := DB.First(&video).Error
+		if err != nil {
+			return err
+		}
+		return DB.Model(&video).Update("comment_count", video.CommentCount-1).Error
+	})
+	if err != nil {
+		return nil, err
 	}
-	if result.RowsAffected == 0 {
-		return nil, errors.New("delete data failed")
-	}
+
 	return comment, nil
 }
 

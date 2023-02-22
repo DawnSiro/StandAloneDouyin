@@ -18,6 +18,7 @@ enum ErrCode {
 	AccessPermission                         = 10300 // 访问权限异常 二级宏观错误码
 	DeletePermission                         = 10310 // 删除权限异常 普通用户不能删除别人的评论
 	UserRequestParameter                     = 10400 // 用户请求参数错误 二级宏观错误码
+	RepeatOperationError                     = 10410 // 用户重复操作
 	IllegalUserInput                         = 10430
 	ContainsProhibitedSensitiveWords         = 10431
 	UserUploadFile                           = 10500 // 用户上传文件异常 二级宏观错误码

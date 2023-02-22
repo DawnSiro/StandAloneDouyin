@@ -4,6 +4,7 @@ import (
 	"errors"
 
 	"douyin/pkg/constant"
+	"douyin/pkg/errno"
 
 	"gorm.io/gorm"
 )
@@ -21,7 +22,7 @@ func (n *UserFavoriteVideo) TableName() string {
 
 func FavoriteVideo(userID uint64, videoID uint64) error {
 	if userID == 0 || videoID == 0 {
-		return errors.New("favorite failed")
+		return errno.UserRequestParameterError
 	}
 
 	userFavoriteVideo := &UserFavoriteVideo{
@@ -35,9 +36,21 @@ func FavoriteVideo(userID uint64, videoID uint64) error {
 		return result.Error
 	}
 	return DB.Transaction(func(tx *gorm.DB) error {
-		// 先更新用户的点赞视频数
+		// 增加该视频的点赞数
+		video := &Video{
+			ID: videoID,
+		}
+		err := tx.First(&video).Error
+		if err != nil {
+			return err
+		}
+		if err := tx.Model(&video).Update("favorite_count", video.FavoriteCount+1).Error; err != nil {
+			return err
+		}
+
+		// 更新用户的点赞视频数
 		u := &User{ID: userID}
-		err := tx.Select("favorite_count").First(u).Error
+		err = tx.Select("favorite_count").First(u).Error
 		if err != nil {
 			return err
 		}
@@ -69,9 +82,21 @@ func CancelFavoriteVideo(userID uint64, videoID uint64) error {
 	}
 
 	return DB.Transaction(func(tx *gorm.DB) error {
+		// 增加该视频的点赞数
+		video := &Video{
+			ID: videoID,
+		}
+		err := tx.First(&video).Error
+		if err != nil {
+			return err
+		}
+		if err := tx.Model(&video).Update("favorite_count", video.FavoriteCount-1).Error; err != nil {
+			return err
+		}
+
 		// 更新用户的点赞视频数
 		u := &User{ID: userID}
-		err := tx.Select("favorite_count").First(u).Error
+		err = tx.Select("favorite_count").First(u).Error
 		if err != nil {
 			return err
 		}

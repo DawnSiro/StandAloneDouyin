@@ -188,6 +188,7 @@ func GetFriendList(userID uint64) ([]*api.FriendUser, error) {
 	relations := make([]*Relation, 0)
 	results := make([]*api.FriendUser, 0)
 
+	// TODO 存在循环查询DB
 	result := DB.Where("user_id = ? AND is_deleted = ?", userID, constant.DataNotDeleted).Find(&relations)
 	if result.RowsAffected == 0 {
 		return results, nil

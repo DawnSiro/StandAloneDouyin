@@ -30,6 +30,7 @@ const (
 	ErrCode_AccessPermission                         ErrCode = 10300
 	ErrCode_DeletePermission                         ErrCode = 10310
 	ErrCode_UserRequestParameter                     ErrCode = 10400
+	ErrCode_RepeatOperationError                     ErrCode = 10410
 	ErrCode_IllegalUserInput                         ErrCode = 10430
 	ErrCode_ContainsProhibitedSensitiveWords         ErrCode = 10431
 	ErrCode_UserUploadFile                           ErrCode = 10500
@@ -93,6 +94,8 @@ func (p ErrCode) String() string {
 		return "DeletePermission"
 	case ErrCode_UserRequestParameter:
 		return "UserRequestParameter"
+	case ErrCode_RepeatOperationError:
+		return "RepeatOperationError"
 	case ErrCode_IllegalUserInput:
 		return "IllegalUserInput"
 	case ErrCode_ContainsProhibitedSensitiveWords:
@@ -183,6 +186,8 @@ func ErrCodeFromString(s string) (ErrCode, error) {
 		return ErrCode_DeletePermission, nil
 	case "UserRequestParameter":
 		return ErrCode_UserRequestParameter, nil
+	case "RepeatOperationError":
+		return ErrCode_RepeatOperationError, nil
 	case "IllegalUserInput":
 		return ErrCode_IllegalUserInput, nil
 	case "ContainsProhibitedSensitiveWords":
