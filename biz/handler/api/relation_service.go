@@ -7,6 +7,7 @@ import (
 	api "douyin/biz/model/api"
 	"douyin/biz/service"
 	"douyin/pkg/constant"
+	"douyin/pkg/errno"
 	"errors"
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/common/hlog"
@@ -37,7 +38,11 @@ func Follow(ctx context.Context, c *app.RequestContext) {
 	}
 
 	if err != nil {
-		c.JSON(consts.StatusOK, err)
+		errNo := errno.ConvertErr(err)
+		c.JSON(consts.StatusOK, &api.DouyinRelationActionResponse{
+			StatusCode: errNo.ErrCode,
+			StatusMsg:  &errNo.ErrMsg,
+		})
 		return
 	}
 

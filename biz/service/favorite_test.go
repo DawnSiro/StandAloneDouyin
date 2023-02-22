@@ -54,7 +54,6 @@ func TestFavoriteList(t *testing.T) {
 		want    *api.DouyinFavoriteListResponse
 		wantErr bool
 	}{
-		// TODO: Add test cases.
 		{
 			"Normal",
 			args{
