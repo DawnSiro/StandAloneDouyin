@@ -2,15 +2,16 @@ package mw
 
 import (
 	"context"
+	"net/http"
+	"time"
+
 	"douyin/biz/model/api"
 	"douyin/biz/service"
 	"douyin/pkg/constant"
 	"douyin/pkg/errno"
-	"github.com/cloudwego/hertz/pkg/common/hlog"
-	"net/http"
-	"time"
 
 	"github.com/cloudwego/hertz/pkg/app"
+	"github.com/cloudwego/hertz/pkg/common/hlog"
 	"github.com/cloudwego/hertz/pkg/common/utils"
 	"github.com/hertz-contrib/jwt"
 )
@@ -64,7 +65,6 @@ func InitJWT() {
 		LoginResponse: func(ctx context.Context, c *app.RequestContext, code int, token string, expire time.Time) {
 			// 可以通过 Get 去取放在 请求上下文 的数据
 			userID := c.GetUint64(constant.IdentityKey)
-			hlog.Info("info", userID, " ", token)
 			c.JSON(http.StatusOK, api.DouyinUserLoginResponse{
 				StatusCode: errno.Success.ErrCode,
 				UserID:     int64(userID),

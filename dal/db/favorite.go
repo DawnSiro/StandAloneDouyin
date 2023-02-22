@@ -1,8 +1,10 @@
 package db
 
 import (
-	"douyin/pkg/constant"
 	"errors"
+
+	"douyin/pkg/constant"
+
 	"gorm.io/gorm"
 )
 

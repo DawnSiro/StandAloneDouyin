@@ -7,6 +7,7 @@ import (
 	"douyin/dal/db"
 	"douyin/pkg/util"
 	"github.com/cloudwego/hertz/pkg/app/server"
+	"github.com/hertz-contrib/pprof"
 )
 
 func Init() {
@@ -19,6 +20,8 @@ func main() {
 		server.WithHostPorts("192.168.18.6:30000"),
 		server.WithExitWaitTime(0),
 	)
+
+	pprof.Register(h)
 
 	Init()
 	util.ScheduledInit()

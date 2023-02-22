@@ -4,13 +4,14 @@ package api
 
 import (
 	"context"
+
+	"douyin/biz/model/api"
 	"douyin/biz/service"
 	"douyin/pkg/constant"
-	"errors"
-	"github.com/cloudwego/hertz/pkg/common/hlog"
+	"douyin/pkg/errno"
 
-	api "douyin/biz/model/api"
 	"github.com/cloudwego/hertz/pkg/app"
+	"github.com/cloudwego/hertz/pkg/common/hlog"
 	"github.com/cloudwego/hertz/pkg/protocol/consts"
 )
 
@@ -25,19 +26,25 @@ func FavoriteVideo(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
-	hlog.Infof("%#v", req)
+	hlog.Info("handler.favorite_service.FavoriteVideo Request:", req)
 	userID := c.GetUint64(constant.IdentityKey)
+	hlog.Info("handler.favorite_service.FavoriteVideo GetUserID:", userID)
 	var resp *api.DouyinFavoriteActionResponse
 	if req.ActionType == constant.Favorite {
 		resp, err = service.FavoriteVideo(userID, uint64(req.VideoID))
 	} else if req.ActionType == constant.CancelFavorite {
 		resp, err = service.CancelFavoriteVideo(userID, uint64(req.VideoID))
 	} else {
-		err = errors.New("action type error")
+		err = errno.UserRequestParameterError
+		hlog.Error("handler.favorite_service.FavoriteVideo err:", err.Error())
 	}
 
 	if err != nil {
-		c.JSON(consts.StatusOK, err)
+		errNo := errno.ConvertErr(err)
+		c.JSON(consts.StatusOK, &api.DouyinFavoriteActionResponse{
+			StatusCode: errNo.ErrCode,
+			StatusMsg:  &errNo.ErrMsg,
+		})
 		return
 	}
 
@@ -55,11 +62,16 @@ func GetFavoriteList(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
-	hlog.Infof("%#v", req)
+	hlog.Info("handler.favorite_service.GetFavoriteList Request:", req)
 	userID := c.GetUint64(constant.IdentityKey)
+	hlog.Info("handler.favorite_service.GetFavoriteList GetUserID:", userID)
 	resp, err := service.FavoriteList(userID, uint64(req.UserID))
 	if err != nil {
-		c.JSON(consts.StatusOK, err)
+		errNo := errno.ConvertErr(err)
+		c.JSON(consts.StatusOK, &api.DouyinFavoriteListResponse{
+			StatusCode: errNo.ErrCode,
+			StatusMsg:  &errNo.ErrMsg,
+		})
 		return
 	}
 

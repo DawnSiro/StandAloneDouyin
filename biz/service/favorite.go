@@ -1,11 +1,13 @@
 package service
 
 import (
+	"strconv"
+
 	"douyin/biz/model/api"
 	"douyin/dal/db"
 	"douyin/dal/pack"
+
 	"github.com/go-redis/redis"
-	"strconv"
 )
 
 // FavoriteVideo this is a func for add Favorite or reduce Favorite

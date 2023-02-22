@@ -1,9 +1,10 @@
 package errno
 
 import (
-	"douyin/biz/model/api"
 	"errors"
 	"fmt"
+
+	"douyin/biz/model/api"
 )
 
 type ErrNo struct {

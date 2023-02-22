@@ -3,11 +3,12 @@ package util
 import (
 	"encoding/base64"
 	"fmt"
+	"io"
+
 	"github.com/aliyun/alibaba-cloud-sdk-go/services/sts"
 	"github.com/aliyun/aliyun-oss-go-sdk/oss"
 	"github.com/cloudwego/hertz/pkg/common/hlog"
 	"github.com/gofrs/uuid"
-	"io"
 )
 
 const (

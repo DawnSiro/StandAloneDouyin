@@ -1,10 +1,12 @@
 package db
 
 import (
+	"time"
+
 	"douyin/pkg/constant"
+
 	"github.com/cloudwego/hertz/pkg/common/hlog"
 	"gorm.io/gorm"
-	"time"
 )
 
 type Video struct {

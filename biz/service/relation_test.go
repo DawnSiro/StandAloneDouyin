@@ -198,7 +198,7 @@ func TestGetFriendList(t *testing.T) {
 	v2 := int64(1)
 	v3 := "你好"
 	type args struct {
-		req *api.DouyinRelationFriendListRequest
+		userID uint64
 	}
 	tests := []struct {
 		name    string
@@ -238,7 +238,7 @@ func TestGetFriendList(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := GetFriendList(tt.args.req)
+			got, err := GetFriendList(tt.args.userID)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("GetFriendList() error = %v, wantErr %v", err, tt.wantErr)
 				return

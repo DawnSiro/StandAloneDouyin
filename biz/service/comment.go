@@ -4,20 +4,25 @@ import (
 	"douyin/biz/model/api"
 	"douyin/dal/db"
 	"douyin/dal/pack"
-	"douyin/pkg/util"
+	"douyin/pkg/util/sensitive"
 	"errors"
 	"github.com/cloudwego/hertz/pkg/common/hlog"
 	"github.com/cloudwego/hertz/pkg/common/json"
 	"github.com/go-redis/redis"
 	"reflect"
 	"strconv"
+	"strings"
 )
 
 func PostComment(userID, videoID uint64, commentText string) (*api.DouyinCommentActionResponse, error) {
 	filterErr := "评论带有敏感词"
 
-	//删除redis评论列表缓存
-	delCommentListKey := strconv.FormatUint(videoID, 10) + "_video" + "_comments"
+	// 删除redis评论列表缓存
+	// 使用 strings.Builder 来优化字符串的拼接
+	var builder strings.Builder
+	builder.WriteString(strconv.FormatUint(videoID, 10))
+	builder.WriteString("_video_comments")
+	delCommentListKey := builder.String()
 
 	keysMatch, err := db.RDB.Do("keys", "*"+delCommentListKey).Result()
 	if err != nil {
@@ -38,7 +43,7 @@ func PostComment(userID, videoID uint64, commentText string) (*api.DouyinComment
 		return nil, errors.New("评论不能为空")
 	}
 	//检测是否带有敏感词
-	if util.IsWordsFilter(commentText) {
+	if sensitive.IsWordsFilter(commentText) {
 		return nil, errors.New(filterErr)
 	}
 	dbc, err := db.CreateComment(videoID, commentText, userID)
