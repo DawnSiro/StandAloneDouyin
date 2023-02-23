@@ -61,6 +61,8 @@ func GetUserInfo(userID, infoUserID uint64) (*api.DouyinUserResponse, error) {
 		return nil, err
 	}
 
+	// TODO 使用 Redis Hash 来对用户数据进行缓存
+
 	// pack
 	userInfo := pack.UserInfo(u, db.IsFollow(userID, infoUserID))
 	return &api.DouyinUserResponse{

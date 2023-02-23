@@ -63,7 +63,9 @@ func GetFollowList(ctx context.Context, c *app.RequestContext) {
 	}
 
 	hlog.Info("handler.relation_service.GetFollowList Request:", req)
-	resp, err := service.GetFollowList(uint64(req.UserID))
+	userID := c.GetUint64(constant.IdentityKey)
+	hlog.Info("handler.relation_service.GetFollowList GetUserID:", userID)
+	resp, err := service.GetFollowList(userID, uint64(req.UserID))
 	if err != nil {
 		errNo := errno.ConvertErr(err)
 		c.JSON(consts.StatusOK, &api.DouyinRelationFollowListResponse{
@@ -88,7 +90,9 @@ func GetFollowerList(ctx context.Context, c *app.RequestContext) {
 	}
 
 	hlog.Info("handler.relation_service.GetFollowerList Request:", req)
-	resp, err := service.GetFollowerList(uint64(req.UserID))
+	userID := c.GetUint64(constant.IdentityKey)
+	hlog.Info("handler.relation_service.GetFollowList GetUserID:", userID)
+	resp, err := service.GetFollowerList(userID, uint64(req.UserID))
 	if err != nil {
 		errNo := errno.ConvertErr(err)
 		c.JSON(consts.StatusOK, &api.DouyinRelationFollowerListResponse{
@@ -113,7 +117,18 @@ func GetFriendList(ctx context.Context, c *app.RequestContext) {
 	}
 
 	hlog.Info("handler.relation_service.GetFollowerList Request:", req)
-	resp, err := service.GetFriendList(uint64(req.UserID))
+	userID := c.GetUint64(constant.IdentityKey)
+	hlog.Info("handler.relation_service.GetFollowerList GetUserID:", userID)
+	// 目前的判断是不能看别人的好友列表
+	if userID != uint64(req.UserID) {
+		hlog.Error("handler.relation_service.GetFollowerList err:", errno.UserRequestParameterError.ErrCode)
+		c.JSON(consts.StatusOK, &api.DouyinRelationFriendListResponse{
+			StatusCode: errno.UserRequestParameterError.ErrCode,
+			StatusMsg:  &errno.UserRequestParameterError.ErrMsg,
+		})
+		return
+	}
+	resp, err := service.GetFriendList(userID)
 	if err != nil {
 		errNo := errno.ConvertErr(err)
 		c.JSON(consts.StatusOK, &api.DouyinRelationFriendListResponse{

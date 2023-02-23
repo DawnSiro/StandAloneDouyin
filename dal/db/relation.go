@@ -22,6 +22,7 @@ func (n *Relation) TableName() string {
 	return constant.RelationTableName
 }
 
+// IsFollow ID 为 userID 的用户是否关注了 ID 为 toUserID 的用户
 func IsFollow(userID uint64, toUserID uint64) bool {
 	// 未登录默认未关注
 	if userID == 0 || toUserID == 0 {
@@ -34,6 +35,23 @@ func IsFollow(userID uint64, toUserID uint64) bool {
 	}
 
 	// 查不到关注记录则为未关注
+	result := DB.Where("user_id = ? AND to_user_id = ? AND is_deleted = ?",
+		userID, toUserID, constant.DataNotDeleted).Limit(1).Find(&Relation{})
+	if result.RowsAffected == 1 {
+		return true
+	}
+	// 查询出错和没有数据都返回 false
+	return false
+}
+
+// IsFriend ID 为 userID 的用户是否是 ID 为 toUserID 的用户的好友（互相关注）
+func IsFriend(userID uint64, toUserID uint64) bool {
+	// 默认不能给自己发消息
+	if userID == 0 || toUserID == 0 || userID == toUserID {
+		return false
+	}
+
+	//
 	result := DB.Where("user_id = ? AND to_user_id = ? AND is_deleted = ?",
 		userID, toUserID, constant.DataNotDeleted).Limit(1).Find(&Relation{})
 	if result.RowsAffected == 1 {
@@ -81,11 +99,11 @@ func Follow(userID uint64, toUserID uint64) error {
 
 		// 更新关注的关系
 		// 先查询是否存在软删除的关注数据
-		result := tx.Where("user_id = ? AND to_user_id = ? AND is_deleted = ?",
-			userID, toUserID, constant.DataNotDeleted).Limit(1).Find(relation)
+		result := tx.Model(&Relation{}).Where("user_id = ? AND to_user_id = ? AND is_deleted = ?",
+			userID, toUserID, constant.DataDeleted).Limit(1).Find(relation)
 		// 如果有则修改为未删除
 		if result.RowsAffected == 1 {
-			return tx.Model(relation).Update("is_deleted", constant.DataDeleted).Error
+			return tx.Model(relation).Update("is_deleted", constant.DataNotDeleted).Error
 		}
 		// 没有则新建
 		return tx.Create(relation).Error
@@ -94,14 +112,12 @@ func Follow(userID uint64, toUserID uint64) error {
 
 func CancelFollow(userID uint64, toUserID uint64) error {
 	if userID == 0 || toUserID == 0 {
-		return errors.New("delete data failed")
+		return errno.UserRequestParameterError
 	}
 
-	relation := &Relation{
-		UserID:   userID,
-		ToUserID: toUserID,
-	}
-	result := DB.Where("is_deleted = ?", constant.DataNotDeleted).Limit(1).Find(relation)
+	relation := &Relation{}
+	result := DB.Where("user_id = ? AND to_user_id = ? AND is_deleted = ?",
+		userID, toUserID, constant.DataNotDeleted).Limit(1).Find(relation)
 	if result.Error != nil {
 		return result.Error
 	}
@@ -136,8 +152,8 @@ func CancelFollow(userID uint64, toUserID uint64) error {
 		}
 
 		// 去除关注的关系
-		return DB.Model(relation).Where("user_id = ? AND to_user_id = ? AND is_deleted = ?",
-			userID, toUserID, constant.DataNotDeleted).Update("is_deleted", constant.DataDeleted).Error
+		return DB.Model(relation).Where("is_deleted = ?", constant.DataNotDeleted).
+			Update("is_deleted", constant.DataDeleted).Error
 	})
 
 }
@@ -213,8 +229,8 @@ func GetFriendList(userID uint64) ([]*api.FriendUser, error) {
 			return nil, err
 		}
 
-		followCount := int64(u.FollowingCount)
-		followerCount := int64(u.FollowerCount)
+		followCount := u.FollowingCount
+		followerCount := u.FollowerCount
 		results = append(results,
 			&api.FriendUser{
 				ID:            int64(u.ID),
