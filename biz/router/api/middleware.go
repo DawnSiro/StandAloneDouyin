@@ -48,6 +48,7 @@ func _getcommentlistMw() []app.HandlerFunc {
 
 func _favoriteMw() []app.HandlerFunc {
 	// your code...
+	// 登录的用户才能点赞和查看点赞列表
 	return []app.HandlerFunc{
 		// use jwt mw
 		mw.JwtMiddleware.MiddlewareFunc(),
@@ -107,10 +108,7 @@ func _getmessagechatMw() []app.HandlerFunc {
 
 func _publishMw() []app.HandlerFunc {
 	// your code...
-	return []app.HandlerFunc{
-		// use jwt mw
-		mw.JwtMiddleware.MiddlewareFunc(),
-	}
+	return nil
 }
 
 func _action1Mw() []app.HandlerFunc {
@@ -143,7 +141,10 @@ func _relationMw() []app.HandlerFunc {
 
 func _action2Mw() []app.HandlerFunc {
 	// your code...
-	return nil
+	return []app.HandlerFunc{
+		// use jwt mw
+		mw.JwtMiddleware.MiddlewareFunc(),
+	}
 }
 
 func _followMw() []app.HandlerFunc {
@@ -156,7 +157,11 @@ func _followMw() []app.HandlerFunc {
 
 func _follow0Mw() []app.HandlerFunc {
 	// your code...
-	return nil
+	// 登录的用户才能关注列表
+	return []app.HandlerFunc{
+		// use jwt mw
+		mw.JwtMiddleware.MiddlewareFunc(),
+	}
 }
 
 func _list2Mw() []app.HandlerFunc {
@@ -171,7 +176,11 @@ func _getfollowlistMw() []app.HandlerFunc {
 
 func _followerMw() []app.HandlerFunc {
 	// your code...
-	return nil
+	// 登录的用户才能查看粉丝列表
+	return []app.HandlerFunc{
+		// use jwt mw
+		mw.JwtMiddleware.MiddlewareFunc(),
+	}
 }
 
 func _list3Mw() []app.HandlerFunc {
@@ -186,7 +195,11 @@ func _getfollowerlistMw() []app.HandlerFunc {
 
 func _friendMw() []app.HandlerFunc {
 	// your code...
-	return nil
+	// 登录的用户才能查看好友列表
+	return []app.HandlerFunc{
+		// use jwt mw
+		mw.JwtMiddleware.MiddlewareFunc(),
+	}
 }
 
 func _list4Mw() []app.HandlerFunc {
@@ -196,10 +209,7 @@ func _list4Mw() []app.HandlerFunc {
 
 func _getfriendlistMw() []app.HandlerFunc {
 	// your code...
-	return []app.HandlerFunc{
-		// use jwt mw
-		mw.JwtMiddleware.MiddlewareFunc(),
-	}
+	return nil
 }
 
 func _userMw() []app.HandlerFunc {

@@ -15,8 +15,8 @@ type Video struct {
 	AuthorID      uint64    `gorm:"not null" json:"author_id"`
 	PlayURL       string    `gorm:"type:varchar(255);not null" json:"play_url"`
 	CoverURL      string    `gorm:"type:varchar(255);not null" json:"cover_url"`
-	FavoriteCount uint64    `gorm:"default:0;not null" json:"favorite_count"`
-	CommentCount  uint64    `gorm:"default:0;not null" json:"comment_count"`
+	FavoriteCount int64     `gorm:"default:0;not null" json:"favorite_count"`
+	CommentCount  int64     `gorm:"default:0;not null" json:"comment_count"`
 	Title         string    `gorm:"type:varchar(63);not null" json:"title"`
 }
 
@@ -85,7 +85,7 @@ func SelectAuthorIDByVideoID(videoID uint64) (uint64, error) {
 	return video.AuthorID, nil
 }
 
-func UpdateVideoFavoriteCount(videoID uint64, favoriteCount uint64) (uint64, error) {
+func UpdateVideoFavoriteCount(videoID uint64, favoriteCount uint64) (int64, error) {
 	video := &Video{
 		ID: videoID,
 	}
@@ -97,7 +97,7 @@ func UpdateVideoFavoriteCount(videoID uint64, favoriteCount uint64) (uint64, err
 }
 
 // IncreaseVideoFavoriteCount increase 1
-func IncreaseVideoFavoriteCount(videoID uint64) (uint64, error) {
+func IncreaseVideoFavoriteCount(videoID uint64) (int64, error) {
 	video := &Video{
 		ID: videoID,
 	}
@@ -112,7 +112,7 @@ func IncreaseVideoFavoriteCount(videoID uint64) (uint64, error) {
 }
 
 // DecreaseVideoFavoriteCount decrease 1
-func DecreaseVideoFavoriteCount(videoID uint64) (uint64, error) {
+func DecreaseVideoFavoriteCount(videoID uint64) (int64, error) {
 	video := &Video{
 		ID: videoID,
 	}
@@ -126,7 +126,7 @@ func DecreaseVideoFavoriteCount(videoID uint64) (uint64, error) {
 	return video.CommentCount, nil
 }
 
-func UpdateCommentCount(videoID uint64, commentCount uint64) (uint64, error) {
+func UpdateCommentCount(videoID uint64, commentCount uint64) (int64, error) {
 	video := &Video{
 		ID: videoID,
 	}
@@ -138,7 +138,7 @@ func UpdateCommentCount(videoID uint64, commentCount uint64) (uint64, error) {
 }
 
 // IncreaseCommentCount increase 1
-func IncreaseCommentCount(videoID uint64) (uint64, error) {
+func IncreaseCommentCount(videoID uint64) (int64, error) {
 	video := &Video{
 		ID: videoID,
 	}
@@ -155,7 +155,7 @@ func IncreaseCommentCount(videoID uint64) (uint64, error) {
 }
 
 // DecreaseCommentCount decrease  1
-func DecreaseCommentCount(videoID uint64) (uint64, error) {
+func DecreaseCommentCount(videoID uint64) (int64, error) {
 	video := &Video{
 		ID: videoID,
 	}
@@ -169,7 +169,7 @@ func DecreaseCommentCount(videoID uint64) (uint64, error) {
 	return video.CommentCount, nil
 }
 
-func SelectVideoFavoriteCountByVideoID(videoID uint64) (uint64, error) {
+func SelectVideoFavoriteCountByVideoID(videoID uint64) (int64, error) {
 	video := &Video{
 		ID: videoID,
 	}
@@ -181,7 +181,7 @@ func SelectVideoFavoriteCountByVideoID(videoID uint64) (uint64, error) {
 	return video.FavoriteCount, nil
 }
 
-func SelectCommentCountByVideoID(videoID uint64) (uint64, error) {
+func SelectCommentCountByVideoID(videoID uint64) (int64, error) {
 	video := &Video{
 		ID: videoID,
 	}
