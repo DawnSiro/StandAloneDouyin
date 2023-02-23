@@ -1,10 +1,9 @@
 package errno
 
 import (
+	"douyin/biz/model/api"
 	"errors"
 	"fmt"
-
-	"douyin/biz/model/api"
 )
 
 type ErrNo struct {
@@ -80,7 +79,7 @@ func ConvertErr(err error) ErrNo {
 	if errors.As(err, &Err) {
 		return Err
 	}
+	// 不属于列写出的错误码的错误的错误信息不返回客户端
 	s := ServiceError
-	s.ErrMsg = err.Error()
 	return s
 }

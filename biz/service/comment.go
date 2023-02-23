@@ -25,7 +25,7 @@ func PostComment(userID, videoID uint64, commentText string) (*api.DouyinComment
 	delCommentListKey := builder.String()
 
 	// TODO 业务优化
-	keysMatch, err := db.VideoCRDB.Do("keys", "*"+delCommentListKey).Result()
+	keysMatch, err := db.VideoCRC.Do("keys", "*"+delCommentListKey).Result()
 	if err != nil {
 		hlog.Error("service.comment.PostComment err:", err.Error())
 	}
@@ -33,7 +33,7 @@ func PostComment(userID, videoID uint64, commentText string) (*api.DouyinComment
 		val := reflect.ValueOf(keysMatch)
 		// 删除key
 		for i := 0; i < val.Len(); i++ {
-			db.VideoCRDB.Del(val.Index(i).Interface().(string))
+			db.VideoCRC.Del(val.Index(i).Interface().(string))
 			hlog.Info("删除了RedisKey:", val.Index(i).Interface().(string))
 		}
 	}
@@ -105,7 +105,7 @@ func CommentList(userID, videoID uint64) (*api.DouyinCommentListResponse, error)
 	builder.WriteString("_video_comments")
 	commentListKey := builder.String()
 
-	commentList, err := db.VideoCRDB.Get(commentListKey).Result()
+	commentList, err := db.VideoCRC.Get(commentListKey).Result()
 	if err == redis.Nil {
 		dbcList, err := db.SelectCommentListByVideoID(videoID)
 		if err != nil {
@@ -122,12 +122,12 @@ func CommentList(userID, videoID uint64) (*api.DouyinCommentListResponse, error)
 
 		//序列化
 		marshalList, _ := json.Marshal(cList)
-		_, err = db.VideoCRDB.Set(commentListKey, marshalList, 0).Result()
+		_, err = db.VideoCRC.Set(commentListKey, marshalList, 0).Result()
 		if err != nil {
 			hlog.Error("service.comment.CommentList err:", err.Error())
 			return nil, err
 		}
-		commentList, err = db.VideoCRDB.Get(commentListKey).Result()
+		commentList, err = db.VideoCRC.Get(commentListKey).Result()
 		if err != nil {
 			hlog.Error("service.comment.CommentList err:", err.Error())
 			return nil, err

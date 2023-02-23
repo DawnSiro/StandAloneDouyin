@@ -64,7 +64,6 @@ func GetUserInfo(ctx context.Context, c *app.RequestContext) {
 	userID := c.GetUint64(constant.IdentityKey)
 	hlog.Info("handler.user_service.GetUserInfo GetUserID:", userID)
 	resp, err := service.GetUserInfo(userID, uint64(req.UserID))
-	hlog.Info(resp)
 	if err != nil {
 		errNo := errno.ConvertErr(err)
 		c.JSON(consts.StatusOK, &api.DouyinUserResponse{

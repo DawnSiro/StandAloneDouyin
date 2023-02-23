@@ -1,30 +1,9 @@
 package constant
 
+// 中间件
 const (
-	CommentTableName            = "comment"
-	MessageTableName            = "message"
-	RelationTableName           = "relation"
-	UserFavoriteVideosTableName = "user_favorite_video"
-	VideoTableName              = "video"
-	UserTableName               = "user"
-	SecretKey                   = "CloudWeRun"
-	IdentityKey                 = "id"
-	ApiServiceName              = "api"
-	CommentServiceName          = "comment"
-	FavoriteServiceName         = "Favorite"
-	FeedServiceName             = "feed"
-	MessageServiceName          = "message"
-	PublishServiceName          = "publish"
-	RelationServiceName         = "relation"
-	UserServiceName             = "user"
-	MySQLDefaultDSN             = "douyin:BS5sp3K4yZTiEJ4S@tcp(119.29.27.252:3306)/douyin?charset=utf8&parseTime=True&loc=Local"
-	//MySQLDefaultDSN = "douyin:!wwTF5VK)vPglY@-@tcp(172.17.0.1:3306)/douyin?charset=utf8&parseTime=True&loc=Local"
-	TCP             = "tcp"
-	UserServiceAddr = ":30110"
-	ExportEndpoint  = ":4317"
-	ETCDAddress     = ":2379"
-	DefaultLimit    = 10
-	MaxVideoNum     = 30
+	SecretKey   = "CloudWeRun"
+	IdentityKey = "id"
 )
 
 // ActionType 的枚举
@@ -45,9 +24,46 @@ const (
 	SentMessage       = 1
 )
 
-// 数据库层面的枚举
+// 数据库层面
 // 0-未删除，1-已删除
 const (
-	DataNotDeleted = 0
-	DataDeleted    = 1
+	DataNotDeleted              = 0
+	DataDeleted                 = 1
+	CommentTableName            = "comment"
+	MessageTableName            = "message"
+	RelationTableName           = "relation"
+	UserFavoriteVideosTableName = "user_favorite_video"
+	VideoTableName              = "video"
+	UserTableName               = "user"
+	MySQLDefaultDSN             = "douyin:BS5sp3K4yZTiEJ4S@tcp(119.29.27.252:3306)/douyin?charset=utf8&parseTime=True&loc=Local"
+	//MySQLDefaultDSN = "douyin:!wwTF5VK)vPglY@-@tcp(172.17.0.1:3306)/douyin?charset=utf8&parseTime=True&loc=Local"
+)
+
+// Redis
+const (
+	RedisAddress = "127.0.0.1:6379"
+	VideoCRDB    = 0
+	VideoFRDB    = 1
+	UserInfoRDB  = 2
+)
+
+// 业务相关
+const (
+	MaxVideoNum = 30
+	MaxFileSize = 10 << 19 // 5MB
+)
+
+// 微服务相关
+const (
+	ApiServiceName      = "api"
+	CommentServiceName  = "comment"
+	FavoriteServiceName = "Favorite"
+	FeedServiceName     = "feed"
+	MessageServiceName  = "message"
+	PublishServiceName  = "publish"
+	RelationServiceName = "relation"
+	UserServiceName     = "user"
+	UserServiceAddr     = ":30110"
+	ExportEndpoint      = ":4317"
+	ETCDAddress         = ":2379"
 )

@@ -15,8 +15,9 @@ import (
 
 var DB *gorm.DB
 
-var VideoCRDB *redis.Client // 视频评论列表
-var VideoFRDB *redis.Client // 视频点赞
+var VideoCRC *redis.Client   // 视频评论列表
+var VideoFRC *redis.Client   // 视频点赞
+var UserInfoRC *redis.Client // 用户信息
 
 func Init() {
 	newLogger := logger.New(
@@ -39,22 +40,31 @@ func Init() {
 		panic(err)
 	}
 
-	// TODO 使用 Viper 从配置文件中读取
-	VideoCRDB = redis.NewClient(&redis.Options{
-		Addr: "127.0.0.1:6379",
-		DB:   0,
+	VideoCRC = redis.NewClient(&redis.Options{
+		Addr: constant.RedisAddress,
+		DB:   constant.VideoCRDB,
 	})
-	_, err = VideoCRDB.Ping().Result()
+	_, err = VideoCRC.Ping().Result()
 	if err != nil {
 		panic(err)
 	}
 
-	VideoFRDB = redis.NewClient(&redis.Options{
-		Addr: "127.0.0.1:6379",
-		DB:   1,
+	VideoFRC = redis.NewClient(&redis.Options{
+		Addr: constant.RedisAddress,
+		DB:   constant.VideoFRDB,
 	})
 
-	_, err = VideoFRDB.Ping().Result()
+	_, err = VideoFRC.Ping().Result()
+	if err != nil {
+		panic(err)
+	}
+
+	UserInfoRC = redis.NewClient(&redis.Options{
+		Addr: constant.RedisAddress,
+		DB:   constant.UserInfoRDB,
+	})
+
+	_, err = UserInfoRC.Ping().Result()
 	if err != nil {
 		panic(err)
 	}

@@ -10,6 +10,13 @@ import (
 )
 
 func SendMessage(fromUserID, toUserID uint64, content string) (*api.DouyinMessageActionResponse, error) {
+	isFriend := db.IsFriend(fromUserID, toUserID)
+	if !isFriend {
+		errNo := errno.UserRequestParameterError
+		errNo.ErrMsg = "不能给非好友发消息"
+		hlog.Error("service.message.SendMessage err:", errNo.Error())
+		return nil, errNo
+	}
 	err := db.CreateMessage(fromUserID, toUserID, content)
 	if err != nil {
 		hlog.Error("service.message.SendMessage err:", err.Error())
