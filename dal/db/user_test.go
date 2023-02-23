@@ -43,7 +43,7 @@ func TestDecreaseUserFavoriteCount(t *testing.T) {
 	tests := []struct {
 		name    string
 		args    args
-		want    uint64
+		want    int64
 		wantErr bool
 	}{
 		// TODO: Add test cases.
@@ -69,7 +69,7 @@ func TestIncreaseUserFavoriteCount(t *testing.T) {
 	tests := []struct {
 		name    string
 		args    args
-		want    uint64
+		want    int64
 		wantErr bool
 	}{
 		// TODO: Add test cases.
@@ -145,11 +145,11 @@ func TestUser_TableName(t *testing.T) {
 		ID             uint64
 		Username       string
 		Password       string
-		FollowingCount uint64
-		FollowerCount  uint64
+		FollowingCount int64
+		FollowerCount  int64
 		Avatar         string
-		WorkCount      uint64
-		FavoriteCount  uint64
+		WorkCount      int64
+		FavoriteCount  int64
 	}
 	tests := []struct {
 		name   string

@@ -28,12 +28,13 @@ func FavoriteVideo(userID, videoID uint64) (*api.DouyinFavoriteActionResponse, e
 		}
 		db.VideoFRDB.Set(videoLikeKey, likeInt64, 0)
 	}
-	//like
-	//put it into redis
-	likeInt64, err := strconv.ParseUint(likeCount, 10, 64)
-	if err != nil {
-		hlog.Error("service.favorite.FavoriteVideo err:", err.Error())
-		return nil, err
+	var likeUint64 uint64
+	if likeCount != "" {
+		likeUint64, err = strconv.ParseUint(likeCount, 10, 64)
+		if err != nil {
+			hlog.Error("service.favorite.FavoriteVideo err:", err.Error())
+			return nil, err
+		}
 	}
 
 	err = db.FavoriteVideo(userID, videoID)
@@ -42,7 +43,7 @@ func FavoriteVideo(userID, videoID uint64) (*api.DouyinFavoriteActionResponse, e
 		return nil, err
 	}
 	// 如果 DB 层事务回滚了，err 就不为 nil，Redis 里的数据就不会更新
-	db.VideoFRDB.Set(videoLikeKey, likeInt64+1, 0)
+	db.VideoFRDB.Set(videoLikeKey, likeUint64+1, 0)
 
 	return &api.DouyinFavoriteActionResponse{
 		StatusCode: 0,
@@ -65,10 +66,13 @@ func CancelFavoriteVideo(userID, videoID uint64) (*api.DouyinFavoriteActionRespo
 		db.VideoFRDB.Set(videoLikeKey, likeInt64, 0)
 	}
 
-	likeInt64, err := strconv.ParseInt(likeCount, 10, 64)
-	if err != nil {
-		hlog.Error("service.favorite.CancelFavoriteVideo err:", err.Error())
-		return nil, err
+	var likeUint64 uint64
+	if likeCount != "" {
+		likeUint64, err = strconv.ParseUint(likeCount, 10, 64)
+		if err != nil {
+			hlog.Error("service.favorite.CancelFavoriteVideo err:", err.Error())
+			return nil, err
+		}
 	}
 
 	err = db.CancelFavoriteVideo(userID, videoID)
@@ -77,7 +81,7 @@ func CancelFavoriteVideo(userID, videoID uint64) (*api.DouyinFavoriteActionRespo
 		return nil, err
 	}
 	// 如果 DB 层事务回滚了，err 就不为 nil，Redis 里的数据就不会更新
-	db.VideoFRDB.Set(videoLikeKey, likeInt64-1, 0)
+	db.VideoFRDB.Set(videoLikeKey, likeUint64-1, 0)
 
 	return &api.DouyinFavoriteActionResponse{
 		StatusCode: 0,
