@@ -46,6 +46,8 @@ func FavoriteVideo(userID, videoID uint64) (*api.DouyinFavoriteActionResponse, e
 	// 如果 DB 层事务回滚了，err 就不为 nil，Redis 里的数据就不会更新
 	global.VideoFRC.Set(videoLikeKey, likeUint64+1, 0)
 
+	// TODO 用缓存记录用户点赞数量，防止刷赞
+
 	return &api.DouyinFavoriteActionResponse{
 		StatusCode: 0,
 	}, nil

@@ -1,5 +1,13 @@
 package constant
 
+import "time"
+
+// 中间件相关
+const (
+	TokenTimeOut    = 12 * time.Hour
+	TokenMaxRefresh = 3 * time.Hour
+)
+
 // ActionType 的枚举
 // 1-发布评论，2-删除评论
 // 1-点赞，2-取消点赞
@@ -35,6 +43,7 @@ const (
 const (
 	MaxVideoNum = 30
 	MaxFileSize = 10 << 19 // 5MB
+
 )
 
 // 微服务相关

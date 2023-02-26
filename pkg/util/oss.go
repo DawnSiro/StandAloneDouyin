@@ -12,13 +12,13 @@ import (
 )
 
 const (
-	regionID        = "regionID" // bucket所在位置，可查看oss对象储存控制台的概况获取
-	accessKeyID     = "accessKeyID"
-	accessKeySecret = "accessKeySecret"
-	roleArn         = "roleArn"
-	roleSessionName = "roleSessionName"
-	endpoint        = "endpoint"
-	bucketName      = "bucketName"
+	regionID        = "" // bucket所在位置，可查看oss对象储存控制台的概况获取
+	accessKeyID     = ""
+	accessKeySecret = ""
+	roleArn         = ""
+	roleSessionName = ""
+	endpoint        = ""
+	bucketName      = ""
 )
 
 func GetSTS() *sts.AssumeRoleResponse {
@@ -41,9 +41,9 @@ func GetSTS() *sts.AssumeRoleResponse {
 	//发起请求，并得到响应。
 	response, err := client.AssumeRole(request)
 	if err != nil {
-		fmt.Print(err.Error())
+		hlog.Error("util.oss.GetSTS err:", err)
 	}
-	hlog.Infof("response is %#v\n", response)
+	hlog.Info("util.oss.GetSTS response:", response)
 	return response
 }
 
@@ -60,7 +60,7 @@ func UploadVideo(file *io.Reader, fileName string) (videoURL, coverURL string, e
 	client, err := oss.New(endpoint,
 		response.Credentials.AccessKeyId, response.Credentials.AccessKeySecret, oss.SecurityToken(securityToken))
 	if err != nil {
-		fmt.Println("Error:", err)
+		hlog.Error("util.oss.UploadVideo err:", err)
 		return
 	}
 	// 填写Bucket名称，例如examplebucket。
@@ -68,13 +68,11 @@ func UploadVideo(file *io.Reader, fileName string) (videoURL, coverURL string, e
 	// 填写Object的完整路径，完整路径中不能包含Bucket名称，例如exampledir/exampleobject.txt。
 	objectName := "DouYin/video/" + fileName
 
-	hlog.Info(objectName)
-
 	bucket, err := client.Bucket(bucketName)
 	// ObjectID 即为 OSS 中的文件路径
 	err = bucket.PutObject(objectName, *file)
 	if err != nil {
-		hlog.Info(err)
+		hlog.Error("util.oss.UploadVideo err:", err)
 		return "", "", err
 	}
 
@@ -85,6 +83,7 @@ func UploadVideo(file *io.Reader, fileName string) (videoURL, coverURL string, e
 	// 指定原图名称。如果图片不在Bucket根目录，需携带文件完整路径，例如example/example.jpg。
 	u1, err := uuid.NewV4()
 	if err != nil {
+		hlog.Error("util.oss.UploadVideo err:", err)
 		return "", "", err
 	}
 
@@ -98,11 +97,11 @@ func UploadVideo(file *io.Reader, fileName string) (videoURL, coverURL string, e
 		base64.URLEncoding.EncodeToString([]byte(targetBucketName)))
 	result, err := bucket.ProcessObject(objectName, process)
 	if err != nil {
-		hlog.Info(err)
+		hlog.Error("util.oss.UploadVideo err:", err)
 		return "", "", err
 	}
 
-	hlog.Info(result)
+	hlog.Info("util.oss.GetSTS result:", result)
 
 	// 填写Object的完整路径，完整路径中不能包含Bucket名称，例如exampledir/exampleobject.txt。
 	//coverObjectName := result.Object
@@ -110,7 +109,7 @@ func UploadVideo(file *io.Reader, fileName string) (videoURL, coverURL string, e
 	videoURL = "https://" + bucketName + "." + endpoint + "/" + objectName
 	coverURL = "https://" + bucketName + "." + endpoint + "/" + result.Object
 
-	hlog.Info(videoURL)
-	hlog.Info(coverURL)
+	hlog.Info("util.oss.GetSTS videoURL:", videoURL)
+	hlog.Info("util.oss.GetSTS coverURL:", coverURL)
 	return
 }

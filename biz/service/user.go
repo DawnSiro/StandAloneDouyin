@@ -10,48 +10,61 @@ import (
 	"github.com/cloudwego/hertz/pkg/common/hlog"
 )
 
-func Register(username, password string) error {
+func Register(username, password string) (*api.DouyinUserRegisterResponse, error) {
 	users, err := db.SelectUserByName(username)
 	if err != nil {
 		hlog.Error("service.user.Register err:", err.Error())
-		return err
+		return nil, err
 	}
 	if len(users) != 0 {
 		hlog.Error("service.user.Register err:", errno.UsernameAlreadyExistsError.Error())
-		return errno.UsernameAlreadyExistsError
+		return nil, errno.UsernameAlreadyExistsError
 	}
 
 	// 进行加密并存储
 	encryptedPassword := util.BcryptHash(password)
-	_, err = db.CreateUser(&db.User{
+	userID, err := db.CreateUser(&db.User{
 		Username: username,
 		Password: encryptedPassword,
 	})
 	if err != nil {
 		hlog.Error("service.user.Register err:", err.Error())
-		return err
+		return nil, err
 	}
-	return nil
+	token, err := util.SignToken(userID)
+	if err != nil {
+		hlog.Error("service.user.Register err:", err.Error())
+		return nil, err
+	}
+	return &api.DouyinUserRegisterResponse{
+		StatusCode: 0,
+		UserID:     int64(userID),
+		Token:      token,
+	}, nil
 }
 
-// Login check user info
-func Login(username, password string) (userID uint64, err error) {
+func Login(username, password string) (*api.DouyinUserLoginResponse, error) {
 	users, err := db.SelectUserByName(username)
 	if err != nil {
 		hlog.Error("service.user.Login err:", err.Error())
-		return 0, err
+		return nil, err
 	}
 	if len(users) == 0 {
 		hlog.Error("service.user.Login err:", errno.UserAccountDoesNotExistError.Error())
-		return 0, errno.UserAccountDoesNotExistError
+		return nil, errno.UserAccountDoesNotExistError
 	}
 
 	u := users[0]
 	if !util.BcryptCheck(password, u.Password) {
 		hlog.Error("service.user.Login err:", errno.UserPasswordError.Error())
-		return 0, errno.UserPasswordError
+		return nil, errno.UserPasswordError
 	}
-	return u.ID, nil
+	token, err := util.SignToken(u.ID)
+	return &api.DouyinUserLoginResponse{
+		StatusCode: 0,
+		UserID:     int64(u.ID),
+		Token:      token,
+	}, nil
 }
 
 func GetUserInfo(userID, infoUserID uint64) (*api.DouyinUserResponse, error) {

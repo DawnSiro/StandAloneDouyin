@@ -38,6 +38,8 @@ func UserInfo(u *db.User, isFollow bool) *api.UserInfo {
 		IsFollow:        isFollow,
 		Avatar:          u.Avatar,
 		BackgroundImage: u.BackgroundImage,
+		Signature:       u.Signature,
+		TotalFavorited:  u.TotalFavorited,
 		WorkCount:       u.WorkCount,
 		FavoriteCount:   u.FavoriteCount,
 	}
