@@ -35,8 +35,7 @@ const (
 	UserFavoriteVideosTableName = "user_favorite_video"
 	VideoTableName              = "video"
 	UserTableName               = "user"
-	MySQLDefaultDSN             = "douyin:BS5sp3K4yZTiEJ4S@tcp(119.29.27.252:3306)/douyin?charset=utf8&parseTime=True&loc=Local"
-	//MySQLDefaultDSN = "douyin:!wwTF5VK)vPglY@-@tcp(172.17.0.1:3306)/douyin?charset=utf8&parseTime=True&loc=Local"
+	MySQLDefaultDSN             = "douyin:123456@tcp(127.0.0.1:3306)/douyin?charset=utf8&parseTime=True&loc=Local"
 )
 
 // Redis

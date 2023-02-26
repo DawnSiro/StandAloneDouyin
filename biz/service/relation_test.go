@@ -129,7 +129,7 @@ func TestGetFollowList(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := GetFollowList(tt.args.userID)
+			got, err := GetFollowList(tt.args.userID, tt.args.userID)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("GetFollowList() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -180,7 +180,7 @@ func TestGetFollowerList(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := GetFollowerList(tt.args.userID)
+			got, err := GetFollowerList(tt.args.userID, tt.args.userID)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("GetFollowerList() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -241,5 +241,11 @@ func TestGetFriendList(t *testing.T) {
 				t.Errorf("GetFriendList() got = %v, want %v", got, tt.want)
 			}
 		})
+	}
+}
+
+func BenchmarkGetFriendList(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		GetFriendList(108)
 	}
 }
