@@ -1,6 +1,7 @@
 package db
 
 import (
+	"douyin/pkg/global"
 	"errors"
 	"time"
 
@@ -31,9 +32,9 @@ func CreateComment(videoID uint64, content string, userID uint64) (*Comment, err
 		CreatedTime: time.Now(),
 	}
 	// DB 层开事务来保证原子性
-	err := DB.Transaction(func(tx *gorm.DB) error {
+	err := global.DB.Transaction(func(tx *gorm.DB) error {
 		// 创建评论
-		err := DB.Create(comment).Error
+		err := global.DB.Create(comment).Error
 		if err != nil {
 			return err
 		}
@@ -41,11 +42,11 @@ func CreateComment(videoID uint64, content string, userID uint64) (*Comment, err
 		video := &Video{
 			ID: videoID,
 		}
-		err = DB.First(&video).Error
+		err = global.DB.First(&video).Error
 		if err != nil {
 			return err
 		}
-		return DB.Model(&video).Update("comment_count", video.CommentCount+1).Error
+		return global.DB.Model(&video).Update("comment_count", video.CommentCount+1).Error
 	})
 	if err != nil {
 		return nil, err
@@ -60,15 +61,15 @@ func DeleteCommentByID(videoID, commentID uint64) (*Comment, error) {
 		ID: commentID,
 	}
 	// 先查询是否存在评论
-	result := DB.Where("is_deleted = ?", constant.DataNotDeleted).Limit(1).Find(comment)
+	result := global.DB.Where("is_deleted = ?", constant.DataNotDeleted).Limit(1).Find(comment)
 	if result.RowsAffected == 0 {
 		return nil, errors.New("delete data failed")
 	}
 
 	// DB 层开事务来保证原子性
-	err := DB.Transaction(func(tx *gorm.DB) error {
+	err := global.DB.Transaction(func(tx *gorm.DB) error {
 		// 删除评论
-		result = DB.Model(comment).Update("is_deleted", constant.DataDeleted)
+		result = global.DB.Model(comment).Update("is_deleted", constant.DataDeleted)
 		if result.Error != nil {
 			return result.Error
 		}
@@ -79,11 +80,11 @@ func DeleteCommentByID(videoID, commentID uint64) (*Comment, error) {
 		video := &Video{
 			ID: videoID,
 		}
-		err := DB.First(&video).Error
+		err := global.DB.First(&video).Error
 		if err != nil {
 			return err
 		}
-		return DB.Model(&video).Update("comment_count", video.CommentCount-1).Error
+		return global.DB.Model(&video).Update("comment_count", video.CommentCount-1).Error
 	})
 	if err != nil {
 		return nil, err
@@ -94,7 +95,7 @@ func DeleteCommentByID(videoID, commentID uint64) (*Comment, error) {
 
 func SelectCommentListByVideoID(videoID uint64) ([]*Comment, error) {
 	res := make([]*Comment, 0)
-	err := DB.Where("video_id = ? AND is_deleted = ?", videoID, constant.DataNotDeleted).Find(&res).Error
+	err := global.DB.Where("video_id = ? AND is_deleted = ?", videoID, constant.DataNotDeleted).Find(&res).Error
 	if err != nil {
 		return nil, err
 	}
@@ -102,7 +103,7 @@ func SelectCommentListByVideoID(videoID uint64) ([]*Comment, error) {
 }
 
 func IsCommentCreatedByMyself(userID uint64, commentID uint64) bool {
-	result := DB.Where("id = ? AND user_id = ? AND is_deleted = ?", commentID, userID, constant.DataNotDeleted).
+	result := global.DB.Where("id = ? AND user_id = ? AND is_deleted = ?", commentID, userID, constant.DataNotDeleted).
 		Find(&Comment{})
 	if result.RowsAffected == 0 {
 		return false

@@ -4,28 +4,17 @@ package main
 
 import (
 	"douyin/biz/mw"
-	"douyin/dal/db"
-	"douyin/pkg/util"
-	"github.com/cloudwego/hertz/pkg/app/server"
-	"github.com/hertz-contrib/pprof"
+	"douyin/pkg/initialize"
 )
 
 func Init() {
-	db.Init()
+	initialize.Viper()
+	initialize.MySQL()
+	initialize.Redis()
 	mw.InitJWT()
+	initialize.Hertz()
 }
 
 func main() {
-	h := server.Default(
-		server.WithHostPorts("192.168.18.6:30000"),
-		server.WithExitWaitTime(0),
-	)
-
-	pprof.Register(h)
-
 	Init()
-	util.ScheduledInit()
-
-	register(h)
-	h.Spin()
 }

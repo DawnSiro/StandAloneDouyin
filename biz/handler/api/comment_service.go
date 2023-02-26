@@ -4,6 +4,7 @@ package api
 
 import (
 	"context"
+	"douyin/pkg/global"
 
 	"douyin/biz/model/api"
 	"douyin/biz/service"
@@ -27,7 +28,7 @@ func CommentAction(ctx context.Context, c *app.RequestContext) {
 	}
 
 	hlog.Info("handler.comment_service.CommentAction Request:", req)
-	userID := c.GetUint64(constant.IdentityKey)
+	userID := c.GetUint64(global.Config.JWTConfig.IdentityKey)
 	hlog.Info("handler.comment_service.CommentAction GetUserID:", userID)
 	var resp *api.DouyinCommentActionResponse
 	// 这里注意走 ActionType 对应的逻辑的时候要注意判断相关字段是否为空
@@ -63,7 +64,7 @@ func GetCommentList(ctx context.Context, c *app.RequestContext) {
 	}
 
 	hlog.Info("handler.comment_service.GetCommentList Request:", req)
-	userID := c.GetUint64(constant.IdentityKey)
+	userID := c.GetUint64(global.Config.JWTConfig.IdentityKey)
 	hlog.Info("handler.comment_service.GetCommentList GetUserID:", userID)
 	resp, err := service.CommentList(userID, uint64(req.VideoID))
 	if err != nil {

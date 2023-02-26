@@ -4,6 +4,7 @@ package api
 
 import (
 	"context"
+	"douyin/pkg/global"
 
 	"douyin/biz/model/api"
 	"douyin/biz/service"
@@ -27,7 +28,7 @@ func Follow(ctx context.Context, c *app.RequestContext) {
 	}
 
 	hlog.Info("handler.relation_service.Follow Request:", req)
-	userID := c.GetUint64(constant.IdentityKey)
+	userID := c.GetUint64(global.Config.JWTConfig.IdentityKey)
 	hlog.Info("handler.relation_service.Follow GetUserID:", userID)
 	var resp *api.DouyinRelationActionResponse
 	if req.ActionType == constant.Follow {
@@ -63,7 +64,7 @@ func GetFollowList(ctx context.Context, c *app.RequestContext) {
 	}
 
 	hlog.Info("handler.relation_service.GetFollowList Request:", req)
-	userID := c.GetUint64(constant.IdentityKey)
+	userID := c.GetUint64(global.Config.JWTConfig.IdentityKey)
 	hlog.Info("handler.relation_service.GetFollowList GetUserID:", userID)
 	resp, err := service.GetFollowList(userID, uint64(req.UserID))
 	if err != nil {
@@ -90,7 +91,7 @@ func GetFollowerList(ctx context.Context, c *app.RequestContext) {
 	}
 
 	hlog.Info("handler.relation_service.GetFollowerList Request:", req)
-	userID := c.GetUint64(constant.IdentityKey)
+	userID := c.GetUint64(global.Config.JWTConfig.IdentityKey)
 	hlog.Info("handler.relation_service.GetFollowList GetUserID:", userID)
 	resp, err := service.GetFollowerList(userID, uint64(req.UserID))
 	if err != nil {
@@ -117,7 +118,7 @@ func GetFriendList(ctx context.Context, c *app.RequestContext) {
 	}
 
 	hlog.Info("handler.relation_service.GetFollowerList Request:", req)
-	userID := c.GetUint64(constant.IdentityKey)
+	userID := c.GetUint64(global.Config.JWTConfig.IdentityKey)
 	hlog.Info("handler.relation_service.GetFollowerList GetUserID:", userID)
 	// 目前的判断是不能看别人的好友列表
 	if userID != uint64(req.UserID) {

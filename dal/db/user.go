@@ -2,6 +2,7 @@ package db
 
 import (
 	"douyin/pkg/constant"
+	"douyin/pkg/global"
 )
 
 type User struct {
@@ -24,7 +25,7 @@ func (u *User) TableName() string {
 
 func CreateUser(user *User) (userID int64, err error) {
 	// 这里不指明更新的字段的话，会全部赋零值，就无法使用数据库的默认值了
-	if err := DB.Select("username", "password").Create(user).Error; err != nil {
+	if err := global.DB.Select("username", "password").Create(user).Error; err != nil {
 		return 0, err
 	}
 	return int64(user.ID), nil
@@ -32,7 +33,7 @@ func CreateUser(user *User) (userID int64, err error) {
 
 func SelectUserByID(userID uint64) (*User, error) {
 	res := User{ID: userID}
-	if err := DB.First(&res).Error; err != nil {
+	if err := global.DB.First(&res).Error; err != nil {
 		return nil, err
 	}
 	return &res, nil
@@ -40,7 +41,7 @@ func SelectUserByID(userID uint64) (*User, error) {
 
 func SelectUserByName(username string) ([]*User, error) {
 	res := make([]*User, 0)
-	if err := DB.Where("username = ?", username).Limit(1).Find(&res).Error; err != nil {
+	if err := global.DB.Where("username = ?", username).Limit(1).Find(&res).Error; err != nil {
 		return nil, err
 	}
 	return res, nil
@@ -50,11 +51,11 @@ func IncreaseUserFavoriteCount(userID uint64) (int64, error) {
 	user := &User{
 		ID: userID,
 	}
-	err := DB.First(&user).Error
+	err := global.DB.First(&user).Error
 	if err != nil {
 		return 0, err
 	}
-	if err := DB.Model(&user).Update("favorite_count", user.FavoriteCount+1).Error; err != nil {
+	if err := global.DB.Model(&user).Update("favorite_count", user.FavoriteCount+1).Error; err != nil {
 		return 0, err
 	}
 	return user.FavoriteCount, nil
@@ -64,11 +65,11 @@ func DecreaseUserFavoriteCount(userID uint64) (int64, error) {
 	user := &User{
 		ID: userID,
 	}
-	err := DB.First(&user).Error
+	err := global.DB.First(&user).Error
 	if err != nil {
 		return 0, err
 	}
-	if err := DB.Model(&user).Update("favorite_count", user.FavoriteCount-1).Error; err != nil {
+	if err := global.DB.Model(&user).Update("favorite_count", user.FavoriteCount-1).Error; err != nil {
 		return 0, err
 	}
 	return user.FavoriteCount, nil

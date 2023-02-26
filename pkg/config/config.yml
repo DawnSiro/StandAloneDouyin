@@ -1,0 +1,37 @@
+hertz:
+  host:
+  port:
+
+jwt:
+  signing_key:
+  identity_key:
+
+mysql:
+  host:
+  port:
+  username:
+  password:
+  db_name:
+  max_open_conns:
+  max_idle_conns:
+
+videoCRCRedis:
+  host:
+  port:
+  password:
+  db:
+  pool_size:
+
+videoFRCRedis:
+  host:
+  port:
+  password:
+  db:
+  pool_size:
+
+userInfoRCRedis:
+  host:
+  port:
+  password:
+  db:
+  pool_size:

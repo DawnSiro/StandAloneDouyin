@@ -4,11 +4,11 @@ package api
 
 import (
 	"context"
+	"douyin/pkg/global"
 
 	"douyin/biz/model/api"
 	"douyin/biz/mw"
 	"douyin/biz/service"
-	"douyin/pkg/constant"
 	"douyin/pkg/errno"
 
 	"github.com/cloudwego/hertz/pkg/app"
@@ -61,7 +61,7 @@ func GetUserInfo(ctx context.Context, c *app.RequestContext) {
 	}
 
 	hlog.Info("handler.user_service.GetUserInfo Request:", req)
-	userID := c.GetUint64(constant.IdentityKey)
+	userID := c.GetUint64(global.Config.JWTConfig.IdentityKey)
 	hlog.Info("handler.user_service.GetUserInfo GetUserID:", userID)
 	resp, err := service.GetUserInfo(userID, uint64(req.UserID))
 	if err != nil {

@@ -1,11 +1,5 @@
 package constant
 
-// 中间件
-const (
-	SecretKey   = "CloudWeRun"
-	IdentityKey = "id"
-)
-
 // ActionType 的枚举
 // 1-发布评论，2-删除评论
 // 1-点赞，2-取消点赞
@@ -35,15 +29,6 @@ const (
 	UserFavoriteVideosTableName = "user_favorite_video"
 	VideoTableName              = "video"
 	UserTableName               = "user"
-	MySQLDefaultDSN             = "douyin:123456@tcp(127.0.0.1:3306)/douyin?charset=utf8&parseTime=True&loc=Local"
-)
-
-// Redis
-const (
-	RedisAddress = "127.0.0.1:6379"
-	VideoCRDB    = 0
-	VideoFRDB    = 1
-	UserInfoRDB  = 2
 )
 
 // 业务相关

@@ -1,6 +1,7 @@
 package db
 
 import (
+	"douyin/pkg/global"
 	"time"
 
 	"douyin/pkg/constant"
@@ -25,7 +26,7 @@ func (n *Video) TableName() string {
 }
 
 func CreateVideo(video *Video) error {
-	return DB.Transaction(func(tx *gorm.DB) error {
+	return global.DB.Transaction(func(tx *gorm.DB) error {
 		//从这里开始，应该使用 tx 而不是 db（tx 是 Transaction 的简写）
 		u := &User{ID: video.AuthorID}
 		err := tx.Select("work_count").First(u).Error
@@ -57,7 +58,7 @@ func MGetVideos(maxVideoNum int, latestTime *int64) ([]*Video, error) {
 
 	// TODO 设计简单的推荐算法，比如关注的 UP 发了视频，会优先推送
 	hlog.Info(*latestTime)
-	if err := DB.Where("publish_time < ?", time.UnixMilli(*latestTime)).Limit(maxVideoNum).
+	if err := global.DB.Where("publish_time < ?", time.UnixMilli(*latestTime)).Limit(maxVideoNum).
 		Order("publish_time desc").Find(&res).Error; err != nil {
 		return nil, err
 	}
@@ -66,7 +67,7 @@ func MGetVideos(maxVideoNum int, latestTime *int64) ([]*Video, error) {
 
 func GetVideosByAuthorID(userID uint64) ([]*Video, error) {
 	res := make([]*Video, 0)
-	err := DB.Find(&res, "author_id = ? ", userID).Error
+	err := global.DB.Find(&res, "author_id = ? ", userID).Error
 	if err != nil {
 		return nil, err
 	}
@@ -78,7 +79,7 @@ func SelectAuthorIDByVideoID(videoID uint64) (uint64, error) {
 		ID: videoID,
 	}
 
-	err := DB.First(&video).Error
+	err := global.DB.First(&video).Error
 	if err != nil {
 		return 0, err
 	}
@@ -90,7 +91,7 @@ func UpdateVideoFavoriteCount(videoID uint64, favoriteCount uint64) (int64, erro
 		ID: videoID,
 	}
 
-	if err := DB.Model(&video).Update("favorite_count", favoriteCount).Error; err != nil {
+	if err := global.DB.Model(&video).Update("favorite_count", favoriteCount).Error; err != nil {
 		return 0, err
 	}
 	return video.FavoriteCount, nil
@@ -101,11 +102,11 @@ func IncreaseVideoFavoriteCount(videoID uint64) (int64, error) {
 	video := &Video{
 		ID: videoID,
 	}
-	err := DB.First(&video).Error
+	err := global.DB.First(&video).Error
 	if err != nil {
 		return 0, err
 	}
-	if err := DB.Model(&video).Update("favorite_count", video.FavoriteCount+1).Error; err != nil {
+	if err := global.DB.Model(&video).Update("favorite_count", video.FavoriteCount+1).Error; err != nil {
 		return 0, err
 	}
 	return video.CommentCount, nil
@@ -116,11 +117,11 @@ func DecreaseVideoFavoriteCount(videoID uint64) (int64, error) {
 	video := &Video{
 		ID: videoID,
 	}
-	err := DB.First(&video).Error
+	err := global.DB.First(&video).Error
 	if err != nil {
 		return 0, err
 	}
-	if err := DB.Model(&video).Update("favorite_count", video.FavoriteCount-1).Error; err != nil {
+	if err := global.DB.Model(&video).Update("favorite_count", video.FavoriteCount-1).Error; err != nil {
 		return 0, err
 	}
 	return video.CommentCount, nil
@@ -131,7 +132,7 @@ func UpdateCommentCount(videoID uint64, commentCount uint64) (int64, error) {
 		ID: videoID,
 	}
 
-	if err := DB.Model(&video).Update("comment_count", commentCount).Error; err != nil {
+	if err := global.DB.Model(&video).Update("comment_count", commentCount).Error; err != nil {
 		return 0, err
 	}
 	return video.FavoriteCount, nil
@@ -143,12 +144,12 @@ func IncreaseCommentCount(videoID uint64) (int64, error) {
 		ID: videoID,
 	}
 
-	err := DB.First(&video).Error
+	err := global.DB.First(&video).Error
 	if err != nil {
 		return 0, err
 	}
 
-	if err := DB.Model(&video).Update("comment_count", video.CommentCount+1).Error; err != nil {
+	if err := global.DB.Model(&video).Update("comment_count", video.CommentCount+1).Error; err != nil {
 		return 0, err
 	}
 	return video.CommentCount, nil
@@ -159,11 +160,11 @@ func DecreaseCommentCount(videoID uint64) (int64, error) {
 	video := &Video{
 		ID: videoID,
 	}
-	err := DB.First(&video).Error
+	err := global.DB.First(&video).Error
 	if err != nil {
 		return 0, err
 	}
-	if err := DB.Model(&video).Update("comment_count", video.CommentCount-1).Error; err != nil {
+	if err := global.DB.Model(&video).Update("comment_count", video.CommentCount-1).Error; err != nil {
 		return 0, err
 	}
 	return video.CommentCount, nil
@@ -174,7 +175,7 @@ func SelectVideoFavoriteCountByVideoID(videoID uint64) (int64, error) {
 		ID: videoID,
 	}
 
-	err := DB.First(&video).Error
+	err := global.DB.First(&video).Error
 	if err != nil {
 		return 0, err
 	}
@@ -186,7 +187,7 @@ func SelectCommentCountByVideoID(videoID uint64) (int64, error) {
 		ID: videoID,
 	}
 
-	err := DB.First(&video).Error
+	err := global.DB.First(&video).Error
 	if err != nil {
 		return 0, err
 	}
@@ -196,7 +197,7 @@ func SelectCommentCountByVideoID(videoID uint64) (int64, error) {
 func SelectVideoList() ([]*Video, error) {
 	videoList := new([]*Video)
 
-	if err := DB.Find(&videoList).Error; err != nil {
+	if err := global.DB.Find(&videoList).Error; err != nil {
 		return nil, err
 	}
 	return *videoList, nil

@@ -4,6 +4,7 @@ package api
 
 import (
 	"context"
+	"douyin/pkg/global"
 
 	"douyin/biz/model/api"
 	"douyin/biz/service"
@@ -27,7 +28,7 @@ func FavoriteVideo(ctx context.Context, c *app.RequestContext) {
 	}
 
 	hlog.Info("handler.favorite_service.FavoriteVideo Request:", req)
-	userID := c.GetUint64(constant.IdentityKey)
+	userID := c.GetUint64(global.Config.JWTConfig.IdentityKey)
 	hlog.Info("handler.favorite_service.FavoriteVideo GetUserID:", userID)
 	var resp *api.DouyinFavoriteActionResponse
 	if req.ActionType == constant.Favorite {
@@ -63,7 +64,7 @@ func GetFavoriteList(ctx context.Context, c *app.RequestContext) {
 	}
 
 	hlog.Info("handler.favorite_service.GetFavoriteList Request:", req)
-	userID := c.GetUint64(constant.IdentityKey)
+	userID := c.GetUint64(global.Config.JWTConfig.IdentityKey)
 	hlog.Info("handler.favorite_service.GetFavoriteList GetUserID:", userID)
 	resp, err := service.FavoriteList(userID, uint64(req.UserID))
 	if err != nil {

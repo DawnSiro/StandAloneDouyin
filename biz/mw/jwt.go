@@ -2,12 +2,12 @@ package mw
 
 import (
 	"context"
+	"douyin/pkg/global"
 	"net/http"
 	"time"
 
 	"douyin/biz/model/api"
 	"douyin/biz/service"
-	"douyin/pkg/constant"
 	"douyin/pkg/errno"
 
 	"github.com/cloudwego/hertz/pkg/app"
@@ -20,24 +20,24 @@ var JwtMiddleware *jwt.HertzJWTMiddleware
 
 func InitJWT() {
 	JwtMiddleware, _ = jwt.New(&jwt.HertzJWTMiddleware{
-		Key:           []byte(constant.SecretKey),
+		Key:           []byte(global.Config.JWTConfig.SigningKey),
 		TokenLookup:   "header: Authorization, query: token, cookie: jwt, form: token",
 		TokenHeadName: "Bearer",
 		TimeFunc:      time.Now,
 		Timeout:       time.Hour * 12,
 		MaxRefresh:    time.Hour * 3,
-		IdentityKey:   constant.IdentityKey,
+		IdentityKey:   global.Config.JWTConfig.IdentityKey,
 		// 用于设置获取身份信息的函数，默认与 IdentityKey 配合使用
 		IdentityHandler: func(ctx context.Context, c *app.RequestContext) interface{} {
 			claims := jwt.ExtractClaims(ctx, c)
 			// 这里的返回值可以通过 c.Get() 或者 c.GetInt64() 去取到
-			return uint64(claims[constant.IdentityKey].(float64))
+			return uint64(claims[global.Config.JWTConfig.IdentityKey].(float64))
 		},
 		// 用于设置登陆成功后为向 token 中添加自定义负载信息的函数
 		PayloadFunc: func(data interface{}) jwt.MapClaims {
 			if v, ok := data.(uint64); ok {
 				return jwt.MapClaims{
-					constant.IdentityKey: v,
+					global.Config.JWTConfig.IdentityKey: v,
 				}
 			}
 			return jwt.MapClaims{}
@@ -58,13 +58,13 @@ func InitJWT() {
 			}
 			hlog.Info(userID)
 			// 设置 userID 到请求上下文
-			c.Set(constant.IdentityKey, userID)
+			c.Set(global.Config.JWTConfig.IdentityKey, userID)
 			return userID, nil
 		},
 		// 用于设置登录的响应函数
 		LoginResponse: func(ctx context.Context, c *app.RequestContext, code int, token string, expire time.Time) {
 			// 可以通过 Get 去取放在 请求上下文 的数据
-			userID := c.GetUint64(constant.IdentityKey)
+			userID := c.GetUint64(global.Config.JWTConfig.IdentityKey)
 			c.JSON(http.StatusOK, api.DouyinUserLoginResponse{
 				StatusCode: errno.Success.ErrCode,
 				UserID:     int64(userID),
