@@ -2,7 +2,10 @@ package mw
 
 import (
 	"context"
+	"douyin/pkg/constant"
 	"douyin/pkg/global"
+	"douyin/pkg/util"
+	"github.com/cloudwego/hertz/pkg/protocol/consts"
 	"net/http"
 	"time"
 
@@ -24,8 +27,8 @@ func InitJWT() {
 		TokenLookup:   "header: Authorization, query: token, cookie: jwt, form: token",
 		TokenHeadName: "Bearer",
 		TimeFunc:      time.Now,
-		Timeout:       time.Hour * 12,
-		MaxRefresh:    time.Hour * 3,
+		Timeout:       constant.TokenTimeOut,
+		MaxRefresh:    constant.TokenMaxRefresh,
 		IdentityKey:   global.Config.JWTConfig.IdentityKey,
 		// 用于设置获取身份信息的函数，默认与 IdentityKey 配合使用
 		IdentityHandler: func(ctx context.Context, c *app.RequestContext) interface{} {
@@ -52,14 +55,13 @@ func InitJWT() {
 			if len(req.Username) == 0 || len(req.Password) == 0 {
 				return "", jwt.ErrMissingLoginValues
 			}
-			userID, err := service.Login(req.Username, req.Password)
+			resp, err := service.Login(req.Username, req.Password)
 			if err != nil {
 				return 0, err
 			}
-			hlog.Info(userID)
 			// 设置 userID 到请求上下文
-			c.Set(global.Config.JWTConfig.IdentityKey, userID)
-			return userID, nil
+			c.Set(global.Config.JWTConfig.IdentityKey, resp.UserID)
+			return resp.UserID, nil
 		},
 		// 用于设置登录的响应函数
 		LoginResponse: func(ctx context.Context, c *app.RequestContext, code int, token string, expire time.Time) {
@@ -74,7 +76,7 @@ func InitJWT() {
 		Unauthorized: func(ctx context.Context, c *app.RequestContext, code int, message string) {
 			c.JSON(http.StatusOK, utils.H{
 				"status_code": errno.UserIdentityVerificationFailedError.ErrCode,
-				"status_msg":  errno.UserIdentityVerificationFailedError.Error(),
+				"status_msg":  errno.UserIdentityVerificationFailedError.ErrMsg,
 			})
 		},
 		HTTPStatusMessageFunc: func(e error, ctx context.Context, c *app.RequestContext) string {
@@ -86,4 +88,50 @@ func InitJWT() {
 			}
 		},
 	})
+}
+
+func JWT() app.HandlerFunc {
+	return func(ctx context.Context, c *app.RequestContext) {
+		token := c.Query("token")
+		if token == "" {
+			hlog.Error("mw.jwt.ParseToken err:", errno.UserIdentityVerificationFailedError)
+			c.JSON(consts.StatusBadRequest, utils.H{
+				"status_code": errno.UserIdentityVerificationFailedError.ErrCode,
+				"status_msg":  "Token 为空",
+			})
+			c.Abort()
+			return
+		}
+		claim, err := util.ParseToken(token)
+		if err != nil {
+			hlog.Error("mw.jwt.ParseToken err:", err.Error())
+			c.JSON(consts.StatusBadRequest, utils.H{
+				"status_code": errno.UserIdentityVerificationFailedError.ErrCode,
+				"status_msg":  errno.UserIdentityVerificationFailedError.ErrMsg,
+			})
+			c.Abort()
+			return
+		}
+		hlog.Info("mw.jwt.ParseToken userID:", claim.ID)
+		c.Set(global.Config.JWTConfig.IdentityKey, claim.ID)
+		c.Next(ctx)
+	}
+}
+
+// ParseToken 如果 Token 存在，会试着解析 Token，不存在也会放行。主要用于某些登录和未登录都能使用的接口
+func ParseToken() app.HandlerFunc {
+	return func(ctx context.Context, c *app.RequestContext) {
+		token := c.Query("token")
+		if token == "" {
+			return
+		}
+		claim, err := util.ParseToken(token)
+		if err != nil {
+			hlog.Info("mw.jwt.ParseToken err:", err.Error())
+			return
+		}
+		hlog.Info("mw.jwt.ParseToken userID:", claim.ID)
+		c.Set(global.Config.JWTConfig.IdentityKey, claim.ID)
+		return
+	}
 }

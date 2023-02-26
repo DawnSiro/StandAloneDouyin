@@ -26,7 +26,7 @@ func _actionMw() []app.HandlerFunc {
 	// your code...
 	return []app.HandlerFunc{
 		// use jwt mw
-		mw.JwtMiddleware.MiddlewareFunc(),
+		mw.JWT(),
 	}
 }
 
@@ -51,7 +51,7 @@ func _favoriteMw() []app.HandlerFunc {
 	// 登录的用户才能点赞和查看点赞列表
 	return []app.HandlerFunc{
 		// use jwt mw
-		mw.JwtMiddleware.MiddlewareFunc(),
+		mw.JWT(),
 	}
 }
 
@@ -64,13 +64,15 @@ func _getfavoritelistMw() []app.HandlerFunc {
 	// your code...
 	return []app.HandlerFunc{
 		// use jwt mw
-		mw.JwtMiddleware.MiddlewareFunc(),
+		mw.JWT(),
 	}
 }
 
 func _feedMw() []app.HandlerFunc {
 	// your code...
-	return nil
+	return []app.HandlerFunc{
+		mw.ParseToken(),
+	}
 }
 
 func _getfeedMw() []app.HandlerFunc {
@@ -82,7 +84,7 @@ func _messageMw() []app.HandlerFunc {
 	// your code...
 	return []app.HandlerFunc{
 		// use jwt mw
-		mw.JwtMiddleware.MiddlewareFunc(),
+		mw.JWT(),
 	}
 }
 
@@ -135,7 +137,7 @@ func _relationMw() []app.HandlerFunc {
 	// your code...
 	return []app.HandlerFunc{
 		// use jwt mw
-		mw.JwtMiddleware.MiddlewareFunc(),
+		mw.JWT(),
 	}
 }
 
@@ -143,7 +145,7 @@ func _action2Mw() []app.HandlerFunc {
 	// your code...
 	return []app.HandlerFunc{
 		// use jwt mw
-		mw.JwtMiddleware.MiddlewareFunc(),
+		mw.JWT(),
 	}
 }
 
@@ -151,7 +153,7 @@ func _followMw() []app.HandlerFunc {
 	// your code...
 	return []app.HandlerFunc{
 		// use jwt mw
-		mw.JwtMiddleware.MiddlewareFunc(),
+		mw.JWT(),
 	}
 }
 
@@ -160,7 +162,7 @@ func _follow0Mw() []app.HandlerFunc {
 	// 登录的用户才能关注列表
 	return []app.HandlerFunc{
 		// use jwt mw
-		mw.JwtMiddleware.MiddlewareFunc(),
+		mw.JWT(),
 	}
 }
 
@@ -179,7 +181,7 @@ func _followerMw() []app.HandlerFunc {
 	// 登录的用户才能查看粉丝列表
 	return []app.HandlerFunc{
 		// use jwt mw
-		mw.JwtMiddleware.MiddlewareFunc(),
+		mw.JWT(),
 	}
 }
 
@@ -198,7 +200,7 @@ func _friendMw() []app.HandlerFunc {
 	// 登录的用户才能查看好友列表
 	return []app.HandlerFunc{
 		// use jwt mw
-		mw.JwtMiddleware.MiddlewareFunc(),
+		mw.JWT(),
 	}
 }
 
@@ -221,7 +223,7 @@ func _getuserinfoMw() []app.HandlerFunc {
 	// your code...
 	return []app.HandlerFunc{
 		// use jwt mw
-		mw.JwtMiddleware.MiddlewareFunc(),
+		mw.JWT(),
 	}
 }
 
@@ -249,7 +251,7 @@ func _favoritevideoMw() []app.HandlerFunc {
 	// your code...
 	return []app.HandlerFunc{
 		// use jwt mw
-		mw.JwtMiddleware.MiddlewareFunc(),
+		mw.JWT(),
 	}
 }
 

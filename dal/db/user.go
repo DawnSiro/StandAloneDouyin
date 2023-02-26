@@ -23,12 +23,12 @@ func (u *User) TableName() string {
 	return constant.UserTableName
 }
 
-func CreateUser(user *User) (userID int64, err error) {
+func CreateUser(user *User) (userID uint64, err error) {
 	// 这里不指明更新的字段的话，会全部赋零值，就无法使用数据库的默认值了
 	if err := global.DB.Select("username", "password").Create(user).Error; err != nil {
 		return 0, err
 	}
-	return int64(user.ID), nil
+	return user.ID, nil
 }
 
 func SelectUserByID(userID uint64) (*User, error) {

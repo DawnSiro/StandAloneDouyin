@@ -26,8 +26,16 @@ func GetFeed(latestTime *int64, userID uint64) (*api.DouyinFeedResponse, error) 
 			return nil, err
 		}
 
-		video := pack.Video(videos[i], u,
-			db.IsFollow(userID, u.ID), db.IsFavoriteVideo(userID, videos[i].ID))
+		var video *api.Video
+		// 未登录默认未关注，未点赞
+		if userID == 0 {
+			video = pack.Video(videos[i], u,
+				false, false)
+		} else {
+			video = pack.Video(videos[i], u,
+				db.IsFollow(userID, u.ID), db.IsFavoriteVideo(userID, videos[i].ID))
+		}
+
 		videoList = append(videoList, video)
 	}
 
@@ -35,7 +43,7 @@ func GetFeed(latestTime *int64, userID uint64) (*api.DouyinFeedResponse, error) 
 	// 没有视频的时候 nextTime 为 nil，会重置时间
 	if len(videos) != 0 {
 		nextTime = new(int64)
-		*nextTime = int64(videos[len(videos)-1].PublishTime.Second())
+		*nextTime = videos[len(videos)-1].PublishTime.UnixMilli()
 	}
 
 	return &api.DouyinFeedResponse{

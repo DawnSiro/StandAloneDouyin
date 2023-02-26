@@ -7,7 +7,6 @@ import (
 	"douyin/pkg/global"
 
 	"douyin/biz/model/api"
-	"douyin/biz/mw"
 	"douyin/biz/service"
 	"douyin/pkg/errno"
 
@@ -27,7 +26,8 @@ func Register(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
-	err = service.Register(req.Username, req.Password)
+	// 用户信息就不用打印到日志里了
+	resp, err := service.Register(req.Username, req.Password)
 	if err != nil {
 		errNo := errno.ConvertErr(err)
 		c.JSON(consts.StatusOK, &api.DouyinUserRegisterResponse{
@@ -37,16 +37,32 @@ func Register(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
-	// 注册完后直接登录
-	// 实际调用的是初始化 JWT 时传递的 func
-	mw.JwtMiddleware.LoginHandler(ctx, c)
+	c.JSON(consts.StatusOK, resp)
 }
 
 // Login .
 // @router /douyin/user/login/ [POST]
 func Login(ctx context.Context, c *app.RequestContext) {
-	// 实际调用的是初始化 JWT 时传递的 func
-	mw.JwtMiddleware.LoginHandler(ctx, c)
+	var err error
+	var req api.DouyinUserLoginRequest
+	err = c.BindAndValidate(&req)
+	if err != nil {
+		c.String(consts.StatusBadRequest, err.Error())
+		return
+	}
+
+	// 用户信息就不用打印到日志里了
+	resp, err := service.Login(req.Username, req.Password)
+	if err != nil {
+		errNo := errno.ConvertErr(err)
+		c.JSON(consts.StatusOK, &api.DouyinUserRegisterResponse{
+			StatusCode: errNo.ErrCode,
+			StatusMsg:  &errNo.ErrMsg,
+		})
+		return
+	}
+
+	c.JSON(consts.StatusOK, resp)
 }
 
 // GetUserInfo .
