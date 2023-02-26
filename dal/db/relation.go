@@ -1,9 +1,6 @@
 package db
 
 import (
-	"errors"
-
-	"douyin/biz/model/api"
 	"douyin/pkg/constant"
 	"douyin/pkg/errno"
 
@@ -51,10 +48,11 @@ func IsFriend(userID uint64, toUserID uint64) bool {
 		return false
 	}
 
-	//
-	result := DB.Where("user_id = ? AND to_user_id = ? AND is_deleted = ?",
-		userID, toUserID, constant.DataNotDeleted).Limit(1).Find(&Relation{})
-	if result.RowsAffected == 1 {
+	// limit 2 需要使用切片而非单个结构体
+	relation := make([]*Relation, 0, 2)
+	result := DB.Where("(user_id = ? AND to_user_id = ? OR user_id = ? AND to_user_id = ?) AND is_deleted = ?",
+		userID, toUserID, toUserID, userID, constant.DataNotDeleted).Limit(2).Find(&relation)
+	if result.RowsAffected == 2 {
 		return true
 	}
 	// 查询出错和没有数据都返回 false
@@ -76,27 +74,22 @@ func Follow(userID uint64, toUserID uint64) error {
 		self := &User{ID: userID}
 		err := tx.Select("following_count").First(self).Error
 		if err != nil {
-			hlog.Error("db.relation.Follow err:", err.Error())
 			return err
 		}
 		err = tx.Model(self).Update("following_count", self.FollowingCount+1).Error
 		if err != nil {
-			hlog.Error("db.relation.Follow err:", err.Error())
 			return err
 		}
 		// 新增关注用户的粉丝数
 		opposite := &User{ID: toUserID}
 		err = tx.Select("follower_count").First(opposite).Error
 		if err != nil {
-			hlog.Error("db.relation.Follow err:", err.Error())
 			return err
 		}
 		err = tx.Model(opposite).Update("follower_count", opposite.FollowerCount+1).Error
 		if err != nil {
-			hlog.Error("db.relation.Follow err:", err.Error())
 			return err
 		}
-
 		// 更新关注的关系
 		// 先查询是否存在软删除的关注数据
 		result := tx.Model(&Relation{}).Where("user_id = ? AND to_user_id = ? AND is_deleted = ?",
@@ -122,7 +115,7 @@ func CancelFollow(userID uint64, toUserID uint64) error {
 		return result.Error
 	}
 	if result.RowsAffected == 0 {
-		return errors.New("cancel favorite failed")
+		return errno.UserRequestParameterError
 	}
 
 	return DB.Transaction(func(tx *gorm.DB) error {
@@ -130,24 +123,20 @@ func CancelFollow(userID uint64, toUserID uint64) error {
 		self := &User{ID: userID}
 		err := tx.Select("following_count").First(self).Error
 		if err != nil {
-			hlog.Error("db.relation.CancelFollow err:", err.Error())
 			return err
 		}
 		err = tx.Model(self).Update("following_count", self.FollowingCount-1).Error
 		if err != nil {
-			hlog.Error("db.relation.CancelFollow err:", err.Error())
 			return err
 		}
 		// 减少关注用户的粉丝数
 		opposite := &User{ID: toUserID}
 		err = tx.Select("follower_count").First(opposite).Error
 		if err != nil {
-			hlog.Error("db.relation.CancelFollow err:", err.Error())
 			return err
 		}
 		err = tx.Model(opposite).Update("follower_count", opposite.FollowerCount-1).Error
 		if err != nil {
-			hlog.Error("db.relation.CancelFollow err:", err.Error())
 			return err
 		}
 
@@ -193,56 +182,33 @@ func GetFollowerList(userID uint64) ([]*User, error) {
 		if err != nil {
 			return nil, err
 		}
-
 		res = append(res, u)
 	}
 
 	return res, nil
 }
 
-func GetFriendList(userID uint64) ([]*api.FriendUser, error) {
-	relations := make([]*Relation, 0)
-	results := make([]*api.FriendUser, 0)
+func GetFriendList(userID uint64) ([]*User, error) {
+	friendUserID := make([]int64, 0)
+	res := make([]*User, 0)
 
-	// TODO 存在循环查询DB
-	result := DB.Where("user_id = ? AND is_deleted = ?", userID, constant.DataNotDeleted).Find(&relations)
-	if result.RowsAffected == 0 {
-		return results, nil
+	// 查询关注自己的所有粉丝的 userID
+	followerQuery := DB.Select("user_id").Table(constant.RelationTableName).
+		Where("to_user_id = ? AND is_deleted = ?", userID, constant.DataNotDeleted)
+	// 查询自己关注的，并且在自己的粉丝 userID 集合里的用户
+	err := DB.Select("to_user_id").Table(constant.RelationTableName).
+		Where("user_id = ? AND is_deleted = ? AND to_user_id IN (?)",
+			userID, constant.DataNotDeleted, followerQuery).Find(&friendUserID).Error
+	if err != nil {
+		return nil, err
 	}
-
-	for i := 0; i < len(relations); i++ {
-		//查看对方是否是自己的粉丝
-		rs2 := make([]*Relation, 0)
-		result := DB.Where("user_id = ? AND to_user_id = ? AND is_deleted = ?",
-			relations[i].ToUserID, userID, constant.DataNotDeleted).Limit(1).Find(&rs2)
-		if result.RowsAffected == 0 {
-			continue
-		}
-
-		u, err := SelectUserByID(relations[i].ToUserID)
-		if err != nil {
-			return nil, err
-		}
-
-		messageResult, err := GetLatestMsg(userID, relations[i].ToUserID)
-		if err != nil {
-			return nil, err
-		}
-
-		followCount := u.FollowingCount
-		followerCount := u.FollowerCount
-		results = append(results,
-			&api.FriendUser{
-				ID:            int64(u.ID),
-				Name:          u.Username,
-				FollowCount:   &followCount,
-				FollowerCount: &followerCount,
-				IsFollow:      IsFollow(relations[i].ToUserID, userID),
-				Avatar:        u.Avatar,
-				Message:       &messageResult.Content,
-				MsgType:       int8(messageResult.MsgType),
-			})
+	// 没有好友，直接返回
+	if len(friendUserID) == 0 {
+		return res, nil
 	}
-
-	return results, nil
+	err = DB.Where("id IN (?)", friendUserID).Find(&res).Error
+	if err != nil {
+		return nil, err
+	}
+	return res, nil
 }

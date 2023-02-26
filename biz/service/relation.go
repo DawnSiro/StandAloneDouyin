@@ -102,14 +102,25 @@ func GetFollowerList(userID, selectUserID uint64) (*api.DouyinRelationFollowerLi
 }
 
 func GetFriendList(userID uint64) (*api.DouyinRelationFriendListResponse, error) {
-	resultList, err := db.GetFriendList(userID)
+	userList, err := db.GetFriendList(userID)
 	if err != nil {
 		hlog.Error("service.relation.GetFollowerList err:", err.Error())
 		return nil, err
 	}
 
+	// TODO 存在循环查询DB
+	friendUserList := make([]*api.FriendUser, 0, len(userList))
+	for _, u := range userList {
+		msg, err := db.GetLatestMsg(userID, u.ID)
+		if err != nil {
+			hlog.Error("service.relation.GetFollowerList err:", err.Error())
+			return nil, err
+		}
+		friendUserList = append(friendUserList, pack.FriendUser(u, db.IsFollow(userID, u.ID), msg.Content, msg.MsgType))
+	}
+
 	return &api.DouyinRelationFriendListResponse{
 		StatusCode: errno.Success.ErrCode,
-		UserList:   resultList,
+		UserList:   friendUserList,
 	}, nil
 }

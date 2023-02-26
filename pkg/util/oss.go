@@ -12,13 +12,13 @@ import (
 )
 
 const (
-	regionID        = "cn-beijing" // bucket所在位置，可查看oss对象储存控制台的概况获取
-	accessKeyID     = "LTAI5tMB6ctwKJYvXUrUJNMt"
-	accessKeySecret = "82EwfIUlIveWmceGVfSJ9RNPtdvRZP"
-	roleArn         = "acs:ram::1603132833552980:role/ramosstest2"
-	roleSessionName = "RamOssTest2"
-	endpoint        = "oss-cn-beijing.aliyuncs.com"
-	bucketName      = "picture-bucket-01"
+	regionID        = "regionID" // bucket所在位置，可查看oss对象储存控制台的概况获取
+	accessKeyID     = "accessKeyID"
+	accessKeySecret = "accessKeySecret"
+	roleArn         = "roleArn"
+	roleSessionName = "roleSessionName"
+	endpoint        = "endpoint"
+	bucketName      = "bucketName"
 )
 
 func GetSTS() *sts.AssumeRoleResponse {

@@ -1,11 +1,9 @@
 package db
 
 import (
-	"errors"
-
 	"douyin/pkg/constant"
 	"douyin/pkg/errno"
-
+	"errors"
 	"gorm.io/gorm"
 )
 
@@ -123,7 +121,7 @@ func IsFavoriteVideo(userID, videoID uint64) bool {
 	if userID == 0 || videoID == 0 {
 		return false
 	}
-	ufv := make([]*UserFavoriteVideo, 1)
+	ufv := make([]*UserFavoriteVideo, 0, 1)
 	res := DB.Where("user_id = ? AND video_id = ? AND is_deleted = ?",
 		userID, videoID, constant.DataNotDeleted).Limit(1).Find(&ufv)
 	return res.RowsAffected == 1
