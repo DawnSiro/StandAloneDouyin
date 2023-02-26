@@ -5,12 +5,12 @@ package api
 import (
 	"bytes"
 	"context"
+	"douyin/pkg/global"
 	"io"
 	"mime/multipart"
 
 	"douyin/biz/model/api"
 	"douyin/biz/service"
-	"douyin/pkg/constant"
 	"douyin/pkg/errno"
 
 	"github.com/cloudwego/hertz/pkg/app"
@@ -65,7 +65,7 @@ func PublishAction(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
-	userID := c.GetUint64(constant.IdentityKey)
+	userID := c.GetUint64(global.Config.JWTConfig.IdentityKey)
 	hlog.Info("handler.feed_service.GetFeed GetUserID:", userID)
 	err = service.PublishAction(req.Title, buf.Bytes(), userID)
 	if err != nil {

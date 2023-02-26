@@ -1,6 +1,7 @@
 package db
 
 import (
+	"douyin/pkg/global"
 	"time"
 
 	"douyin/pkg/constant"
@@ -24,17 +25,17 @@ type FriendMessageResp struct {
 }
 
 func CreateMessage(fromUserID, toUserID uint64, content string) error {
-	return DB.Create(&Message{FromUserID: fromUserID, ToUserID: toUserID, Content: content, CreateTime: time.Now()}).Error
+	return global.DB.Create(&Message{FromUserID: fromUserID, ToUserID: toUserID, Content: content, CreateTime: time.Now()}).Error
 }
 
 func GetMessagesByUserIDAndPreMsgTime(userID, oppositeID uint64, preMsgTime int64) ([]*Message, error) {
 	res := make([]*Message, 0)
 	message := &Message{}
 	// 使用 Union 来避免使用 or 导致不走索引的问题
-	err := DB.Raw("? UNION ? ORDER BY create_time ASC",
-		DB.Where("to_user_id = ? AND from_user_id = ? AND `create_time` > ?",
+	err := global.DB.Raw("? UNION ? ORDER BY create_time ASC",
+		global.DB.Where("to_user_id = ? AND from_user_id = ? AND `create_time` > ?",
 			userID, oppositeID, time.UnixMilli(preMsgTime)).Model(message),
-		DB.Where("to_user_id = ? AND from_user_id = ? AND `create_time` > ?",
+		global.DB.Where("to_user_id = ? AND from_user_id = ? AND `create_time` > ?",
 			oppositeID, userID, time.UnixMilli(preMsgTime)).Model(message),
 	).Scan(&res).Error
 	if err != nil {
@@ -47,9 +48,9 @@ func GetMessagesByUserIDAndPreMsgTime(userID, oppositeID uint64, preMsgTime int6
 func GetLatestMsg(userID uint64, oppositeID uint64) (*FriendMessageResp, error) {
 	message := &Message{}
 	// 使用 Union 来避免使用 or 导致不走索引的问题
-	err := DB.Raw("? UNION ? ORDER BY create_time DESC LIMIT 1",
-		DB.Where("to_user_id = ? AND from_user_id = ?", userID, oppositeID).Model(message),
-		DB.Where("to_user_id = ? AND from_user_id = ?", oppositeID, userID).Model(message),
+	err := global.DB.Raw("? UNION ? ORDER BY create_time DESC LIMIT 1",
+		global.DB.Where("to_user_id = ? AND from_user_id = ?", userID, oppositeID).Model(message),
+		global.DB.Where("to_user_id = ? AND from_user_id = ?", oppositeID, userID).Model(message),
 	).Scan(&message).Error
 	if err != nil {
 		return nil, err

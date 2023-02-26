@@ -4,10 +4,10 @@ package api
 
 import (
 	"context"
+	"douyin/pkg/global"
 
 	"douyin/biz/model/api"
 	"douyin/biz/service"
-	"douyin/pkg/constant"
 	"douyin/pkg/errno"
 
 	"github.com/cloudwego/hertz/pkg/app"
@@ -27,7 +27,7 @@ func GetFeed(ctx context.Context, c *app.RequestContext) {
 	}
 
 	hlog.Infof("handler.feed_service.GetFeed Request: %#v", req)
-	userID := c.GetUint64(constant.IdentityKey)
+	userID := c.GetUint64(global.Config.JWTConfig.IdentityKey)
 	hlog.Info("handler.feed_service.GetFeed GetUserID:", userID)
 	resp, err := service.GetFeed(req.LatestTime, userID)
 	if err != nil {

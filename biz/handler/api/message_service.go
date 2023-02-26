@@ -4,6 +4,7 @@ package api
 
 import (
 	"context"
+	"douyin/pkg/global"
 
 	"douyin/biz/model/api"
 	"douyin/biz/service"
@@ -27,7 +28,7 @@ func SendMessage(ctx context.Context, c *app.RequestContext) {
 	}
 
 	hlog.Info("handler.message_service.SendMessage Request:", req)
-	fromUserID := c.GetUint64(constant.IdentityKey)
+	fromUserID := c.GetUint64(global.Config.JWTConfig.IdentityKey)
 	hlog.Info("handler.message_service.SendMessage GetFromUserID:", fromUserID)
 	var resp *api.DouyinMessageActionResponse
 	if req.ActionType == constant.SendMessageAction {
@@ -61,7 +62,7 @@ func GetMessageChat(ctx context.Context, c *app.RequestContext) {
 	}
 
 	hlog.Info("handler.message_service.GetMessageChat Request:", req)
-	userID := c.GetUint64(constant.IdentityKey)
+	userID := c.GetUint64(global.Config.JWTConfig.IdentityKey)
 	hlog.Info("handler.message_service.GetMessageChat GetUserID:", userID)
 	if req.PreMsgTime == nil {
 		preMsgTime := int64(0)

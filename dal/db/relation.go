@@ -3,6 +3,7 @@ package db
 import (
 	"douyin/pkg/constant"
 	"douyin/pkg/errno"
+	"douyin/pkg/global"
 
 	"github.com/cloudwego/hertz/pkg/common/hlog"
 	"gorm.io/gorm"
@@ -32,7 +33,7 @@ func IsFollow(userID uint64, toUserID uint64) bool {
 	}
 
 	// 查不到关注记录则为未关注
-	result := DB.Where("user_id = ? AND to_user_id = ? AND is_deleted = ?",
+	result := global.DB.Where("user_id = ? AND to_user_id = ? AND is_deleted = ?",
 		userID, toUserID, constant.DataNotDeleted).Limit(1).Find(&Relation{})
 	if result.RowsAffected == 1 {
 		return true
@@ -50,7 +51,7 @@ func IsFriend(userID uint64, toUserID uint64) bool {
 
 	// limit 2 需要使用切片而非单个结构体
 	relation := make([]*Relation, 0, 2)
-	result := DB.Where("(user_id = ? AND to_user_id = ? OR user_id = ? AND to_user_id = ?) AND is_deleted = ?",
+	result := global.DB.Where("(user_id = ? AND to_user_id = ? OR user_id = ? AND to_user_id = ?) AND is_deleted = ?",
 		userID, toUserID, toUserID, userID, constant.DataNotDeleted).Limit(2).Find(&relation)
 	if result.RowsAffected == 2 {
 		return true
@@ -69,7 +70,7 @@ func Follow(userID uint64, toUserID uint64) error {
 		ToUserID: toUserID,
 	}
 
-	return DB.Transaction(func(tx *gorm.DB) error {
+	return global.DB.Transaction(func(tx *gorm.DB) error {
 		// 新增自己的关注数
 		self := &User{ID: userID}
 		err := tx.Select("following_count").First(self).Error
@@ -109,7 +110,7 @@ func CancelFollow(userID uint64, toUserID uint64) error {
 	}
 
 	relation := &Relation{}
-	result := DB.Where("user_id = ? AND to_user_id = ? AND is_deleted = ?",
+	result := global.DB.Where("user_id = ? AND to_user_id = ? AND is_deleted = ?",
 		userID, toUserID, constant.DataNotDeleted).Limit(1).Find(relation)
 	if result.Error != nil {
 		return result.Error
@@ -118,7 +119,7 @@ func CancelFollow(userID uint64, toUserID uint64) error {
 		return errno.UserRequestParameterError
 	}
 
-	return DB.Transaction(func(tx *gorm.DB) error {
+	return global.DB.Transaction(func(tx *gorm.DB) error {
 		// 减少自己的关注数
 		self := &User{ID: userID}
 		err := tx.Select("following_count").First(self).Error
@@ -141,7 +142,7 @@ func CancelFollow(userID uint64, toUserID uint64) error {
 		}
 
 		// 去除关注的关系
-		return DB.Model(relation).Where("is_deleted = ?", constant.DataNotDeleted).
+		return global.DB.Model(relation).Where("is_deleted = ?", constant.DataNotDeleted).
 			Update("is_deleted", constant.DataDeleted).Error
 	})
 
@@ -151,7 +152,7 @@ func GetFollowList(userID uint64) ([]*User, error) {
 	relations := make([]*Relation, 0)
 	res := make([]*User, 0)
 
-	result := DB.Where("user_id = ? AND is_deleted = ?", userID, constant.DataNotDeleted).Find(&relations)
+	result := global.DB.Where("user_id = ? AND is_deleted = ?", userID, constant.DataNotDeleted).Find(&relations)
 	if result.RowsAffected == 0 {
 		return res, nil
 	}
@@ -172,7 +173,7 @@ func GetFollowerList(userID uint64) ([]*User, error) {
 	relations := make([]*Relation, 0)
 	res := make([]*User, 0)
 
-	result := DB.Where("to_user_id = ? AND is_deleted = ?", userID, constant.DataNotDeleted).Find(&relations)
+	result := global.DB.Where("to_user_id = ? AND is_deleted = ?", userID, constant.DataNotDeleted).Find(&relations)
 	if result.RowsAffected == 0 {
 		return res, nil
 	}
@@ -193,10 +194,10 @@ func GetFriendList(userID uint64) ([]*User, error) {
 	res := make([]*User, 0)
 
 	// 查询关注自己的所有粉丝的 userID
-	followerQuery := DB.Select("user_id").Table(constant.RelationTableName).
+	followerQuery := global.DB.Select("user_id").Table(constant.RelationTableName).
 		Where("to_user_id = ? AND is_deleted = ?", userID, constant.DataNotDeleted)
 	// 查询自己关注的，并且在自己的粉丝 userID 集合里的用户
-	err := DB.Select("to_user_id").Table(constant.RelationTableName).
+	err := global.DB.Select("to_user_id").Table(constant.RelationTableName).
 		Where("user_id = ? AND is_deleted = ? AND to_user_id IN (?)",
 			userID, constant.DataNotDeleted, followerQuery).Find(&friendUserID).Error
 	if err != nil {
@@ -206,7 +207,7 @@ func GetFriendList(userID uint64) ([]*User, error) {
 	if len(friendUserID) == 0 {
 		return res, nil
 	}
-	err = DB.Where("id IN (?)", friendUserID).Find(&res).Error
+	err = global.DB.Where("id IN (?)", friendUserID).Find(&res).Error
 	if err != nil {
 		return nil, err
 	}

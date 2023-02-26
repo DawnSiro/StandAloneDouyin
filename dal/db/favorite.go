@@ -3,6 +3,7 @@ package db
 import (
 	"douyin/pkg/constant"
 	"douyin/pkg/errno"
+	"douyin/pkg/global"
 	"errors"
 	"gorm.io/gorm"
 )
@@ -29,11 +30,11 @@ func FavoriteVideo(userID uint64, videoID uint64) error {
 	}
 
 	// 先查询是否存在软删除的点赞数据
-	result := DB.Where("is_deleted = ?", constant.DataDeleted).Limit(1).Find(userFavoriteVideo)
+	result := global.DB.Where("is_deleted = ?", constant.DataDeleted).Limit(1).Find(userFavoriteVideo)
 	if result.Error != nil {
 		return result.Error
 	}
-	return DB.Transaction(func(tx *gorm.DB) error {
+	return global.DB.Transaction(func(tx *gorm.DB) error {
 		// 增加该视频的点赞数
 		video := &Video{
 			ID: videoID,
@@ -74,12 +75,12 @@ func CancelFavoriteVideo(userID uint64, videoID uint64) error {
 		UserID:  userID,
 		VideoID: videoID,
 	}
-	result := DB.Where("is_deleted = ?", constant.DataNotDeleted).Limit(1).Find(userFavoriteVideo)
+	result := global.DB.Where("is_deleted = ?", constant.DataNotDeleted).Limit(1).Find(userFavoriteVideo)
 	if result.Error != nil {
 		return result.Error
 	}
 
-	return DB.Transaction(func(tx *gorm.DB) error {
+	return global.DB.Transaction(func(tx *gorm.DB) error {
 		// 增加该视频的点赞数
 		video := &Video{
 			ID: videoID,
@@ -103,17 +104,17 @@ func CancelFavoriteVideo(userID uint64, videoID uint64) error {
 			return err
 		}
 		// 进行软删除
-		return DB.Model(userFavoriteVideo).Update("is_deleted", constant.DataDeleted).Error
+		return global.DB.Model(userFavoriteVideo).Update("is_deleted", constant.DataDeleted).Error
 	})
 }
 
 func SelectFavoriteVideoListByUserID(toUserID uint64) ([]*Video, error) {
 	res := make([]*Video, 0)
 	// 使用子查询避免循环查询DB
-	selectVideoIDSQL := DB.Select(`video_id`).
+	selectVideoIDSQL := global.DB.Select(`video_id`).
 		Table("user_favorite_video").
 		Where("user_id = ? AND is_deleted = ?", toUserID, constant.DataNotDeleted)
-	DB.Where("id IN (?)", selectVideoIDSQL).Find(&res)
+	global.DB.Where("id IN (?)", selectVideoIDSQL).Find(&res)
 	return res, nil
 }
 
@@ -122,7 +123,7 @@ func IsFavoriteVideo(userID, videoID uint64) bool {
 		return false
 	}
 	ufv := make([]*UserFavoriteVideo, 0, 1)
-	res := DB.Where("user_id = ? AND video_id = ? AND is_deleted = ?",
+	res := global.DB.Where("user_id = ? AND video_id = ? AND is_deleted = ?",
 		userID, videoID, constant.DataNotDeleted).Limit(1).Find(&ufv)
 	return res.RowsAffected == 1
 }
