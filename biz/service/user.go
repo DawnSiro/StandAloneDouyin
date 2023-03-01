@@ -37,7 +37,7 @@ func Register(username, password string) (*api.DouyinUserRegisterResponse, error
 		return nil, err
 	}
 	return &api.DouyinUserRegisterResponse{
-		StatusCode: 0,
+		StatusCode: errno.Success.ErrCode,
 		UserID:     int64(userID),
 		Token:      token,
 	}, nil
@@ -61,7 +61,7 @@ func Login(username, password string) (*api.DouyinUserLoginResponse, error) {
 	}
 	token, err := util.SignToken(u.ID)
 	return &api.DouyinUserLoginResponse{
-		StatusCode: 0,
+		StatusCode: errno.Success.ErrCode,
 		UserID:     int64(u.ID),
 		Token:      token,
 	}, nil

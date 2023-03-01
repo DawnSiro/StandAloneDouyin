@@ -29,7 +29,7 @@ func Follow(userID, toUserID uint64) (*api.DouyinRelationActionResponse, error) 
 		return nil, err
 	}
 	return &api.DouyinRelationActionResponse{
-		StatusCode: int64(api.ErrCode_Success),
+		StatusCode: errno.Success.ErrCode,
 	}, nil
 }
 
@@ -47,7 +47,7 @@ func CancelFollow(userID, toUserID uint64) (*api.DouyinRelationActionResponse, e
 		return nil, err
 	}
 	return &api.DouyinRelationActionResponse{
-		StatusCode: int64(api.ErrCode_Success),
+		StatusCode: errno.Success.ErrCode,
 	}, nil
 }
 

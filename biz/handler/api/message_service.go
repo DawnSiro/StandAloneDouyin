@@ -23,7 +23,10 @@ func SendMessage(ctx context.Context, c *app.RequestContext) {
 	var req api.DouyinMessageActionRequest
 	err = c.BindAndValidate(&req)
 	if err != nil {
-		c.String(consts.StatusBadRequest, err.Error())
+		c.JSON(consts.StatusOK, &api.DouyinResponse{
+			StatusCode: errno.UserRequestParameterError.ErrCode,
+			StatusMsg:  err.Error(),
+		})
 		return
 	}
 
@@ -56,8 +59,10 @@ func GetMessageChat(ctx context.Context, c *app.RequestContext) {
 	var req api.DouyinMessageChatRequest
 	err = c.BindAndValidate(&req)
 	if err != nil {
-		hlog.Info(err)
-		c.String(consts.StatusBadRequest, err.Error())
+		c.JSON(consts.StatusOK, &api.DouyinResponse{
+			StatusCode: errno.UserRequestParameterError.ErrCode,
+			StatusMsg:  err.Error(),
+		})
 		return
 	}
 

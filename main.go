@@ -11,7 +11,9 @@ func Init() {
 	initialize.Viper()
 	initialize.MySQL()
 	initialize.Redis()
+	initialize.Global()
 	mw.InitJWT()
+	// initialize.Hertz() 需要保持在最下方，因为调用完后 Hertz 就启动完毕了
 	initialize.Hertz()
 }
 

@@ -2,13 +2,13 @@ package service
 
 import (
 	"douyin/biz/model/api"
-	"douyin/dal/db"
+	"douyin/pkg/initialize"
 	"reflect"
 	"testing"
 )
 
 func TestCommentList(t *testing.T) {
-	db.Init()
+	initialize.MySQL()
 	type args struct {
 		userID  uint64
 		videoID uint64
@@ -43,20 +43,20 @@ func TestCommentList(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := CommentList(tt.args.userID, tt.args.videoID)
+			got, err := GetCommentList(tt.args.userID, tt.args.videoID)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("CommentList() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("GetCommentList() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("CommentList() got = %v, want %v", got, tt.want)
+				t.Errorf("GetCommentList() got = %v, want %v", got, tt.want)
 			}
 		})
 	}
 }
 
 func TestDeleteComment(t *testing.T) {
-	db.Init()
+	initialize.MySQL()
 	v1 := int64(0)
 	type args struct {
 		userID    uint64
@@ -112,7 +112,7 @@ func TestDeleteComment(t *testing.T) {
 }
 
 func TestPostComment(t *testing.T) {
-	db.Init()
+	initialize.MySQL()
 	v1 := int64(0)
 	//v2 := "评论不能为空"
 	type args struct {

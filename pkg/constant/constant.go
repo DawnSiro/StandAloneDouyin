@@ -42,7 +42,7 @@ const (
 // 业务相关
 const (
 	MaxVideoNum = 30
-	MaxFileSize = 10 << 19 // 5MB
+	MaxFileSize = 3 * 1024 * 1024 // 3MB 另外 Hertz 默认的请求体大小是 4MB
 
 )
 
@@ -59,4 +59,5 @@ const (
 	UserServiceAddr     = ":30110"
 	ExportEndpoint      = ":4317"
 	ETCDAddress         = ":2379"
+	TCP                 = "tcp"
 )

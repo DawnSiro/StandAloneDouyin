@@ -94,10 +94,13 @@ func JWT() app.HandlerFunc {
 	return func(ctx context.Context, c *app.RequestContext) {
 		token := c.Query("token")
 		if token == "" {
+			token = c.PostForm("token")
+		}
+		if token == "" {
 			hlog.Error("mw.jwt.ParseToken err:", errno.UserIdentityVerificationFailedError)
-			c.JSON(consts.StatusBadRequest, utils.H{
-				"status_code": errno.UserIdentityVerificationFailedError.ErrCode,
-				"status_msg":  "Token 为空",
+			c.JSON(consts.StatusOK, &api.DouyinResponse{
+				StatusCode: errno.UserIdentityVerificationFailedError.ErrCode,
+				StatusMsg:  errno.UserIdentityVerificationFailedError.ErrMsg,
 			})
 			c.Abort()
 			return
@@ -105,9 +108,9 @@ func JWT() app.HandlerFunc {
 		claim, err := util.ParseToken(token)
 		if err != nil {
 			hlog.Error("mw.jwt.ParseToken err:", err.Error())
-			c.JSON(consts.StatusBadRequest, utils.H{
-				"status_code": errno.UserIdentityVerificationFailedError.ErrCode,
-				"status_msg":  errno.UserIdentityVerificationFailedError.ErrMsg,
+			c.JSON(consts.StatusOK, &api.DouyinResponse{
+				StatusCode: errno.UserIdentityVerificationFailedError.ErrCode,
+				StatusMsg:  errno.UserIdentityVerificationFailedError.ErrMsg,
 			})
 			c.Abort()
 			return
@@ -128,10 +131,10 @@ func ParseToken() app.HandlerFunc {
 		claim, err := util.ParseToken(token)
 		if err != nil {
 			hlog.Info("mw.jwt.ParseToken err:", err.Error())
-			return
+		} else {
+			hlog.Info("mw.jwt.ParseToken userID:", claim.ID)
+			c.Set(global.Config.JWTConfig.IdentityKey, claim.ID)
 		}
-		hlog.Info("mw.jwt.ParseToken userID:", claim.ID)
-		c.Set(global.Config.JWTConfig.IdentityKey, claim.ID)
-		return
+		c.Next(ctx)
 	}
 }

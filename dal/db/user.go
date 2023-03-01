@@ -48,9 +48,7 @@ func SelectUserByName(username string) ([]*User, error) {
 }
 
 func IncreaseUserFavoriteCount(userID uint64) (int64, error) {
-	user := &User{
-		ID: userID,
-	}
+	user := &User{ID: userID}
 	err := global.DB.First(&user).Error
 	if err != nil {
 		return 0, err
@@ -62,9 +60,7 @@ func IncreaseUserFavoriteCount(userID uint64) (int64, error) {
 }
 
 func DecreaseUserFavoriteCount(userID uint64) (int64, error) {
-	user := &User{
-		ID: userID,
-	}
+	user := &User{ID: userID}
 	err := global.DB.First(&user).Error
 	if err != nil {
 		return 0, err

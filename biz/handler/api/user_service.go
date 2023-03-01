@@ -22,7 +22,10 @@ func Register(ctx context.Context, c *app.RequestContext) {
 	var req api.DouyinUserRegisterRequest
 	err = c.BindAndValidate(&req)
 	if err != nil {
-		c.String(consts.StatusBadRequest, err.Error())
+		c.JSON(consts.StatusOK, &api.DouyinResponse{
+			StatusCode: errno.UserRequestParameterError.ErrCode,
+			StatusMsg:  err.Error(),
+		})
 		return
 	}
 
@@ -47,7 +50,10 @@ func Login(ctx context.Context, c *app.RequestContext) {
 	var req api.DouyinUserLoginRequest
 	err = c.BindAndValidate(&req)
 	if err != nil {
-		c.String(consts.StatusBadRequest, err.Error())
+		c.JSON(consts.StatusOK, &api.DouyinResponse{
+			StatusCode: errno.UserRequestParameterError.ErrCode,
+			StatusMsg:  err.Error(),
+		})
 		return
 	}
 
@@ -72,7 +78,10 @@ func GetUserInfo(ctx context.Context, c *app.RequestContext) {
 	var req api.DouyinUserRequest
 	err = c.BindAndValidate(&req)
 	if err != nil {
-		c.String(consts.StatusBadRequest, err.Error())
+		c.JSON(consts.StatusOK, &api.DouyinResponse{
+			StatusCode: errno.UserRequestParameterError.ErrCode,
+			StatusMsg:  err.Error(),
+		})
 		return
 	}
 

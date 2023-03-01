@@ -22,7 +22,9 @@ func SendMessage(fromUserID, toUserID uint64, content string) (*api.DouyinMessag
 		hlog.Error("service.message.SendMessage err:", err.Error())
 		return nil, err
 	}
-	return &api.DouyinMessageActionResponse{StatusCode: 0}, nil
+	return &api.DouyinMessageActionResponse{
+		StatusCode: errno.Success.ErrCode,
+	}, nil
 }
 
 func GetMessageChat(userID, oppositeID uint64, preMsgTime int64) (*api.DouyinMessageChatResponse, error) {
@@ -35,7 +37,7 @@ func GetMessageChat(userID, oppositeID uint64, preMsgTime int64) (*api.DouyinMes
 		return nil, err
 	}
 	return &api.DouyinMessageChatResponse{
-		StatusCode:  0,
+		StatusCode:  errno.Success.ErrCode,
 		MessageList: pack.Messages(messages),
 	}, nil
 }

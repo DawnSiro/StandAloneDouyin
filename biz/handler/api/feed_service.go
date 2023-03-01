@@ -22,7 +22,10 @@ func GetFeed(ctx context.Context, c *app.RequestContext) {
 	var req api.DouyinFeedRequest
 	err = c.BindAndValidate(&req)
 	if err != nil {
-		c.String(consts.StatusBadRequest, err.Error())
+		c.JSON(consts.StatusOK, &api.DouyinResponse{
+			StatusCode: errno.UserRequestParameterError.ErrCode,
+			StatusMsg:  err.Error(),
+		})
 		return
 	}
 
