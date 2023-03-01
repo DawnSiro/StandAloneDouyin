@@ -5,13 +5,12 @@ package api
 import (
 	"bytes"
 	"context"
-	"douyin/pkg/global"
-	"io"
-	"mime/multipart"
-
 	"douyin/biz/model/api"
 	"douyin/biz/service"
 	"douyin/pkg/errno"
+	"douyin/pkg/global"
+	"io"
+	"mime/multipart"
 
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/common/hlog"
@@ -25,7 +24,10 @@ func PublishAction(ctx context.Context, c *app.RequestContext) {
 	var req api.DouyinPublishActionRequest
 	err = c.BindAndValidate(&req)
 	if err != nil {
-		c.String(consts.StatusBadRequest, err.Error())
+		c.JSON(consts.StatusOK, &api.DouyinResponse{
+			StatusCode: errno.UserRequestParameterError.ErrCode,
+			StatusMsg:  err.Error(),
+		})
 		return
 	}
 
@@ -54,6 +56,7 @@ func PublishAction(ctx context.Context, c *app.RequestContext) {
 			return
 		}
 	}(file)
+
 	// 将文件转化为字节流
 	buf := bytes.NewBuffer(nil)
 	if _, err := io.Copy(buf, file); err != nil {
@@ -67,7 +70,7 @@ func PublishAction(ctx context.Context, c *app.RequestContext) {
 
 	userID := c.GetUint64(global.Config.JWTConfig.IdentityKey)
 	hlog.Info("handler.feed_service.GetFeed GetUserID:", userID)
-	err = service.PublishAction(req.Title, buf.Bytes(), userID)
+	resp, err := service.PublishAction(req.Title, buf.Bytes(), userID)
 	if err != nil {
 		errNo := errno.ConvertErr(err)
 		c.JSON(consts.StatusOK, &api.DouyinPublishActionResponse{
@@ -77,7 +80,7 @@ func PublishAction(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
-	c.JSON(consts.StatusOK, &api.DouyinPublishActionResponse{StatusCode: 0})
+	c.JSON(consts.StatusOK, resp)
 }
 
 // GetPublishVideos .
@@ -87,7 +90,10 @@ func GetPublishVideos(ctx context.Context, c *app.RequestContext) {
 	var req api.DouyinPublishListRequest
 	err = c.BindAndValidate(&req)
 	if err != nil {
-		c.String(consts.StatusBadRequest, err.Error())
+		c.JSON(consts.StatusOK, &api.DouyinResponse{
+			StatusCode: errno.UserRequestParameterError.ErrCode,
+			StatusMsg:  err.Error(),
+		})
 		return
 	}
 

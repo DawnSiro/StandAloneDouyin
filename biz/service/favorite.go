@@ -1,6 +1,7 @@
 package service
 
 import (
+	"douyin/pkg/errno"
 	"douyin/pkg/global"
 	"strconv"
 	"strings"
@@ -49,7 +50,7 @@ func FavoriteVideo(userID, videoID uint64) (*api.DouyinFavoriteActionResponse, e
 	// TODO 用缓存记录用户点赞数量，防止刷赞
 
 	return &api.DouyinFavoriteActionResponse{
-		StatusCode: 0,
+		StatusCode: errno.Success.ErrCode,
 	}, nil
 }
 
@@ -87,14 +88,14 @@ func CancelFavoriteVideo(userID, videoID uint64) (*api.DouyinFavoriteActionRespo
 	global.VideoFRC.Set(videoLikeKey, likeUint64-1, 0)
 
 	return &api.DouyinFavoriteActionResponse{
-		StatusCode: 0,
+		StatusCode: errno.Success.ErrCode,
 	}, nil
 }
 
-func FavoriteList(userID, selectUserID uint64) (*api.DouyinFavoriteListResponse, error) {
+func GetFavoriteList(userID, selectUserID uint64) (*api.DouyinFavoriteListResponse, error) {
 	videos, err := db.SelectFavoriteVideoListByUserID(selectUserID)
 	if err != nil {
-		hlog.Error("service.favorite.FavoriteList err:", err.Error())
+		hlog.Error("service.favorite.GetFavoriteList err:", err.Error())
 		return nil, err
 	}
 
@@ -103,7 +104,7 @@ func FavoriteList(userID, selectUserID uint64) (*api.DouyinFavoriteListResponse,
 	for i := 0; i < len(videos); i++ {
 		u, err := db.SelectUserByID(videos[i].AuthorID)
 		if err != nil {
-			hlog.Error("service.favorite.FavoriteList err:", err.Error())
+			hlog.Error("service.favorite.GetFavoriteList err:", err.Error())
 			return nil, err
 		}
 		video := pack.Video(videos[i], u,
@@ -112,7 +113,7 @@ func FavoriteList(userID, selectUserID uint64) (*api.DouyinFavoriteListResponse,
 	}
 
 	return &api.DouyinFavoriteListResponse{
-		StatusCode: 0,
+		StatusCode: errno.Success.ErrCode,
 		VideoList:  videoList,
 	}, nil
 }

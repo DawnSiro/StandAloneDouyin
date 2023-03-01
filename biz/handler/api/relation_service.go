@@ -23,7 +23,10 @@ func Follow(ctx context.Context, c *app.RequestContext) {
 	var req api.DouyinRelationActionRequest
 	err = c.BindAndValidate(&req)
 	if err != nil {
-		c.String(consts.StatusBadRequest, err.Error())
+		c.JSON(consts.StatusOK, &api.DouyinResponse{
+			StatusCode: errno.UserRequestParameterError.ErrCode,
+			StatusMsg:  err.Error(),
+		})
 		return
 	}
 
@@ -59,7 +62,10 @@ func GetFollowList(ctx context.Context, c *app.RequestContext) {
 	var req api.DouyinRelationFollowListRequest
 	err = c.BindAndValidate(&req)
 	if err != nil {
-		c.String(consts.StatusBadRequest, err.Error())
+		c.JSON(consts.StatusOK, &api.DouyinResponse{
+			StatusCode: errno.UserRequestParameterError.ErrCode,
+			StatusMsg:  err.Error(),
+		})
 		return
 	}
 
@@ -86,7 +92,10 @@ func GetFollowerList(ctx context.Context, c *app.RequestContext) {
 	var req api.DouyinRelationFollowerListRequest
 	err = c.BindAndValidate(&req)
 	if err != nil {
-		c.String(consts.StatusBadRequest, err.Error())
+		c.JSON(consts.StatusOK, &api.DouyinResponse{
+			StatusCode: errno.UserRequestParameterError.ErrCode,
+			StatusMsg:  err.Error(),
+		})
 		return
 	}
 
@@ -113,7 +122,10 @@ func GetFriendList(ctx context.Context, c *app.RequestContext) {
 	var req api.DouyinRelationFriendListRequest
 	err = c.BindAndValidate(&req)
 	if err != nil {
-		c.String(consts.StatusBadRequest, err.Error())
+		c.JSON(consts.StatusOK, &api.DouyinResponse{
+			StatusCode: errno.UserRequestParameterError.ErrCode,
+			StatusMsg:  err.Error(),
+		})
 		return
 	}
 
@@ -123,12 +135,14 @@ func GetFriendList(ctx context.Context, c *app.RequestContext) {
 	// 目前的判断是不能看别人的好友列表
 	if userID != uint64(req.UserID) {
 		hlog.Error("handler.relation_service.GetFollowerList err:", errno.UserRequestParameterError.ErrCode)
+		errMsg := "不能查看别人的好友列表"
 		c.JSON(consts.StatusOK, &api.DouyinRelationFriendListResponse{
 			StatusCode: errno.UserRequestParameterError.ErrCode,
-			StatusMsg:  &errno.UserRequestParameterError.ErrMsg,
+			StatusMsg:  &errMsg,
 		})
 		return
 	}
+	hlog.Info(userID, " ", req.UserID)
 	resp, err := service.GetFriendList(userID)
 	if err != nil {
 		errNo := errno.ConvertErr(err)

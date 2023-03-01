@@ -23,6 +23,7 @@ enum ErrCode {
 	ContainsProhibitedSensitiveWords         = 10431
 	UserUploadFile                           = 10500 // 用户上传文件异常 二级宏观错误码
 	FileTypeUploadedNotMatch                 = 10501
+	FileTypeUploadedNotSupport               = 10502
 	VideoUploadedTooLarge                    = 10504
 	Service                                  = 20000 // 未知异常
 	SystemExecution                          = 20001 // 系统执行出错 一级宏观错误码
@@ -44,6 +45,11 @@ enum ErrCode {
 	TableDoesNotExist                        = 30211
 	ColumnDoesNotExist                       = 30212
 	DatabaseDeadlock                         = 30231
+}
+
+struct douyin_response {
+  1: required i64 status_code // 状态码，0-成功，其他值-失败
+  2: required string status_msg // 返回状态描述
 }
 
 struct douyin_comment_action_request {
@@ -246,8 +252,8 @@ struct FriendUser {
 
 
 struct douyin_user_register_request {
-  1: required string username (vt.min_size = "2", vt.max_size = "32", api.vd = "len($)>2 && len($)<32") // 注册用户名，最长32个字符
-  2: required string password (vt.min_size = "6", vt.max_size = "32", vt.pattern = "[0-9A-Za-z]+", api.vd = "len($)>2 && len($)<32") // 密码，最长32个字符
+  1: required string username (vt.min_size = "2", vt.max_size = "32", api.vd = "len($)>1 && len($)<32") // 注册用户名，最短2个字符，最长32个字符
+  2: required string password (vt.min_size = "6", vt.max_size = "32", api.vd = "len($)>5 && len($)<32") // 密码，最短6个字符，最长32个字符
 }
 
 struct douyin_user_register_response {
@@ -258,8 +264,8 @@ struct douyin_user_register_response {
 }
 
 struct douyin_user_login_request {
-  1: required string username (vt.min_size = "2", vt.max_size = "32", api.vd = "len($)>1 && len($)<33") // 登录用户名
-  2: required string password (vt.min_size = "6", vt.max_size = "32", api.vd = "len($)>5 && len($)<33") // 登录密码
+  1: required string username (vt.min_size = "2", vt.max_size = "32", api.vd = "len($)>1 && len($)<33") // 登录用户名，最短2个字符，最长32个字符
+  2: required string password (vt.min_size = "6", vt.max_size = "32", api.vd = "len($)>5 && len($)<33") // 登录密码，最短6个字符，最长32个字符
 }
 
 struct douyin_user_login_response {

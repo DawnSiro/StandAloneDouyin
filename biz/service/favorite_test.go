@@ -2,7 +2,7 @@ package service
 
 import (
 	"douyin/biz/model/api"
-	"douyin/dal/db"
+	"douyin/pkg/initialize"
 	"reflect"
 	"testing"
 )
@@ -42,7 +42,7 @@ func TestCancelFavoriteVideo(t *testing.T) {
 }
 
 func TestFavoriteList(t *testing.T) {
-	db.Init()
+	initialize.MySQL()
 	v1 := int64(0)
 	type args struct {
 		userID       uint64
@@ -95,13 +95,13 @@ func TestFavoriteList(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := FavoriteList(tt.args.userID, tt.args.selectUserID)
+			got, err := GetFavoriteList(tt.args.userID, tt.args.selectUserID)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("FavoriteList() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("GetFavoriteList() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("FavoriteList() got = %v, want %v", got, tt.want)
+				t.Errorf("GetFavoriteList() got = %v, want %v", got, tt.want)
 			}
 		})
 	}

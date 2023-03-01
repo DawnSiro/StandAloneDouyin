@@ -23,7 +23,10 @@ func FavoriteVideo(ctx context.Context, c *app.RequestContext) {
 	var req api.DouyinFavoriteActionRequest
 	err = c.BindAndValidate(&req)
 	if err != nil {
-		c.String(consts.StatusBadRequest, err.Error())
+		c.JSON(consts.StatusOK, &api.DouyinResponse{
+			StatusCode: errno.UserRequestParameterError.ErrCode,
+			StatusMsg:  err.Error(),
+		})
 		return
 	}
 
@@ -59,14 +62,17 @@ func GetFavoriteList(ctx context.Context, c *app.RequestContext) {
 	var req api.DouyinFavoriteListRequest
 	err = c.BindAndValidate(&req)
 	if err != nil {
-		c.String(consts.StatusBadRequest, err.Error())
+		c.JSON(consts.StatusOK, &api.DouyinResponse{
+			StatusCode: errno.UserRequestParameterError.ErrCode,
+			StatusMsg:  err.Error(),
+		})
 		return
 	}
 
 	hlog.Info("handler.favorite_service.GetFavoriteList Request:", req)
 	userID := c.GetUint64(global.Config.JWTConfig.IdentityKey)
 	hlog.Info("handler.favorite_service.GetFavoriteList GetUserID:", userID)
-	resp, err := service.FavoriteList(userID, uint64(req.UserID))
+	resp, err := service.GetFavoriteList(userID, uint64(req.UserID))
 	if err != nil {
 		errNo := errno.ConvertErr(err)
 		c.JSON(consts.StatusOK, &api.DouyinFavoriteListResponse{

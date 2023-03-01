@@ -24,13 +24,11 @@ func FavoriteVideo(userID uint64, videoID uint64) error {
 		return errno.UserRequestParameterError
 	}
 
-	userFavoriteVideo := &UserFavoriteVideo{
-		UserID:  userID,
-		VideoID: videoID,
-	}
+	userFavoriteVideo := &UserFavoriteVideo{}
 
 	// 先查询是否存在软删除的点赞数据
-	result := global.DB.Where("is_deleted = ?", constant.DataDeleted).Limit(1).Find(userFavoriteVideo)
+	result := global.DB.Where("user_id = ? AND video_id = ? AND is_deleted = ?",
+		userID, videoID, constant.DataDeleted).Limit(1).Find(userFavoriteVideo)
 	if result.Error != nil {
 		return result.Error
 	}
@@ -39,7 +37,7 @@ func FavoriteVideo(userID uint64, videoID uint64) error {
 		video := &Video{
 			ID: videoID,
 		}
-		err := tx.First(&video).Error
+		err := tx.Select("favorite_count").First(&video).Error
 		if err != nil {
 			return err
 		}
@@ -71,13 +69,14 @@ func CancelFavoriteVideo(userID uint64, videoID uint64) error {
 		return errors.New("cancel favorite failed")
 	}
 
-	userFavoriteVideo := &UserFavoriteVideo{
-		UserID:  userID,
-		VideoID: videoID,
-	}
-	result := global.DB.Where("is_deleted = ?", constant.DataNotDeleted).Limit(1).Find(userFavoriteVideo)
+	userFavoriteVideo := &UserFavoriteVideo{}
+	result := global.DB.Where("user_id = ? AND video_id = ?",
+		userID, videoID).Limit(1).Find(userFavoriteVideo)
 	if result.Error != nil {
 		return result.Error
+	}
+	if userFavoriteVideo.IsDeleted == constant.DataDeleted {
+		return errors.New("用户重复操作")
 	}
 
 	return global.DB.Transaction(func(tx *gorm.DB) error {
@@ -85,7 +84,7 @@ func CancelFavoriteVideo(userID uint64, videoID uint64) error {
 		video := &Video{
 			ID: videoID,
 		}
-		err := tx.First(&video).Error
+		err := tx.Select("favorite_count").First(&video).Error
 		if err != nil {
 			return err
 		}

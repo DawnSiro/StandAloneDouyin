@@ -38,7 +38,9 @@ func _comment_ctionMw() []app.HandlerFunc {
 func _listMw() []app.HandlerFunc {
 	// your code...
 	// 未登录可以查看评论
-	return nil
+	return []app.HandlerFunc{
+		mw.ParseToken(),
+	}
 }
 
 func _getcommentlistMw() []app.HandlerFunc {
@@ -110,7 +112,9 @@ func _getmessagechatMw() []app.HandlerFunc {
 
 func _publishMw() []app.HandlerFunc {
 	// your code...
-	return nil
+	return []app.HandlerFunc{
+		mw.JWT(),
+	}
 }
 
 func _action1Mw() []app.HandlerFunc {
@@ -120,7 +124,9 @@ func _action1Mw() []app.HandlerFunc {
 
 func _publish_ctionMw() []app.HandlerFunc {
 	// your code...
-	return nil
+	return []app.HandlerFunc{
+		mw.VerifyFile(),
+	}
 }
 
 func _list1Mw() []app.HandlerFunc {

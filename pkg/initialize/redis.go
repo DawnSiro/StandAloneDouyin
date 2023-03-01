@@ -1,8 +1,10 @@
 package initialize
 
 import (
-	"douyin/pkg/global"
 	"fmt"
+
+	"douyin/pkg/global"
+
 	"github.com/go-redis/redis"
 )
 

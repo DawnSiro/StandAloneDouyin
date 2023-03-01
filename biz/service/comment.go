@@ -2,7 +2,6 @@ package service
 
 import (
 	"douyin/pkg/global"
-	"reflect"
 	"strconv"
 	"strings"
 
@@ -24,20 +23,7 @@ func PostComment(userID, videoID uint64, commentText string) (*api.DouyinComment
 	builder.WriteString(strconv.FormatUint(videoID, 10))
 	builder.WriteString("_video_comments")
 	delCommentListKey := builder.String()
-
-	// TODO 业务优化
-	keysMatch, err := global.VideoCRC.Do("keys", "*"+delCommentListKey).Result()
-	if err != nil {
-		hlog.Error("service.comment.PostComment err:", err.Error())
-	}
-	if reflect.TypeOf(keysMatch).Kind() == reflect.Slice {
-		val := reflect.ValueOf(keysMatch)
-		// 删除key
-		for i := 0; i < val.Len(); i++ {
-			global.VideoCRC.Del(val.Index(i).Interface().(string))
-			hlog.Info("删除了RedisKey:", val.Index(i).Interface().(string))
-		}
-	}
+	hlog.Info("service.comment.PostComment delCommentListKey:", delCommentListKey)
 
 	//检测是否带有敏感词
 	if sensitive.IsWordsFilter(commentText) {
@@ -98,7 +84,7 @@ func DeleteComment(userID, videoID, commentID uint64) (*api.DouyinCommentActionR
 	}, nil
 }
 
-func CommentList(userID, videoID uint64) (*api.DouyinCommentListResponse, error) {
+func GetCommentList(userID, videoID uint64) (*api.DouyinCommentListResponse, error) {
 	var builder strings.Builder
 	builder.WriteString(strconv.FormatUint(userID, 10))
 	builder.WriteString("_userId_")
@@ -110,7 +96,7 @@ func CommentList(userID, videoID uint64) (*api.DouyinCommentListResponse, error)
 	if err == redis.Nil {
 		dbcList, err := db.SelectCommentListByVideoID(videoID)
 		if err != nil {
-			hlog.Error("service.comment.CommentList err:", err.Error())
+			hlog.Error("service.comment.GetCommentList err:", err.Error())
 			return nil, err
 		}
 
@@ -125,12 +111,12 @@ func CommentList(userID, videoID uint64) (*api.DouyinCommentListResponse, error)
 		marshalList, _ := json.Marshal(cList)
 		_, err = global.VideoCRC.Set(commentListKey, marshalList, 0).Result()
 		if err != nil {
-			hlog.Error("service.comment.CommentList err:", err.Error())
+			hlog.Error("service.comment.GetCommentList err:", err.Error())
 			return nil, err
 		}
 		commentList, err = global.VideoCRC.Get(commentListKey).Result()
 		if err != nil {
-			hlog.Error("service.comment.CommentList err:", err.Error())
+			hlog.Error("service.comment.GetCommentList err:", err.Error())
 			return nil, err
 		}
 	}
@@ -138,7 +124,7 @@ func CommentList(userID, videoID uint64) (*api.DouyinCommentListResponse, error)
 	var list []*api.Comment
 	err = json.Unmarshal([]byte(commentList), &list)
 	if err != nil {
-		hlog.Error("service.comment.CommentList err:", err.Error())
+		hlog.Error("service.comment.GetCommentList err:", err.Error())
 		return nil, err
 	}
 

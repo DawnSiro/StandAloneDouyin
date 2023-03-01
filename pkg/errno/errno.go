@@ -1,9 +1,10 @@
 package errno
 
 import (
-	"douyin/biz/model/api"
 	"errors"
 	"fmt"
+
+	"douyin/biz/model/api"
 )
 
 type ErrNo struct {
@@ -50,6 +51,7 @@ var (
 	ContainsProhibitedSensitiveWordsError         = NewErrNo(int64(api.ErrCode_ContainsProhibitedSensitiveWords), "包含违禁敏感词")
 	UserUploadFileError                           = NewErrNo(int64(api.ErrCode_UserUploadFile), "用户上传文件异常")
 	FileTypeUploadedNotMatchError                 = NewErrNo(int64(api.ErrCode_FileTypeUploadedNotMatch), "用户上传文件类型不匹配")
+	FileTypeUploadedNotSupportError               = NewErrNo(int64(api.ErrCode_FileTypeUploadedNotSupport), "用户上传文件类型不支持")
 	VideoUploadedTooLargeError                    = NewErrNo(int64(api.ErrCode_VideoUploadedTooLarge), "用户上传视频太大")
 	ServiceError                                  = NewErrNo(int64(api.ErrCode_Service), "未知错误")
 	SystemExecutionError                          = NewErrNo(int64(api.ErrCode_SystemExecution), "系统执行出错")

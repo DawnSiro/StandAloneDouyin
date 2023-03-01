@@ -4,12 +4,11 @@ package api
 
 import (
 	"context"
-	"douyin/pkg/global"
-
 	"douyin/biz/model/api"
 	"douyin/biz/service"
 	"douyin/pkg/constant"
 	"douyin/pkg/errno"
+	"douyin/pkg/global"
 
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/common/hlog"
@@ -23,7 +22,10 @@ func CommentAction(ctx context.Context, c *app.RequestContext) {
 	var req api.DouyinCommentActionRequest
 	err = c.BindAndValidate(&req)
 	if err != nil {
-		c.String(consts.StatusBadRequest, err.Error())
+		c.JSON(consts.StatusOK, &api.DouyinResponse{
+			StatusCode: errno.UserRequestParameterError.ErrCode,
+			StatusMsg:  err.Error(),
+		})
 		return
 	}
 
@@ -59,14 +61,17 @@ func GetCommentList(ctx context.Context, c *app.RequestContext) {
 	var req api.DouyinCommentListRequest
 	err = c.BindAndValidate(&req)
 	if err != nil {
-		c.String(consts.StatusBadRequest, err.Error())
+		c.JSON(consts.StatusOK, &api.DouyinResponse{
+			StatusCode: errno.UserRequestParameterError.ErrCode,
+			StatusMsg:  err.Error(),
+		})
 		return
 	}
 
 	hlog.Info("handler.comment_service.GetCommentList Request:", req)
 	userID := c.GetUint64(global.Config.JWTConfig.IdentityKey)
 	hlog.Info("handler.comment_service.GetCommentList GetUserID:", userID)
-	resp, err := service.CommentList(userID, uint64(req.VideoID))
+	resp, err := service.GetCommentList(userID, uint64(req.VideoID))
 	if err != nil {
 		errNo := errno.ConvertErr(err)
 		c.JSON(consts.StatusOK, &api.DouyinCommentListResponse{

@@ -6,8 +6,6 @@ import (
 	"time"
 
 	"douyin/pkg/constant"
-	"douyin/pkg/errno"
-
 	"gorm.io/gorm"
 )
 
@@ -33,20 +31,21 @@ func CreateComment(videoID uint64, content string, userID uint64) (*Comment, err
 	}
 	// DB 层开事务来保证原子性
 	err := global.DB.Transaction(func(tx *gorm.DB) error {
-		// 创建评论
-		err := global.DB.Create(comment).Error
+		// 先查询 VideoID 是否存在，然后增加评论数，再创建评论
+		video := &Video{
+			ID: videoID,
+		}
+		err := tx.First(&video).Error
 		if err != nil {
 			return err
 		}
 		// 增加视频评论数
-		video := &Video{
-			ID: videoID,
-		}
-		err = global.DB.First(&video).Error
+		err = tx.Model(&video).Update("comment_count", video.CommentCount+1).Error
 		if err != nil {
 			return err
 		}
-		return global.DB.Model(&video).Update("comment_count", video.CommentCount+1).Error
+		// 创建评论
+		return tx.Create(comment).Error
 	})
 	if err != nil {
 		return nil, err
@@ -68,23 +67,20 @@ func DeleteCommentByID(videoID, commentID uint64) (*Comment, error) {
 
 	// DB 层开事务来保证原子性
 	err := global.DB.Transaction(func(tx *gorm.DB) error {
-		// 删除评论
-		result = global.DB.Model(comment).Update("is_deleted", constant.DataDeleted)
-		if result.Error != nil {
-			return result.Error
-		}
-		if result.RowsAffected == 0 {
-			return errno.UserRequestParameterError
-		}
 		// 减少视频评论数
 		video := &Video{
 			ID: videoID,
 		}
-		err := global.DB.First(&video).Error
+		err := tx.First(&video).Error
 		if err != nil {
 			return err
 		}
-		return global.DB.Model(&video).Update("comment_count", video.CommentCount-1).Error
+		err = tx.Model(&video).Update("comment_count", video.CommentCount-1).Error
+		if err != nil {
+			return err
+		}
+		// 删除评论
+		return tx.Model(comment).Update("is_deleted", constant.DataDeleted).Error
 	})
 	if err != nil {
 		return nil, err

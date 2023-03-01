@@ -1,12 +1,14 @@
 package util
 
 import (
+	"time"
+
 	"douyin/pkg/constant"
 	"douyin/pkg/errno"
 	"douyin/pkg/global"
+
 	"github.com/cloudwego/hertz/pkg/common/hlog"
 	"github.com/golang-jwt/jwt/v4"
-	"time"
 )
 
 type UserClaims struct {

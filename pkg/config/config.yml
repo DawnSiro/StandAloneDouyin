@@ -3,35 +3,35 @@ hertz:
   port:
 
 jwt:
-  signing_key:
-  identity_key:
+  signingKey:
+  identityKey:
 
 mysql:
   host:
   port:
   username:
   password:
-  db_name:
-  max_open_conns:
-  max_idle_conns:
+  dbName:
+  maxOpenConn:
+  maxIdleConn:
 
 videoCRCRedis:
   host:
   port:
   password:
   db:
-  pool_size:
+  poolSize:
 
 videoFRCRedis:
   host:
   port:
   password:
   db:
-  pool_size:
+  poolSize:
 
 userInfoRCRedis:
   host:
   port:
   password:
   db:
-  pool_size:
+  poolSize:

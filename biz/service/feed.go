@@ -5,6 +5,7 @@ import (
 	"douyin/dal/db"
 	"douyin/dal/pack"
 	"douyin/pkg/constant"
+	"douyin/pkg/errno"
 
 	"github.com/cloudwego/hertz/pkg/common/hlog"
 )
@@ -47,7 +48,7 @@ func GetFeed(latestTime *int64, userID uint64) (*api.DouyinFeedResponse, error) 
 	}
 
 	return &api.DouyinFeedResponse{
-		StatusCode: 0,
+		StatusCode: errno.Success.ErrCode,
 		VideoList:  videoList,
 		NextTime:   nextTime,
 	}, nil

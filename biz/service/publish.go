@@ -2,6 +2,7 @@ package service
 
 import (
 	"bytes"
+	"douyin/pkg/errno"
 	"errors"
 	"io"
 	"time"
@@ -15,11 +16,11 @@ import (
 	"github.com/gofrs/uuid"
 )
 
-func PublishAction(title string, videoData []byte, userID uint64) error {
+func PublishAction(title string, videoData []byte, userID uint64) (*api.DouyinPublishActionResponse, error) {
 	if userID == 0 {
 		err := errors.New("userID error")
 		hlog.Error("service.publish.PublishAction err:", err.Error())
-		return err
+		return nil, err
 	}
 
 	// 上传 Object 需要一个实现了 io.Reader 接口的结构体
@@ -27,17 +28,18 @@ func PublishAction(title string, videoData []byte, userID uint64) error {
 	u1, err := uuid.NewV4()
 	if err != nil {
 		hlog.Error("service.publish.PublishAction err:", err.Error())
-		return err
+		return nil, err
 	}
 	fileName := u1.String() + "." + "mp4"
 	hlog.Info("service.publish.PublishAction videoName:", fileName)
 	// 上传视频并生成封面
 	playURL, coverURL, err := util.UploadVideo(&reader, fileName)
 	if err != nil {
-		return err
+		hlog.Error("service.publish.PublishAction err:", err.Error())
+		return nil, err
 	}
 
-	return db.CreateVideo(&db.Video{
+	err = db.CreateVideo(&db.Video{
 		PublishTime:   time.Now(),
 		AuthorID:      userID,
 		PlayURL:       playURL,
@@ -46,6 +48,14 @@ func PublishAction(title string, videoData []byte, userID uint64) error {
 		CommentCount:  0,
 		Title:         title,
 	})
+	if err != nil {
+		hlog.Error("service.publish.PublishAction err:", err.Error())
+		return nil, err
+	}
+
+	return &api.DouyinPublishActionResponse{
+		StatusCode: errno.Success.ErrCode,
+	}, nil
 }
 
 func GetPublishVideos(userID uint64) (*api.DouyinPublishListResponse, error) {
@@ -70,7 +80,7 @@ func GetPublishVideos(userID uint64) (*api.DouyinPublishListResponse, error) {
 	}
 
 	return &api.DouyinPublishListResponse{
-		StatusCode: 0,
+		StatusCode: errno.Success.ErrCode,
 		VideoList:  videoList,
 	}, nil
 }

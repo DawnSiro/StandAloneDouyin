@@ -21,6 +21,9 @@ var (
 	_ = time.Nanosecond
 )
 
+func (p *DouyinResponse) IsValid() error {
+	return nil
+}
 func (p *DouyinCommentActionRequest) IsValid() error {
 	if p.VideoID <= int64(0) {
 		return fmt.Errorf("field VideoID gt rule failed, current value: %v", p.VideoID)
@@ -243,10 +246,6 @@ func (p *DouyinUserRegisterRequest) IsValid() error {
 	}
 	if len(p.Password) > int(32) {
 		return fmt.Errorf("field Password max_len rule failed, current value: %d", len(p.Password))
-	}
-	_src := "[0-9A-Za-z]+"
-	if ok, _ := regexp.MatchString(_src, p.Password); !ok {
-		return fmt.Errorf("field Password pattern rule failed, current value: %v", p.Password)
 	}
 	return nil
 }

@@ -6,7 +6,6 @@ import (
 
 	"douyin/pkg/constant"
 
-	"github.com/cloudwego/hertz/pkg/common/hlog"
 	"gorm.io/gorm"
 )
 
@@ -57,7 +56,6 @@ func MGetVideos(maxVideoNum int, latestTime *int64) ([]*Video, error) {
 	}
 
 	// TODO 设计简单的推荐算法，比如关注的 UP 发了视频，会优先推送
-	hlog.Info(*latestTime)
 	if err := global.DB.Where("publish_time < ?", time.UnixMilli(*latestTime)).Limit(maxVideoNum).
 		Order("publish_time desc").Find(&res).Error; err != nil {
 		return nil, err
@@ -175,7 +173,7 @@ func SelectVideoFavoriteCountByVideoID(videoID uint64) (int64, error) {
 		ID: videoID,
 	}
 
-	err := global.DB.First(&video).Error
+	err := global.DB.Select("favorite_count").First(&video).Error
 	if err != nil {
 		return 0, err
 	}
@@ -187,18 +185,9 @@ func SelectCommentCountByVideoID(videoID uint64) (int64, error) {
 		ID: videoID,
 	}
 
-	err := global.DB.First(&video).Error
+	err := global.DB.Select("comment_count").First(&video).Error
 	if err != nil {
 		return 0, err
 	}
 	return video.CommentCount, nil
-}
-
-func SelectVideoList() ([]*Video, error) {
-	videoList := new([]*Video)
-
-	if err := global.DB.Find(&videoList).Error; err != nil {
-		return nil, err
-	}
-	return *videoList, nil
 }

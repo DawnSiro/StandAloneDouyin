@@ -1,10 +1,13 @@
 package initialize
 
 import (
+	"strings"
+
 	"douyin/biz/router"
 	"douyin/pkg/global"
+
 	"github.com/cloudwego/hertz/pkg/app/server"
-	"strings"
+	"github.com/hertz-contrib/pprof"
 )
 
 func Hertz() {
@@ -20,6 +23,8 @@ func Hertz() {
 	)
 
 	router.GeneratedRegister(h)
+
+	pprof.Register(h)
 
 	h.Spin()
 }
