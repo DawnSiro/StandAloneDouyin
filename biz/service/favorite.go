@@ -1,17 +1,17 @@
 package service
 
 import (
-	"douyin/pkg/errno"
-	"douyin/pkg/global"
-	"strconv"
-	"strings"
-
 	"douyin/biz/model/api"
 	"douyin/dal/db"
 	"douyin/dal/pack"
-
+	"douyin/pkg/constant"
+	"douyin/pkg/errno"
+	"douyin/pkg/global"
+	"fmt"
 	"github.com/cloudwego/hertz/pkg/common/hlog"
 	"github.com/go-redis/redis"
+	"strconv"
+	"strings"
 )
 
 // FavoriteVideo this is a func for add Favorite or reduce Favorite
@@ -20,6 +20,27 @@ func FavoriteVideo(userID, videoID uint64) (*api.DouyinFavoriteActionResponse, e
 	builder.WriteString(strconv.FormatUint(videoID, 10))
 	builder.WriteString("_video_like")
 	videoLikeKey := builder.String()
+
+	var builder1 strings.Builder
+	builder1.WriteString(strconv.FormatUint(userID, 10))
+	builder1.WriteString("_user_like_count")
+	videoLikeCountKey := builder1.String()
+
+	userVideoLikeCount, err := global.VideoFRC.Get(videoLikeCountKey).Result()
+	var videoLikeCountInt int
+	if err == redis.Nil {
+		global.VideoFRC.Set(videoLikeCountKey, "0", constant.VideoLikeLimitTime)
+	} else {
+		videoLikeCountInt, _ := strconv.Atoi(userVideoLikeCount)
+		if videoLikeCountInt > constant.VideoLikeLimit {
+			return &api.DouyinFavoriteActionResponse{
+				StatusCode: errno.VideoLikeLimitError.ErrCode,
+				StatusMsg:  &errno.VideoLikeLimitError.ErrMsg,
+			}, nil
+		}
+		fmt.Print(err)
+	}
+	userVideoLikeCountTime, err := global.VideoFRC.TTL(videoLikeCountKey).Result()
 
 	likeCount, err := global.VideoFRC.Get(videoLikeKey).Result()
 	if err == redis.Nil {
@@ -47,7 +68,8 @@ func FavoriteVideo(userID, videoID uint64) (*api.DouyinFavoriteActionResponse, e
 	// 如果 DB 层事务回滚了，err 就不为 nil，Redis 里的数据就不会更新
 	global.VideoFRC.Set(videoLikeKey, likeUint64+1, 0)
 
-	// TODO 用缓存记录用户点赞数量，防止刷赞
+	//前面校验过userVideoLikeCount时存在的 所以省略err
+	global.VideoFRC.Set(videoLikeCountKey, videoLikeCountInt+1, userVideoLikeCountTime)
 
 	return &api.DouyinFavoriteActionResponse{
 		StatusCode: errno.Success.ErrCode,
