@@ -49,7 +49,6 @@ const (
 const (
 	MaxVideoNum = 30
 	MaxFileSize = 3 * 1024 * 1024 // 3MB 另外 Hertz 默认的请求体大小是 4MB
-
 )
 
 // 微服务相关

@@ -39,6 +39,15 @@ func SelectUserByID(userID uint64) (*User, error) {
 	return &res, nil
 }
 
+func SelectUserByIDs(ids map[uint64]struct{}) ([]*User, error) {
+	res := make([]*User, 0)
+	err := global.DB.Where("id IN (?)", ids).Find(&res).Error
+	if err != nil {
+		return nil, err
+	}
+	return res, nil
+}
+
 func SelectUserByName(username string) ([]*User, error) {
 	res := make([]*User, 0)
 	if err := global.DB.Where("username = ?", username).Limit(1).Find(&res).Error; err != nil {
