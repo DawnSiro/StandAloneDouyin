@@ -8,6 +8,12 @@ const (
 	TokenMaxRefresh = 3 * time.Hour
 )
 
+// 点赞限制相关
+const (
+	VideoLikeLimit     = 10
+	VideoLikeLimitTime = 60 * time.Second
+)
+
 // ActionType 的枚举
 // 1-发布评论，2-删除评论
 // 1-点赞，2-取消点赞

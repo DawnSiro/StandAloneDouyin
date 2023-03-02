@@ -73,6 +73,7 @@ var (
 	TableDoesNotExistError                        = NewErrNo(int64(api.ErrCode_TableDoesNotExist), "表不存在")
 	ColumnDoesNotExistError                       = NewErrNo(int64(api.ErrCode_ColumnDoesNotExist), "列不存在")
 	DatabaseDeadlockError                         = NewErrNo(int64(api.ErrCode_DatabaseDeadlock), "数据库死锁")
+	VideoLikeLimitError                           = NewErrNo(int64(api.ErrCode_VideoLikeLimitError), "用户频繁点赞")
 )
 
 // ConvertErr convert error to Errno

@@ -57,6 +57,7 @@ const (
 	ErrCode_TableDoesNotExist                        ErrCode = 30211
 	ErrCode_ColumnDoesNotExist                       ErrCode = 30212
 	ErrCode_DatabaseDeadlock                         ErrCode = 30231
+	ErrCode_VideoLikeLimitError                      ErrCode = 30232
 )
 
 func (p ErrCode) String() string {
