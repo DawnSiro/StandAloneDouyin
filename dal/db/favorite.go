@@ -24,7 +24,10 @@ func FavoriteVideo(userID uint64, videoID uint64) error {
 		return errno.UserRequestParameterError
 	}
 
-	userFavoriteVideo := &UserFavoriteVideo{}
+	userFavoriteVideo := &UserFavoriteVideo{
+		UserID:  userID,
+		VideoID: videoID,
+	}
 
 	// 先查询是否存在软删除的点赞数据
 	result := global.DB.Where("user_id = ? AND video_id = ? AND is_deleted = ?",
@@ -69,7 +72,10 @@ func CancelFavoriteVideo(userID uint64, videoID uint64) error {
 		return errors.New("cancel favorite failed")
 	}
 
-	userFavoriteVideo := &UserFavoriteVideo{}
+	userFavoriteVideo := &UserFavoriteVideo{
+		UserID:  userID,
+		VideoID: videoID,
+	}
 	result := global.DB.Where("user_id = ? AND video_id = ?",
 		userID, videoID).Limit(1).Find(userFavoriteVideo)
 	if result.Error != nil {

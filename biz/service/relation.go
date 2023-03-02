@@ -70,7 +70,7 @@ func GetFollowList(userID, selectUserID uint64) (*api.DouyinRelationFollowListRe
 			userList = append(userList, pack.User(v, true))
 		} else {
 			// 这里要查的是，自己是否关注了查询的用户的关注列表的人
-			userList = append(userList, pack.User(v, db.IsFollow(selectUserID, v.ID)))
+			userList = append(userList, pack.User(v, db.IsFollow(userID, v.ID)))
 		}
 	}
 
