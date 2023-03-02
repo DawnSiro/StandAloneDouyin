@@ -3,18 +3,19 @@ package mw
 import (
 	"bytes"
 	"context"
-	"douyin/biz/model/api"
-	"douyin/pkg/constant"
-	"douyin/pkg/errno"
-	"douyin/pkg/global"
 	"encoding/hex"
-	"github.com/cloudwego/hertz/pkg/common/hlog"
-	"github.com/cloudwego/hertz/pkg/protocol/consts"
 	"path"
 	"strconv"
 	"strings"
 
+	"douyin/biz/model/api"
+	"douyin/pkg/constant"
+	"douyin/pkg/errno"
+	"douyin/pkg/global"
+
 	"github.com/cloudwego/hertz/pkg/app"
+	"github.com/cloudwego/hertz/pkg/common/hlog"
+	"github.com/cloudwego/hertz/pkg/protocol/consts"
 )
 
 func VerifyFile() app.HandlerFunc {
@@ -92,8 +93,7 @@ func bytesToHexString(src []byte) string {
 func getFileType(fSrc []byte) string {
 	var fileType string
 	fileCode := bytesToHexString(fSrc)
-	hlog.Info("fileCode: ", fileCode)
-	hlog.Info(global.FileTypeMap.Load("0000001466747970"))
+	hlog.Info("mw.file_verification.getFileType fileCode: ", fileCode)
 	global.FileTypeMap.Range(func(key, value interface{}) bool {
 		k := key.(string)
 		v := value.(string)

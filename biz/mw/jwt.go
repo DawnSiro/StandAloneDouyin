@@ -2,20 +2,20 @@ package mw
 
 import (
 	"context"
-	"douyin/pkg/constant"
-	"douyin/pkg/global"
-	"douyin/pkg/util"
-	"github.com/cloudwego/hertz/pkg/protocol/consts"
 	"net/http"
 	"time"
 
 	"douyin/biz/model/api"
 	"douyin/biz/service"
+	"douyin/pkg/constant"
 	"douyin/pkg/errno"
+	"douyin/pkg/global"
+	"douyin/pkg/util"
 
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/common/hlog"
 	"github.com/cloudwego/hertz/pkg/common/utils"
+	"github.com/cloudwego/hertz/pkg/protocol/consts"
 	"github.com/hertz-contrib/jwt"
 )
 

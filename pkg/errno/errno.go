@@ -45,6 +45,7 @@ var (
 	UserLoginHasExpiredError                      = NewErrNo(int64(api.ErrCode_UserLoginHasExpired), "用户登陆已过期")
 	AccessPermissionError                         = NewErrNo(int64(api.ErrCode_AccessPermission), "访问权限异常")
 	DeletePermissionError                         = NewErrNo(int64(api.ErrCode_DeletePermission), "删除权限异常")
+	VideoLikeLimitError                           = NewErrNo(int64(api.ErrCode_VideoLikeLimit), "用户频繁点赞")
 	UserRequestParameterError                     = NewErrNo(int64(api.ErrCode_UserRequestParameter), "用户请求参数错误")
 	RepeatOperationError                          = NewErrNo(int64(api.ErrCode_RepeatOperationError), "用户重复操作")
 	IllegalUserInputError                         = NewErrNo(int64(api.ErrCode_IllegalUserInput), "用户输入内容非法")
@@ -73,7 +74,6 @@ var (
 	TableDoesNotExistError                        = NewErrNo(int64(api.ErrCode_TableDoesNotExist), "表不存在")
 	ColumnDoesNotExistError                       = NewErrNo(int64(api.ErrCode_ColumnDoesNotExist), "列不存在")
 	DatabaseDeadlockError                         = NewErrNo(int64(api.ErrCode_DatabaseDeadlock), "数据库死锁")
-	VideoLikeLimitError                           = NewErrNo(int64(api.ErrCode_VideoLikeLimitError), "用户频繁点赞")
 )
 
 // ConvertErr convert error to Errno

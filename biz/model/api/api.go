@@ -29,6 +29,7 @@ const (
 	ErrCode_UserLoginHasExpired                      ErrCode = 10230
 	ErrCode_AccessPermission                         ErrCode = 10300
 	ErrCode_DeletePermission                         ErrCode = 10310
+	ErrCode_VideoLikeLimit                           ErrCode = 10320
 	ErrCode_UserRequestParameter                     ErrCode = 10400
 	ErrCode_RepeatOperationError                     ErrCode = 10410
 	ErrCode_IllegalUserInput                         ErrCode = 10430
@@ -57,7 +58,6 @@ const (
 	ErrCode_TableDoesNotExist                        ErrCode = 30211
 	ErrCode_ColumnDoesNotExist                       ErrCode = 30212
 	ErrCode_DatabaseDeadlock                         ErrCode = 30231
-	ErrCode_VideoLikeLimitError                      ErrCode = 30232
 )
 
 func (p ErrCode) String() string {
@@ -94,6 +94,8 @@ func (p ErrCode) String() string {
 		return "AccessPermission"
 	case ErrCode_DeletePermission:
 		return "DeletePermission"
+	case ErrCode_VideoLikeLimit:
+		return "VideoLikeLimit"
 	case ErrCode_UserRequestParameter:
 		return "UserRequestParameter"
 	case ErrCode_RepeatOperationError:
@@ -188,6 +190,8 @@ func ErrCodeFromString(s string) (ErrCode, error) {
 		return ErrCode_AccessPermission, nil
 	case "DeletePermission":
 		return ErrCode_DeletePermission, nil
+	case "VideoLikeLimit":
+		return ErrCode_VideoLikeLimit, nil
 	case "UserRequestParameter":
 		return ErrCode_UserRequestParameter, nil
 	case "RepeatOperationError":
