@@ -1,37 +1,37 @@
 hertz:
-  host:
-  port:
+  host: 192.168.18.6
+  port: 30000
 
 jwt:
-  signingKey:
-  identityKey:
+  signingKey: CloudWeRun
+  identityKey: id
 
 mysql:
-  host:
-  port:
-  username:
-  password:
-  dbName:
-  maxOpenConn:
-  maxIdleConn:
+  host: 127.0.0.1
+  port: 3306
+  username: root
+  password: 123456
+  dbName: douyin
+  maxOpenConn: 100
+  maxIdleConn: 10
 
 videoCRCRedis:
-  host:
-  port:
+  host: localhost
+  port: 6379
   password:
-  db:
-  poolSize:
+  db: 0
+  poolSize: 100
 
 videoFRCRedis:
-  host:
-  port:
+  host: localhost
+  port: 6379
   password:
-  db:
-  poolSize:
+  db: 1
+  poolSize: 100
 
 userInfoRCRedis:
-  host:
-  port:
+  host: localhost
+  port: 6379
   password:
-  db:
-  poolSize:
+  db: 2
+  poolSize: 100
