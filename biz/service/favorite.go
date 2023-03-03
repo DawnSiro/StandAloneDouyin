@@ -1,12 +1,12 @@
 package service
 
 import (
+	"douyin/dal/pack"
 	"strconv"
 	"strings"
 
 	"douyin/biz/model/api"
 	"douyin/dal/db"
-	"douyin/dal/pack"
 	"douyin/pkg/constant"
 	"douyin/pkg/errno"
 	"douyin/pkg/global"
@@ -114,27 +114,34 @@ func CancelFavoriteVideo(userID, videoID uint64) (*api.DouyinFavoriteActionRespo
 }
 
 func GetFavoriteList(userID, selectUserID uint64) (*api.DouyinFavoriteListResponse, error) {
-	videos, err := db.SelectFavoriteVideoListByUserID(selectUserID)
-	if err != nil {
-		hlog.Error("service.favorite.GetFavoriteList err:", err.Error())
-		return nil, err
-	}
+	// 方案一，每次都按单表查询，存在循环查询数据的问题，经过测试，开启协程进行异步也没有多少性能提升
+	//videos, err := db.SelectFavoriteVideoListByUserID(selectUserID)
+	//if err != nil {
+	//	hlog.Error("service.favorite.GetFavoriteList err:", err.Error())
+	//	return nil, err
+	//}
+	//
+	//// TODO 优化循环查询数据库问题
+	//videoList := make([]*api.Video, 0)
+	//for i := 0; i < len(videos); i++ {
+	//	u, err := db.SelectUserByID(videos[i].AuthorID)
+	//	if err != nil {
+	//		hlog.Error("service.favorite.GetFavoriteList err:", err.Error())
+	//		return nil, err
+	//	}
+	//	video := pack.Video(videos[i], u,
+	//		db.IsFollow(userID, selectUserID), db.IsFavoriteVideo(userID, videos[i].ID))
+	//	videoList = append(videoList, video)
+	//}
 
-	// TODO 优化循环查询数据库问题
-	videoList := make([]*api.Video, 0)
-	for i := 0; i < len(videos); i++ {
-		u, err := db.SelectUserByID(videos[i].AuthorID)
-		if err != nil {
-			hlog.Error("service.favorite.GetFavoriteList err:", err.Error())
-			return nil, err
-		}
-		video := pack.Video(videos[i], u,
-			db.IsFollow(userID, selectUserID), db.IsFavoriteVideo(userID, videos[i].ID))
-		videoList = append(videoList, video)
+	// 方案二，直接使用 JOIN 连接多个表数据，一次性查出所有数据。
+	videoList, err := db.SelectFavoriteVideoDataListByUserID(userID, selectUserID)
+	if err != nil {
+		return nil, err
 	}
 
 	return &api.DouyinFavoriteListResponse{
 		StatusCode: errno.Success.ErrCode,
-		VideoList:  videoList,
+		VideoList:  pack.VideoDataList(videoList),
 	}, nil
 }

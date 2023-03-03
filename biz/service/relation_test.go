@@ -2,13 +2,13 @@ package service
 
 import (
 	"douyin/biz/model/api"
-	"douyin/dal/db"
+	"douyin/pkg/initialize"
 	"reflect"
 	"testing"
 )
 
 func TestCancelFollow(t *testing.T) {
-	db.Init()
+	initialize.MySQL()
 	type args struct {
 		userID   uint64
 		toUserID uint64
@@ -50,7 +50,7 @@ func TestCancelFollow(t *testing.T) {
 }
 
 func TestFollow(t *testing.T) {
-	db.Init()
+	initialize.MySQL()
 	type args struct {
 		userID   uint64
 		toUserID uint64
@@ -91,7 +91,7 @@ func TestFollow(t *testing.T) {
 }
 
 func TestGetFollowList(t *testing.T) {
-	db.Init()
+	initialize.MySQL()
 	v1 := int64(2)
 	v2 := int64(1)
 	type args struct {
@@ -142,7 +142,7 @@ func TestGetFollowList(t *testing.T) {
 }
 
 func TestGetFollowerList(t *testing.T) {
-	db.Init()
+	initialize.MySQL()
 	v1 := int64(2)
 	v2 := int64(1)
 	type args struct {
@@ -193,7 +193,7 @@ func TestGetFollowerList(t *testing.T) {
 }
 
 func TestGetFriendList(t *testing.T) {
-	db.Init()
+	initialize.MySQL()
 	v1 := int64(2)
 	v2 := int64(1)
 	v3 := "你好"

@@ -2,11 +2,13 @@ package db
 
 import (
 	"douyin/biz/model/api"
+	"douyin/pkg/initialize"
 	"reflect"
 	"testing"
 )
 
 func TestCancelFollow(t *testing.T) {
+	initialize.MySQL()
 	type args struct {
 		userID   uint64
 		toUserID uint64
@@ -28,6 +30,7 @@ func TestCancelFollow(t *testing.T) {
 }
 
 func TestFollow(t *testing.T) {
+	initialize.MySQL()
 	type args struct {
 		userID   uint64
 		toUserID uint64
@@ -49,6 +52,7 @@ func TestFollow(t *testing.T) {
 }
 
 func TestGetFollowList(t *testing.T) {
+	initialize.MySQL()
 	type args struct {
 		userID uint64
 	}
@@ -75,6 +79,7 @@ func TestGetFollowList(t *testing.T) {
 }
 
 func TestGetFollowerList(t *testing.T) {
+	initialize.MySQL()
 	type args struct {
 		userID uint64
 	}
@@ -101,6 +106,7 @@ func TestGetFollowerList(t *testing.T) {
 }
 
 func TestGetFriendList(t *testing.T) {
+	initialize.MySQL()
 	type args struct {
 		userID uint64
 	}
@@ -127,6 +133,7 @@ func TestGetFriendList(t *testing.T) {
 }
 
 func TestIsFollow(t *testing.T) {
+	initialize.MySQL()
 	type args struct {
 		userID   uint64
 		toUserID uint64
@@ -148,6 +155,7 @@ func TestIsFollow(t *testing.T) {
 }
 
 func TestRelation_TableName(t *testing.T) {
+	initialize.MySQL()
 	type fields struct {
 		ID        uint64
 		IsDeleted uint8

@@ -2,13 +2,13 @@ package service
 
 import (
 	"douyin/biz/model/api"
-	"douyin/dal/db"
+	"douyin/pkg/initialize"
 	"reflect"
 	"testing"
 )
 
 func TestGetFeed(t *testing.T) {
-	db.Init()
+	initialize.MySQL()
 	v1 := int64(40)
 	v2 := int64(1676991666000)
 	v3 := int64(1576991666000)

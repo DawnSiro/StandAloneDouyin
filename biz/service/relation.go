@@ -55,49 +55,64 @@ func CancelFollow(userID, toUserID uint64) (*api.DouyinRelationActionResponse, e
 // userID 为发送请求的用户ID，从 Token 里取到
 // selectUserID 为需要查询的用户的ID，做为请求参数传递
 func GetFollowList(userID, selectUserID uint64) (*api.DouyinRelationFollowListResponse, error) {
-	dbUserList, err := db.GetFollowList(selectUserID)
+	//dbUserList, err := db.GetFollowList(selectUserID)
+	//if err != nil {
+	//	hlog.Error("service.relation.GetFollowList err:", err.Error())
+	//	return nil, err
+	//}
+	//
+	//// 提前申请好数组大小来避免后续扩容
+	//userList := make([]*api.User, 0, len(dbUserList))
+	//// TODO 存在循环查询DB
+	//for _, v := range dbUserList {
+	//	if userID == selectUserID {
+	//		// 自己的关注列表自己当然都关注了，无需查数据库
+	//		userList = append(userList, pack.User(v, true))
+	//	} else {
+	//		// 这里要查的是，自己是否关注了查询的用户的关注列表的人
+	//		userList = append(userList, pack.User(v, db.IsFollow(userID, v.ID)))
+	//	}
+	//}
+
+	relationDataList, err := db.SelectFollowDataListByUserID(userID)
 	if err != nil {
 		hlog.Error("service.relation.GetFollowList err:", err.Error())
 		return nil, err
 	}
 
-	// 提前申请好数组大小来避免后续扩容
-	userList := make([]*api.User, 0, len(dbUserList))
-	// TODO 存在循环查询DB
-	for _, v := range dbUserList {
-		if userID == selectUserID {
-			// 自己的关注列表自己当然都关注了，无需查数据库
-			userList = append(userList, pack.User(v, true))
-		} else {
-			// 这里要查的是，自己是否关注了查询的用户的关注列表的人
-			userList = append(userList, pack.User(v, db.IsFollow(userID, v.ID)))
-		}
-	}
+	hlog.Info(relationDataList)
 
 	return &api.DouyinRelationFollowListResponse{
 		StatusCode: errno.Success.ErrCode,
-		UserList:   userList,
+		UserList:   pack.RelationDataList(relationDataList),
 	}, nil
 
 }
 
 func GetFollowerList(userID, selectUserID uint64) (*api.DouyinRelationFollowerListResponse, error) {
-	dbUserList, err := db.GetFollowerList(selectUserID)
+	//dbUserList, err := db.GetFollowerList(selectUserID)
+	//if err != nil {
+	//	hlog.Error("service.relation.GetFollowerList err:", err.Error())
+	//	return nil, err
+	//}
+	//
+	//// 提前申请好数组大小来避免后续扩容
+	//userList := make([]*api.User, 0, len(dbUserList))
+	//// TODO 存在循环查询DB
+	//for _, v := range dbUserList {
+	//	// 这里要查的是，自己是否关注了查询的用户的粉丝列表的人
+	//	userList = append(userList, pack.User(v, db.IsFollow(userID, v.ID)))
+	//}
+
+	relationDataList, err := db.SelectFollowerDataListByUserID(userID)
 	if err != nil {
-		hlog.Error("service.relation.GetFollowerList err:", err.Error())
+		hlog.Error("service.relation.GetFollowList err:", err.Error())
 		return nil, err
 	}
 
-	// 提前申请好数组大小来避免后续扩容
-	userList := make([]*api.User, 0, len(dbUserList))
-	// TODO 存在循环查询DB
-	for _, v := range dbUserList {
-		// 这里要查的是，自己是否关注了查询的用户的粉丝列表的人
-		userList = append(userList, pack.User(v, db.IsFollow(userID, v.ID)))
-	}
 	return &api.DouyinRelationFollowerListResponse{
 		StatusCode: errno.Success.ErrCode,
-		UserList:   userList,
+		UserList:   pack.RelationDataList(relationDataList),
 	}, nil
 }
 

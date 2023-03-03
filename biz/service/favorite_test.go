@@ -8,6 +8,7 @@ import (
 )
 
 func TestCancelFavoriteVideo(t *testing.T) {
+	initialize.MySQL()
 	type args struct {
 		userID  uint64
 		videoID uint64
@@ -108,6 +109,7 @@ func TestFavoriteList(t *testing.T) {
 }
 
 func TestFavoriteVideo(t *testing.T) {
+	initialize.MySQL()
 	type args struct {
 		userID  uint64
 		videoID uint64

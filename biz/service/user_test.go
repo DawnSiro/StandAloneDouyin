@@ -2,13 +2,13 @@ package service
 
 import (
 	"douyin/biz/model/api"
-	"douyin/dal/db"
+	"douyin/pkg/initialize"
 	"reflect"
 	"testing"
 )
 
 func TestGetUserInfo(t *testing.T) {
-	db.Init()
+	initialize.MySQL()
 	type args struct {
 		userID     uint64
 		infoUserID uint64
@@ -61,6 +61,7 @@ func TestGetUserInfo(t *testing.T) {
 }
 
 func TestLogin(t *testing.T) {
+	initialize.MySQL()
 	type args struct {
 		username string
 		password string
@@ -75,19 +76,20 @@ func TestLogin(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotUserID, err := Login(tt.args.username, tt.args.password)
+			resp, err := Login(tt.args.username, tt.args.password)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Login() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if gotUserID != tt.wantUserID {
-				t.Errorf("Login() gotUserID = %v, want %v", gotUserID, tt.wantUserID)
+			if uint64(resp.UserID) != tt.wantUserID {
+				t.Errorf("Login() gotUserID = %v, want %v", resp, tt.wantUserID)
 			}
 		})
 	}
 }
 
 func TestRegister(t *testing.T) {
+	initialize.MySQL()
 	type args struct {
 		username string
 		password string
@@ -101,7 +103,7 @@ func TestRegister(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := Register(tt.args.username, tt.args.password); (err != nil) != tt.wantErr {
+			if _, err := Register(tt.args.username, tt.args.password); (err != nil) != tt.wantErr {
 				t.Errorf("Register() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})

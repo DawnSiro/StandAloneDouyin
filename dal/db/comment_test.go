@@ -1,12 +1,14 @@
 package db
 
 import (
+	"douyin/pkg/initialize"
 	"reflect"
 	"testing"
 	"time"
 )
 
 func TestComment_TableName(t *testing.T) {
+	initialize.MySQL()
 	type fields struct {
 		ID          uint64
 		IsDeleted   uint8
@@ -40,6 +42,7 @@ func TestComment_TableName(t *testing.T) {
 }
 
 func TestCreateComment(t *testing.T) {
+	initialize.MySQL()
 	type args struct {
 		videoID uint64
 		content string
@@ -68,7 +71,9 @@ func TestCreateComment(t *testing.T) {
 }
 
 func TestDeleteCommentByID(t *testing.T) {
+	initialize.MySQL()
 	type args struct {
+		videoID   uint64
 		commentID uint64
 	}
 	tests := []struct {
@@ -81,7 +86,7 @@ func TestDeleteCommentByID(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := DeleteCommentByID(tt.args.commentID)
+			got, err := DeleteCommentByID(tt.args.videoID, tt.args.commentID)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("DeleteCommentByID() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -94,6 +99,7 @@ func TestDeleteCommentByID(t *testing.T) {
 }
 
 func TestIsCommentCreatedByMyself(t *testing.T) {
+	initialize.MySQL()
 	type args struct {
 		userID    uint64
 		commentID uint64
@@ -115,6 +121,7 @@ func TestIsCommentCreatedByMyself(t *testing.T) {
 }
 
 func TestSelectCommentListByVideoID(t *testing.T) {
+	initialize.MySQL()
 	type args struct {
 		videoID uint64
 	}

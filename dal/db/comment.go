@@ -106,3 +106,29 @@ func IsCommentCreatedByMyself(userID uint64, commentID uint64) bool {
 	}
 	return true
 }
+
+type CommentData struct {
+	CID            uint64 `gorm:"column:cid"`
+	Content        string
+	CreatedTime    time.Time
+	UID            uint64
+	Username       string
+	FollowingCount uint64
+	FollowerCount  uint64
+	Avatar         string
+	IsFollow       bool
+}
+
+func SelectCommentDataByVideoIDANDUserID(videoID, userID uint64) ([]*CommentData, error) {
+	cs := make([]*CommentData, 0)
+	err := global.DB.Select("c.id AS cid, c.content, c.created_time, "+
+		"u.id AS uid, u.username, u.following_count, u.follower_count, u.avatar, "+
+		"IF(r.is_deleted = 0, TRUE, FALSE) AS is_follow").Table(constant.UserTableName+" AS u").
+		Joins("LEFT JOIN "+constant.CommentTableName+" AS c ON u.id = c.user_id").
+		Joins("LEFT JOIN "+constant.RelationTableName+" AS r ON u.id = r.`to_user_id` AND r.user_id = ?", userID).
+		Where("`video_id` = ?", videoID).Scan(&cs).Error
+	if err != nil {
+		return nil, err
+	}
+	return cs, nil
+}

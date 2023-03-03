@@ -2,6 +2,7 @@ package service
 
 import (
 	"bytes"
+	"douyin/dal/pack"
 	"douyin/pkg/errno"
 	"errors"
 	"io"
@@ -9,7 +10,6 @@ import (
 
 	"douyin/biz/model/api"
 	"douyin/dal/db"
-	"douyin/dal/pack"
 	"douyin/pkg/util"
 
 	"github.com/cloudwego/hertz/pkg/common/hlog"
@@ -58,29 +58,36 @@ func PublishAction(title string, videoData []byte, userID uint64) (*api.DouyinPu
 	}, nil
 }
 
-func GetPublishVideos(userID uint64) (*api.DouyinPublishListResponse, error) {
-	videoList := make([]*api.Video, 0)
+func GetPublishVideos(userID, selectUserID uint64) (*api.DouyinPublishListResponse, error) {
+	// 方案一，每次都按单表查询，存在循环查询数据的问题，经过测试，开启协程进行异步也没有多少性能提升
+	//videoList := make([]*api.Video, 0)
+	//
+	//videos, err := db.GetVideosByAuthorID(userID)
+	//if err != nil {
+	//	hlog.Error("service.publish.GetPublishVideos err:", err.Error())
+	//	return nil, err
+	//}
+	//
+	//for i := 0; i < len(videos); i++ {
+	//	u, err := db.SelectUserByID(videos[i].AuthorID)
+	//	if err != nil {
+	//		hlog.Error("service.publish.GetPublishVideos err:", err.Error())
+	//		return nil, err
+	//	}
+	//
+	//	video := pack.Video(videos[i], u,
+	//		db.IsFollow(userID, u.ID), db.IsFavoriteVideo(userID, videos[i].ID))
+	//	videoList = append(videoList, video)
+	//}
 
-	videos, err := db.GetVideosByAuthorID(userID)
+	videoData, err := db.SelectPublishVideoDataListByUserID(userID, selectUserID)
 	if err != nil {
 		hlog.Error("service.publish.GetPublishVideos err:", err.Error())
 		return nil, err
 	}
 
-	for i := 0; i < len(videos); i++ {
-		u, err := db.SelectUserByID(videos[i].AuthorID)
-		if err != nil {
-			hlog.Error("service.publish.GetPublishVideos err:", err.Error())
-			return nil, err
-		}
-
-		video := pack.Video(videos[i], u,
-			db.IsFollow(userID, u.ID), db.IsFavoriteVideo(userID, videos[i].ID))
-		videoList = append(videoList, video)
-	}
-
 	return &api.DouyinPublishListResponse{
 		StatusCode: errno.Success.ErrCode,
-		VideoList:  videoList,
+		VideoList:  pack.VideoDataList(videoData),
 	}, nil
 }

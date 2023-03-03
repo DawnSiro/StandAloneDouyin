@@ -213,3 +213,34 @@ func GetFriendList(userID uint64) ([]*User, error) {
 	}
 	return res, nil
 }
+
+type RelationUserData struct {
+	UID            uint64 `gorm:"column:uid"`
+	Username       string
+	FollowingCount uint64
+	FollowerCount  uint64
+	Avatar         string
+	IsFollow       bool
+}
+
+func SelectFollowDataListByUserID(userID uint64) ([]*RelationUserData, error) {
+	res := make([]*RelationUserData, 0)
+	err := global.DB.Select("u.id AS uid, u.username, u.following_count, u.follower_count, u.avatar,"+
+		"IF(r.is_deleted = ?, TRUE, FALSE) AS is_follow", constant.DataNotDeleted).Table("`user` AS u").
+		Joins("RIGHT JOIN relation AS r ON r.to_user_id = u.id").Where("r.user_id = ?", userID).Scan(&res).Error
+	if err != nil {
+		return nil, err
+	}
+	return res, nil
+}
+
+func SelectFollowerDataListByUserID(userID uint64) ([]*RelationUserData, error) {
+	res := make([]*RelationUserData, 0)
+	err := global.DB.Select("u.id AS uid, u.username, u.following_count, u.follower_count, u.avatar,"+
+		"IF(r.is_deleted = ?, TRUE, FALSE) AS is_follow", constant.DataNotDeleted).Table("`user` AS u").
+		Joins("RIGHT JOIN relation AS r ON r.user_id = u.id").Where("r.to_user_id = ?", userID).Scan(&res).Error
+	if err != nil {
+		return nil, err
+	}
+	return res, nil
+}

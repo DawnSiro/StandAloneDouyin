@@ -1,15 +1,13 @@
 package db
 
 import (
+	"douyin/pkg/initialize"
 	"reflect"
 	"testing"
 )
 
-func TestMain(m *testing.M) {
-	Init()
-}
-
 func TestCreateUser(t *testing.T) {
+	initialize.MySQL()
 	type args struct {
 		user *User
 	}
@@ -29,7 +27,7 @@ func TestCreateUser(t *testing.T) {
 				t.Errorf("CreateUser() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if gotUserID != tt.wantUserID {
+			if int64(gotUserID) != tt.wantUserID {
 				t.Errorf("CreateUser() gotUserID = %v, want %v", gotUserID, tt.wantUserID)
 			}
 		})
@@ -37,6 +35,7 @@ func TestCreateUser(t *testing.T) {
 }
 
 func TestDecreaseUserFavoriteCount(t *testing.T) {
+	initialize.MySQL()
 	type args struct {
 		userID uint64
 	}
@@ -63,6 +62,7 @@ func TestDecreaseUserFavoriteCount(t *testing.T) {
 }
 
 func TestIncreaseUserFavoriteCount(t *testing.T) {
+	initialize.MySQL()
 	type args struct {
 		userID uint64
 	}
@@ -89,6 +89,7 @@ func TestIncreaseUserFavoriteCount(t *testing.T) {
 }
 
 func TestSelectUserByID(t *testing.T) {
+	initialize.MySQL()
 	type args struct {
 		userID uint64
 	}
@@ -115,6 +116,7 @@ func TestSelectUserByID(t *testing.T) {
 }
 
 func TestSelectUserByName(t *testing.T) {
+	initialize.MySQL()
 	type args struct {
 		username string
 	}
@@ -141,6 +143,7 @@ func TestSelectUserByName(t *testing.T) {
 }
 
 func TestUser_TableName(t *testing.T) {
+	initialize.MySQL()
 	type fields struct {
 		ID             uint64
 		Username       string
