@@ -1,12 +1,14 @@
 package db
 
 import (
+	"douyin/pkg/initialize"
 	"reflect"
 	"testing"
 	"time"
 )
 
 func TestCreateMessage(t *testing.T) {
+	initialize.MySQL()
 	type args struct {
 		fromUserID uint64
 		toUserID   uint64
@@ -29,6 +31,7 @@ func TestCreateMessage(t *testing.T) {
 }
 
 func TestGetLatestMsg(t *testing.T) {
+	initialize.MySQL()
 	type args struct {
 		userID     uint64
 		oppositeID uint64
@@ -56,6 +59,7 @@ func TestGetLatestMsg(t *testing.T) {
 }
 
 func TestGetMessagesByUserIDAndPreMsgTime(t *testing.T) {
+	initialize.MySQL()
 	type args struct {
 		userID     uint64
 		oppositeID uint64
@@ -84,6 +88,7 @@ func TestGetMessagesByUserIDAndPreMsgTime(t *testing.T) {
 }
 
 func TestMessage_TableName(t *testing.T) {
+	initialize.MySQL()
 	type fields struct {
 		ID         uint64
 		ToUserID   uint64

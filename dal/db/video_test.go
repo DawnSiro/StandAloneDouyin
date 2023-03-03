@@ -1,12 +1,14 @@
 package db
 
 import (
+	"douyin/pkg/initialize"
 	"reflect"
 	"testing"
 	"time"
 )
 
 func TestCreateVideo(t *testing.T) {
+	initialize.MySQL()
 	type args struct {
 		video *Video
 	}
@@ -27,13 +29,14 @@ func TestCreateVideo(t *testing.T) {
 }
 
 func TestDecreaseCommentCount(t *testing.T) {
+	initialize.MySQL()
 	type args struct {
 		videoID uint64
 	}
 	tests := []struct {
 		name    string
 		args    args
-		want    uint64
+		want    int64
 		wantErr bool
 	}{
 		// TODO: Add test cases.
@@ -53,13 +56,14 @@ func TestDecreaseCommentCount(t *testing.T) {
 }
 
 func TestDecreaseVideoFavoriteCount(t *testing.T) {
+	initialize.MySQL()
 	type args struct {
 		videoID uint64
 	}
 	tests := []struct {
 		name    string
 		args    args
-		want    uint64
+		want    int64
 		wantErr bool
 	}{
 		// TODO: Add test cases.
@@ -79,6 +83,7 @@ func TestDecreaseVideoFavoriteCount(t *testing.T) {
 }
 
 func TestGetVideosByAuthorID(t *testing.T) {
+	initialize.MySQL()
 	type args struct {
 		userID uint64
 	}
@@ -105,13 +110,14 @@ func TestGetVideosByAuthorID(t *testing.T) {
 }
 
 func TestIncreaseCommentCount(t *testing.T) {
+	initialize.MySQL()
 	type args struct {
 		videoID uint64
 	}
 	tests := []struct {
 		name    string
 		args    args
-		want    uint64
+		want    int64
 		wantErr bool
 	}{
 		// TODO: Add test cases.
@@ -131,13 +137,14 @@ func TestIncreaseCommentCount(t *testing.T) {
 }
 
 func TestIncreaseVideoFavoriteCount(t *testing.T) {
+	initialize.MySQL()
 	type args struct {
 		videoID uint64
 	}
 	tests := []struct {
 		name    string
 		args    args
-		want    uint64
+		want    int64
 		wantErr bool
 	}{
 		// TODO: Add test cases.
@@ -157,6 +164,7 @@ func TestIncreaseVideoFavoriteCount(t *testing.T) {
 }
 
 func TestMGetVideos(t *testing.T) {
+	initialize.MySQL()
 	type args struct {
 		maxVideoNum int
 		latestTime  *int64
@@ -184,6 +192,7 @@ func TestMGetVideos(t *testing.T) {
 }
 
 func TestSelectAuthorIDByVideoID(t *testing.T) {
+	initialize.MySQL()
 	type args struct {
 		videoID uint64
 	}
@@ -210,13 +219,14 @@ func TestSelectAuthorIDByVideoID(t *testing.T) {
 }
 
 func TestSelectCommentCountByVideoID(t *testing.T) {
+	initialize.MySQL()
 	type args struct {
 		videoID uint64
 	}
 	tests := []struct {
 		name    string
 		args    args
-		want    uint64
+		want    int64
 		wantErr bool
 	}{
 		// TODO: Add test cases.
@@ -236,13 +246,14 @@ func TestSelectCommentCountByVideoID(t *testing.T) {
 }
 
 func TestSelectVideoFavoriteCountByVideoID(t *testing.T) {
+	initialize.MySQL()
 	type args struct {
 		videoID uint64
 	}
 	tests := []struct {
 		name    string
 		args    args
-		want    uint64
+		want    int64
 		wantErr bool
 	}{
 		// TODO: Add test cases.
@@ -262,6 +273,7 @@ func TestSelectVideoFavoriteCountByVideoID(t *testing.T) {
 }
 
 func TestUpdateCommentCount(t *testing.T) {
+	initialize.MySQL()
 	type args struct {
 		videoID      uint64
 		commentCount uint64
@@ -269,7 +281,7 @@ func TestUpdateCommentCount(t *testing.T) {
 	tests := []struct {
 		name    string
 		args    args
-		want    uint64
+		want    int64
 		wantErr bool
 	}{
 		// TODO: Add test cases.
@@ -289,6 +301,7 @@ func TestUpdateCommentCount(t *testing.T) {
 }
 
 func TestUpdateVideoFavoriteCount(t *testing.T) {
+	initialize.MySQL()
 	type args struct {
 		videoID       uint64
 		favoriteCount uint64
@@ -296,7 +309,7 @@ func TestUpdateVideoFavoriteCount(t *testing.T) {
 	tests := []struct {
 		name    string
 		args    args
-		want    uint64
+		want    int64
 		wantErr bool
 	}{
 		// TODO: Add test cases.
@@ -316,14 +329,15 @@ func TestUpdateVideoFavoriteCount(t *testing.T) {
 }
 
 func TestVideo_TableName(t *testing.T) {
+	initialize.MySQL()
 	type fields struct {
 		ID            uint64
 		PublishTime   time.Time
 		AuthorID      uint64
 		PlayURL       string
 		CoverURL      string
-		FavoriteCount uint64
-		CommentCount  uint64
+		FavoriteCount int64
+		CommentCount  int64
 		Title         string
 	}
 	tests := []struct {

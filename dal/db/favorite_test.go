@@ -1,11 +1,13 @@
 package db
 
 import (
+	"douyin/pkg/initialize"
 	"reflect"
 	"testing"
 )
 
 func TestCancelFavoriteVideo(t *testing.T) {
+	initialize.MySQL()
 	type args struct {
 		userID  uint64
 		videoID uint64
@@ -27,6 +29,7 @@ func TestCancelFavoriteVideo(t *testing.T) {
 }
 
 func TestFavoriteVideo(t *testing.T) {
+	initialize.MySQL()
 	type args struct {
 		userID  uint64
 		videoID uint64
@@ -48,6 +51,7 @@ func TestFavoriteVideo(t *testing.T) {
 }
 
 func TestIsFavoriteVideo(t *testing.T) {
+	initialize.MySQL()
 	type args struct {
 		userID  uint64
 		videoID uint64
@@ -69,6 +73,7 @@ func TestIsFavoriteVideo(t *testing.T) {
 }
 
 func TestSelectFavoriteVideoListByUserID(t *testing.T) {
+	initialize.MySQL()
 	type args struct {
 		toUserID uint64
 	}
@@ -95,6 +100,7 @@ func TestSelectFavoriteVideoListByUserID(t *testing.T) {
 }
 
 func TestUserFavoriteVideo_TableName(t *testing.T) {
+	initialize.MySQL()
 	type fields struct {
 		ID        uint64
 		UserID    uint64

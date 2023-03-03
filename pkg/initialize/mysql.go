@@ -31,9 +31,9 @@ func MySQL() {
 	newLogger := logger.New(
 		log.New(os.Stdout, "\r\n", log.LstdFlags),
 		logger.Config{
-			SlowThreshold: time.Millisecond * 0, // 慢 SQL 阈值
-			LogLevel:      logger.Info,          // 日志级别
-			Colorful:      false,                // 禁用彩色打印
+			SlowThreshold: time.Millisecond * 500, // 慢 SQL 阈值
+			LogLevel:      logger.Info,            // 日志级别
+			Colorful:      false,                  // 禁用彩色打印
 		},
 	)
 	if db, err := gorm.Open(mysql.New(mysqlConfig), &gorm.Config{

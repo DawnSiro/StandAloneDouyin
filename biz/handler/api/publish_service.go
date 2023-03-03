@@ -98,7 +98,9 @@ func GetPublishVideos(ctx context.Context, c *app.RequestContext) {
 	}
 
 	hlog.Info("handler.publish_service.GetPublishVideos Request:", req)
-	resp, err := service.GetPublishVideos(uint64(req.UserID))
+	userID := c.GetUint64(global.Config.JWTConfig.IdentityKey)
+	hlog.Info("handler.feed_service.GetFeed GetUserID:", userID)
+	resp, err := service.GetPublishVideos(userID, uint64(req.UserID))
 	if err != nil {
 		errNo := errno.ConvertErr(err)
 		c.JSON(consts.StatusOK, &api.DouyinPublishListResponse{

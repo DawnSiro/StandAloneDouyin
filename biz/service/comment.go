@@ -1,15 +1,11 @@
 package service
 
 import (
-	"sort"
-	"sync"
-
 	"douyin/biz/model/api"
 	"douyin/dal/db"
 	"douyin/dal/pack"
 	"douyin/pkg/errno"
 	"douyin/pkg/util/sensitive"
-
 	"github.com/cloudwego/hertz/pkg/common/hlog"
 )
 
@@ -82,51 +78,12 @@ func DeleteComment(userID, videoID, commentID uint64) (*api.DouyinCommentActionR
 }
 
 func GetCommentList(userID, videoID uint64) (*api.DouyinCommentListResponse, error) {
-	//var builder strings.Builder
-	//builder.WriteString(strconv.FormatUint(userID, 10))
-	//builder.WriteString("_userId_")
-	//builder.WriteString(strconv.FormatUint(videoID, 10))
-	//builder.WriteString("_video_comments")
-	//commentListKey := builder.String()
-
-	//commentList, err := global.VideoCRC.Get(commentListKey).Result()
-	//if err == redis.Nil {
-	dbcList, err := db.SelectCommentListByVideoID(videoID)
+	commentData, err := db.SelectCommentDataByVideoIDANDUserID(videoID, userID)
 	if err != nil {
-		hlog.Error("service.comment.GetCommentList err:", err.Error())
 		return nil, err
 	}
-
-	wg := &sync.WaitGroup{}
-	wg.Add(len(dbcList))
-	// TODO 优化循环查询
-	cList := make([]*api.Comment, 0, len(dbcList))
-	for i := 0; i < len(dbcList); i++ {
-		go func(c *db.Comment) {
-			u, _ := db.SelectUserByID(c.UserID)
-			cList = append(cList, pack.Comment(c, u, db.IsFollow(userID, c.UserID)))
-			wg.Done()
-		}(dbcList[i])
-	}
-
-	wg.Wait()
-	sort.Sort(CommentSlice(cList))
-
 	return &api.DouyinCommentListResponse{
 		StatusCode:  0,
-		CommentList: cList,
+		CommentList: pack.CommentDataList(commentData),
 	}, nil
-}
-
-// CommentSlice 排序用的变量类型，用于实现三个排序需要的方法
-type CommentSlice []*api.Comment
-
-func (a CommentSlice) Len() int { //重写Len()方法
-	return len(a)
-}
-func (a CommentSlice) Swap(i, j int) { //重写Swap()方法
-	a[i], a[j] = a[j], a[i]
-}
-func (a CommentSlice) Less(i, j int) bool { //重写Less()方法
-	return a[i].ID > a[j].ID
 }

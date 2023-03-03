@@ -2,13 +2,13 @@ package service
 
 import (
 	"douyin/biz/model/api"
-	"douyin/dal/db"
+	"douyin/pkg/initialize"
 	"reflect"
 	"testing"
 )
 
 func TestGetMessageChat(t *testing.T) {
-	db.Init()
+	initialize.MySQL()
 	v1 := int64(1676972817000)
 	v2 := int64(1676972820000)
 	type args struct {
@@ -74,6 +74,7 @@ func TestGetMessageChat(t *testing.T) {
 }
 
 func TestSendMessage(t *testing.T) {
+	initialize.MySQL()
 	type args struct {
 		fromUserID uint64
 		toUserID   uint64
