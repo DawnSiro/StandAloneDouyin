@@ -9,8 +9,8 @@ jwt:
 mysql:
   host: 127.0.0.1
   port: 3306
-  username: longfar 
-  password: Ning
+  username: username
+  password: password
   dbName: douyin_test
   maxOpenConn: 100
   maxIdleConn: 10
