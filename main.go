@@ -3,12 +3,18 @@
 package main
 
 import (
+	"flag"
+
 	"douyin/biz/mw"
 	"douyin/pkg/initialize"
 )
 
 func Init() {
-	initialize.Viper()
+	var config string
+	flag.StringVar(&config, "c", "./pkg/config/config.yml", "-c <config path>")
+	flag.Parse()
+
+	initialize.Viper(config)
 	initialize.MySQL()
 	initialize.Redis()
 	initialize.Global()
