@@ -10,7 +10,6 @@ import (
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/common/hlog"
 	"github.com/hertz-contrib/websocket"
-	"log"
 	"strconv"
 )
 
@@ -35,7 +34,7 @@ func (c *Client) readPump() {
 
 		err := c.Conn.ReadJSON(&SendMsg)
 		if err != nil {
-			fmt.Println("数据格式不正确", err)
+			hlog.Error("api.websocket_service.readPump.ReadJSON err:", err.Error())
 			MannaClient.Unregister <- c
 			_ = c.Conn.Close()
 			break
@@ -80,7 +79,7 @@ func (c *Client) writePump() {
 			//fmt.Println(msg)
 			err = db.CreateMessage(uid, touid, string(msg[26:len(msg)-2])) // 将消息放到数据库
 			if err != nil {
-				hlog.Error("api.websocket_service.writePump err:", err.Error())
+				hlog.Error("api.websocket_service.writePump.CreateMessage err:", err.Error())
 			}
 		case message, ok := <-c.Send: // 不在线逻辑
 			if ok {
@@ -100,13 +99,13 @@ func (c *Client) writePump() {
 				if !isFriend {
 					errNo := errno.UserRequestParameterError
 					errNo.ErrMsg = "不能给非好友发消息"
-					hlog.Error("service.message.SendMessage err:", errNo.Error())
+					hlog.Error("api.websocket_service.writePump.IsFriend err:", errNo.Error())
 				}
 
 				//fmt.Println(msg)
 				err = db.CreateMessage(uid, touid, string(msg[26:len(msg)-2])) // 将消息放到数据库
 				if err != nil {
-					hlog.Error("api.websocket_service.writePump err:", err.Error())
+					hlog.Error("api.websocket_service.writePump.CreateMessage err:", err.Error())
 				}
 			}
 		}
@@ -127,7 +126,7 @@ func CreateID(uid, toUid string) string {
 
 func ServeWs(ctx context.Context, c *app.RequestContext) {
 	fromUserID := c.GetUint64(global.Config.JWTConfig.IdentityKey)
-	hlog.Info("handler.message_service.SendMessage GetFromUserID:", fromUserID)
+	hlog.Info("biz.handler.api.websocket_service.ServeWs GetFromUserID:", fromUserID)
 	toUid := c.Query("to_user_id")
 
 	err := upgrader.Upgrade(c, func(conn *websocket.Conn) {
@@ -144,6 +143,6 @@ func ServeWs(ctx context.Context, c *app.RequestContext) {
 		client.readPump()
 	})
 	if err != nil {
-		log.Println(err)
+		hlog.Error("biz.handler.api.websocket_service.ServeWs err:", err.Error())
 	}
 }

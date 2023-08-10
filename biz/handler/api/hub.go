@@ -101,7 +101,7 @@ func (h *Hub) Run() {
 			msg, _ := json.Marshal(ReplyMsg)
 			err := client.Conn.WriteMessage(websocket.TextMessage, msg)
 			if err != nil {
-				fmt.Println("不能响应", err)
+				hlog.Error("biz.handler.api.hub.WriteMessage err:", err.Error())
 			}
 		case client := <-h.Unregister:
 			fmt.Printf("连接失败%s,", client.ID)
@@ -148,18 +148,19 @@ func (h *Hub) Run() {
 
 				uid, touid, err := ExtractNumbers(broadcast.Client.ToUserID)
 				if err != nil {
-					fmt.Println("Error:", err)
+					//fmt.Println("Error:", err)
+					hlog.Error("biz.handler.api.hub err:", err)
 				}
 				isFriend := db.IsFriend(uid, touid)
 				if !isFriend {
 					errNo := errno.UserRequestParameterError
 					errNo.ErrMsg = "不能给非好友发消息"
-					hlog.Error("service.message.SendMessage err:", errNo.Error())
+					hlog.Error("biz.handler.api.hub.IsFriend err:", errNo.Error())
 				} else {
 					//fmt.Println(msg)
 					err = db.CreateMessage(uid, touid, string(msg[26:len(msg)-2])) // 将消息放到数据库
 					if err != nil {
-						hlog.Error("api.websocket_service.writePump err:", err.Error())
+						hlog.Error("biz.handler.api.hub.CreateMessage err:", err.Error())
 					}
 				}
 			}
