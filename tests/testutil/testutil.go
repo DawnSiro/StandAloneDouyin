@@ -20,7 +20,7 @@ func CreateURL(path string, query map[string]string) (res string) {
 }
 
 func GetDBConnection() (db *sql.DB, err error) {
-	db, err = sql.Open("mysql", "longfar:Ning@tcp(127.0.0.1:3306)/douyin")
+	db, err = sql.Open("mysql", "longfar:Ning@tcp(127.0.0.1:3306)/douyin_test")
 	if err != nil {
 		return
 	}

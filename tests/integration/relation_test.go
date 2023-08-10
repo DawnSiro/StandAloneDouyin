@@ -10,24 +10,21 @@ import (
 	util "douyin/test/testutil"
 )
 
-var _ = Describe("relation test", func() {
-	const (
-		up  = "fortest-up"
-		fan = "fortest-fan"
-	)
+const fansNumber = 10
 
-	var (
-		upid  int64
-		fanid int64
-	)
+var _ = Describe("relation test", func() {
 
 	Describe("action test", func() {
 		const (
 			path = "/douyin/relation/action"
+			up   = "fortest-relation-action-up"
+			fan  = "fortest-relation-action-fan"
 		)
 
 		var (
 			query = make(map[string]string)
+			upid  int64
+			fanid int64
 		)
 
 		BeforeEach(func() {
@@ -115,18 +112,21 @@ var _ = Describe("relation test", func() {
 		})
 	})
 
-	Describe("follow list test", func() {
+	Describe("following list test", func() {
 		const (
 			path = "/douyin/relation/follow/list"
+			fan  = "fortest-relation-followinglist"
 		)
 
 		var (
 			query = make(map[string]string)
+			fanid int64
 		)
 
 		BeforeEach(func() {
 			id, token, err := util.GetUseridAndToken(fan, fan)
 			Expect(err).To(BeNil())
+			fanid = id
 			query["user_id"] = fmt.Sprintf("%d", id)
 			query["token"] = token
 		})
@@ -139,6 +139,12 @@ var _ = Describe("relation test", func() {
 				respData, err := util.GetDouyinResponse[util.DouyinRelationFollowListResponse](resp)
 				Expect(err).To(BeNil())
 				Expect(respData.StatusCode).To(Equal(int64(0)))
+				// Expect(len(respData.UserList)).To(Equal(0))
+				if len(respData.UserList) != 0 {
+					for _, u := range respData.UserList {
+						Expect(u.IsFollow).To(BeTrue())
+					}
+				}
 
 				cnt, err := GetFollowingNum(fanid)
 				Expect(err).To(BeNil())
@@ -179,6 +185,14 @@ var _ = Describe("relation test", func() {
 				respData, err := util.GetDouyinResponse[util.DouyinRelationFollowListResponse](resp)
 				Expect(err).To(BeNil())
 				Expect(respData.StatusCode).To(Equal(int64(0)))
+				// Expect(len(respData.UserList)).To(Equal(fansNumber))
+				num := 0
+				for _, u := range respData.UserList {
+					if u.IsFollow {
+						num++
+					}
+				}
+				Expect(num).To(Equal(fansNumber))
 
 				cnt, err := GetFollowingNum(fanid)
 				Expect(err).To(BeNil())
@@ -200,20 +214,25 @@ var _ = Describe("relation test", func() {
 				Expect(respData.StatusCode).To(Equal(int64(10220)))
 			})
 		})
+
+		Context("has many followings", func() {}) // TODO: many following test
 	})
 
 	Describe("follower list test", func() {
 		const (
 			path = "/douyin/relation/follower/list"
+			up   = "fortest-relation-followerlist"
 		)
 
 		var (
 			query = make(map[string]string)
+			upid  int64
 		)
 
 		BeforeEach(func() {
 			id, token, err := util.GetUseridAndToken(up, up)
 			Expect(err).To(BeNil())
+			upid = id
 			query["user_id"] = fmt.Sprintf("%d", id)
 			query["token"] = token
 		})
@@ -226,15 +245,21 @@ var _ = Describe("relation test", func() {
 				respData, err := util.GetDouyinResponse[util.DouyinRelationFollowListResponse](resp)
 				Expect(err).To(BeNil())
 				Expect(respData.StatusCode).To(Equal(int64(0)))
-
-				cnt, err := GetFollowerNum(upid)
-				Expect(err).To(BeNil())
-				for _, u := range respData.UserList {
-					if u.IsFollow {
-						cnt--
+				// Expect(len(respData.UserList)).To(Equal(0))
+				if len(respData.UserList) != 0 {
+					for _, u := range respData.UserList {
+						Expect(u.IsFollow).To(BeFalse())
 					}
 				}
-				Expect(cnt).To(BeZero())
+
+				// cnt, err := GetFollowerNum(upid)
+				// Expect(err).To(BeNil())
+				// for _, u := range respData.UserList {
+				// 	if u.IsFollow {
+				// 		cnt--
+				// 	}
+				// }
+				// Expect(cnt).To(BeZero())
 			})
 
 			It("wrong token", func() {
@@ -266,6 +291,14 @@ var _ = Describe("relation test", func() {
 				respData, err := util.GetDouyinResponse[util.DouyinRelationFollowListResponse](resp)
 				Expect(err).To(BeNil())
 				Expect(respData.StatusCode).To(Equal(int64(0)))
+				// Expect(len(respData.UserList)).To(Equal(fansNumber))
+				num := 0
+				for _, u := range respData.UserList {
+					if u.IsFollow {
+						num++
+					}
+				}
+				Expect(num).To(Equal(fansNumber))
 
 				cnt, err := GetFollowerNum(upid)
 				Expect(err).To(BeNil())
@@ -292,7 +325,9 @@ var _ = Describe("relation test", func() {
 
 	Describe("friend list test", func() {
 		const (
-			path = "/douyin/relation/friend/list"
+			path  = "/douyin/relation/friend/list"
+			userA = "fortest-relation-friendlist-a"
+			userB = "fortest-relation-friendlist-b"
 		)
 
 		Context("no friendship", func() {
@@ -301,29 +336,20 @@ var _ = Describe("relation test", func() {
 			)
 
 			BeforeEach(func() {
-				id, token, err := util.GetUseridAndToken(up, up)
+				id, token, err := util.GetUseridAndToken(userA, userA)
 				Expect(err).To(BeNil())
 				query["user_id"] = fmt.Sprintf("%d", id)
 				query["token"] = token
 			})
 
-			It("should fail", func() {
+			It("should have no friend", func() {
 				resp, err := http.Get(util.CreateURL(path, query))
 				Expect(err).To(BeNil())
 				Expect(resp.StatusCode).To(Equal(200))
 				respData, err := util.GetDouyinResponse[util.DouyinRelationFriendListResponse](resp)
 				Expect(err).To(BeNil())
 				Expect(respData.StatusCode).To(Equal(int64(0)))
-
-				cnt, err := GetFollowerNum(upid)
-				Expect(cnt).To(BeZero())
-				Expect(err).To(BeNil())
-				for _, u := range respData.UserList {
-					if u.IsFollow {
-						cnt--
-					}
-				}
-				Expect(cnt).To(BeZero())
+				Expect(len(respData.UserList)).To(BeZero())
 			})
 
 			It("wrong token", func() {
@@ -344,12 +370,12 @@ var _ = Describe("relation test", func() {
 			)
 
 			BeforeEach(func() {
-				id, token, err := util.GetUseridAndToken(up, up)
+				id, token, err := util.GetUseridAndToken(userA, userA)
 				Expect(err).To(BeNil())
 				queryA["user_id"] = fmt.Sprintf("%d", id)
 				queryA["token"] = token
 
-				id, token, err = util.GetUseridAndToken(fan, fan)
+				id, token, err = util.GetUseridAndToken(userB, userB)
 				Expect(err).To(BeNil())
 				queryB["user_id"] = fmt.Sprintf("%d", id)
 				queryB["token"] = token
@@ -386,7 +412,7 @@ var _ = Describe("relation test", func() {
 				respData, err := util.GetDouyinResponse[util.DouyinRelationFriendListResponse](resp)
 				Expect(err).To(BeNil())
 				Expect(respData.StatusCode).To(Equal(int64(0)))
-				Expect(respData.UserList[0].Name).To(Equal(fan))
+				Expect(respData.UserList[0].Name).To(Equal(userB))
 			})
 
 			It("should get friend list of B", func() {
@@ -396,7 +422,7 @@ var _ = Describe("relation test", func() {
 				respData, err := util.GetDouyinResponse[util.DouyinRelationFriendListResponse](resp)
 				Expect(err).To(BeNil())
 				Expect(respData.StatusCode).To(Equal(int64(0)))
-				Expect(respData.UserList[0].Name).To(Equal(up))
+				Expect(respData.UserList[0].Name).To(Equal(userA))
 			})
 
 			// It("wrong token", func() {
@@ -409,6 +435,8 @@ var _ = Describe("relation test", func() {
 			// 	Expect(respData.StatusCode).To(Equal(int64(10220)))
 			// })
 		})
+
+		Context("many friends", func() {})
 
 	})
 })
@@ -471,12 +499,19 @@ func GetFollowerNum(id int64) (res int, err error) {
 }
 
 func actionFollowing(token, action string) (err error) {
+	const prefix = "fortest-followinglist-ups"
 	query := map[string]string{
 		"token":       token,
 		"action_type": action,
 	}
-	for i := 1; i <= 10; i++ {
-		query["to_user_id"] = fmt.Sprintf("%d", i)
+	for i := 1; i < fansNumber+1; i++ {
+		u := prefix + fmt.Sprintf("%d", i)
+		var uid int64
+		uid, _, err = util.GetUseridAndToken(u, u)
+		if err != nil {
+			return
+		}
+		query["to_user_id"] = fmt.Sprintf("%d", uid)
 		_, err = http.Post(util.CreateURL("/douyin/relation/action", query), "", nil)
 		if err != nil {
 			return
@@ -486,12 +521,12 @@ func actionFollowing(token, action string) (err error) {
 }
 
 func actionFollower(upid int64, action string) error {
-	const user = "fortest-fans"
+	const user = "fortest-followerlist-fans"
 	query := map[string]string{
 		"to_user_id":  fmt.Sprintf("%d", upid),
 		"action_type": action,
 	}
-	for i := 0; i < 10; i++ {
+	for i := 1; i < fansNumber+1; i++ {
 		f := user + fmt.Sprintf("%d", i)
 		_, token, err := util.GetUseridAndToken(f, f)
 		if err != nil {
