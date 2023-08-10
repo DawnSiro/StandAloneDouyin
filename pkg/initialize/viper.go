@@ -8,10 +8,10 @@ import (
 	"github.com/spf13/viper"
 )
 
-func Viper(path string) {
+func Viper() {
 	// 设置配置文件类型和路径
 	viper.SetConfigType("yml")
-	viper.SetConfigFile(path)
+	viper.SetConfigFile("./pkg/config/config.yml")
 	// 读取配置信息
 	err := viper.ReadInConfig()
 	if err != nil {

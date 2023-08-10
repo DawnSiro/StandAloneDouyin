@@ -1,6 +1,8 @@
 hertz:
-  host: 192.168.18.6
-  port: 30000
+#  host: 192.168.18.6
+#  port: 30000
+  host:
+  port: 8080
 
 jwt:
   signingKey: CloudWeRun
@@ -10,7 +12,7 @@ mysql:
   host: 127.0.0.1
   port: 3306
   username: root
-  password: 123456
+  password: huangzhitao123
   dbName: douyin
   maxOpenConn: 100
   maxIdleConn: 10

@@ -105,7 +105,17 @@ func _chatMw() []app.HandlerFunc {
 	return nil
 }
 
+func _wsMw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
 func _getmessagechatMw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
+func _websocketMw() []app.HandlerFunc {
 	// your code...
 	return nil
 }
