@@ -118,7 +118,7 @@ func (h *Hub) Run() {
 		case broadcast := <-MannaClient.Broadcast:
 			message := broadcast.Message
 			sendId := broadcast.Client.ToUserID // 2->1
-			flag := false                       // 默认对方是不在线的
+			flag := false                       // 默认对方是不在线的 false表示不在线，ture为在线
 			for id, conn := range MannaClient.Clients {
 				if id != sendId {
 					continue
@@ -138,7 +138,7 @@ func (h *Hub) Run() {
 				}
 				msg, _ := json.Marshal(replyMsg)
 				_ = broadcast.Client.Conn.WriteMessage(websocket.TextMessage, msg) // 对消息进行广播
-			} else { // 不在线判断，是好友将消息插入数据库，不是就退出
+			} else { // 不在线判断
 				ReplyMsg := ReplyMsg{
 					Code:    777777,
 					Content: fmt.Sprintf("%s", string(message)),
@@ -152,7 +152,7 @@ func (h *Hub) Run() {
 					hlog.Error("biz.handler.api.hub err:", err)
 				}
 				isFriend := db.IsFriend(uid, touid)
-				if !isFriend {
+				if !isFriend { // 是好友将消息插入数据库，不是就退出
 					errNo := errno.UserRequestParameterError
 					errNo.ErrMsg = "不能给非好友发消息"
 					hlog.Error("biz.handler.api.hub.IsFriend err:", errNo.Error())

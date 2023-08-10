@@ -11,6 +11,7 @@ import (
 	"github.com/cloudwego/hertz/pkg/common/hlog"
 	"github.com/hertz-contrib/websocket"
 	"strconv"
+	"strings"
 )
 
 type Client struct {
@@ -121,7 +122,11 @@ var upgrader = websocket.HertzUpgrader{
 }
 
 func CreateID(uid, toUid string) string {
-	return uid + "->" + toUid
+	var builder strings.Builder
+	builder.WriteString(uid)
+	builder.WriteString("->")
+	builder.WriteString(toUid)
+	return builder.String()
 }
 
 func ServeWs(ctx context.Context, c *app.RequestContext) {
