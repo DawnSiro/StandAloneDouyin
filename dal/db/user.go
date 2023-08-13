@@ -11,7 +11,7 @@ type User struct {
 	Password        string `gorm:"type:varchar(255);not null" json:"password"`                          //用户密码
 	FollowingCount  int64  `gorm:"default:0;not null" json:"following_count"`                           //关注数
 	FollowerCount   int64  `gorm:"default:0;not null" json:"follower_count"`                            //粉丝数
-	Avatar          string `gorm:"type:varchar(255);not null" json:"avatar"`                            //用户头像
+	Avatar          string `gorm:"type:varchar(255);null" json:"avatar"`                                //用户头像
 	BackgroundImage string `gorm:"type:varchar(255);not null" json:"background_image"`                  //用户个人页顶部大图
 	Signature       string `gorm:"type:varchar(255);not null" json:"signature"`                         //个人简介
 	TotalFavorited  int64  `gorm:"default:0;not null" json:"total_favorited"`                           //获赞数量

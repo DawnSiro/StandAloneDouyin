@@ -126,7 +126,7 @@ func SelectCommentDataByVideoIDANDUserID(videoID, userID uint64) ([]*CommentData
 		"IF(r.is_deleted = 0, TRUE, FALSE) AS is_follow").Table(constant.UserTableName+" AS u").
 		Joins("LEFT JOIN "+constant.CommentTableName+" AS c ON u.id = c.user_id").
 		Joins("LEFT JOIN "+constant.RelationTableName+" AS r ON u.id = r.`to_user_id` AND r.user_id = ?", userID).
-		Where("`video_id` = ? AND c.`is_deleted` = ?", videoID, constant.DataNotDeleted).Scan(&cs).Error
+		Where("`video_id` = ?", videoID).Scan(&cs).Error
 	if err != nil {
 		return nil, err
 	}

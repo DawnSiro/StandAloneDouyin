@@ -3,23 +3,21 @@
 package main
 
 import (
-	"flag"
-
+	"douyin/biz/handler/api"
 	"douyin/biz/mw"
 	"douyin/pkg/initialize"
 )
 
 func Init() {
-	var config string
-	flag.StringVar(&config, "c", "./pkg/config/config.yml", "-c <config path>")
-	flag.Parse()
 
-	initialize.Viper(config)
+	initialize.Viper()
 	initialize.MySQL()
 	initialize.Redis()
 	initialize.Global()
 	mw.InitJWT()
+
 	// initialize.Hertz() 需要保持在最下方，因为调用完后 Hertz 就启动完毕了
+	go api.MannaClient.Run()
 	initialize.Hertz()
 }
 

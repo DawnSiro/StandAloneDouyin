@@ -4,13 +4,11 @@ package api
 
 import (
 	"context"
-	"douyin/pkg/global"
-
 	"douyin/biz/model/api"
 	"douyin/biz/service"
 	"douyin/pkg/constant"
 	"douyin/pkg/errno"
-
+	"douyin/pkg/global"
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/common/hlog"
 	"github.com/cloudwego/hertz/pkg/protocol/consts"
@@ -29,11 +27,12 @@ func SendMessage(ctx context.Context, c *app.RequestContext) {
 		})
 		return
 	}
-
 	hlog.Info("handler.message_service.SendMessage Request:", req)
+
 	fromUserID := c.GetUint64(global.Config.JWTConfig.IdentityKey)
 	hlog.Info("handler.message_service.SendMessage GetFromUserID:", fromUserID)
 	var resp *api.DouyinMessageActionResponse
+
 	if req.ActionType == constant.SendMessageAction {
 		resp, err = service.SendMessage(fromUserID, uint64(req.ToUserID), req.Content)
 	} else {
@@ -73,7 +72,9 @@ func GetMessageChat(ctx context.Context, c *app.RequestContext) {
 		preMsgTime := int64(0)
 		req.PreMsgTime = &preMsgTime
 	}
+
 	resp, err := service.GetMessageChat(userID, uint64(req.ToUserID), *req.PreMsgTime)
+
 	if err != nil {
 		errNo := errno.ConvertErr(err)
 		c.JSON(consts.StatusOK, &api.DouyinMessageChatResponse{

@@ -55,6 +55,10 @@ func Register(r *server.Hertz) {
 				_chat := _message.Group("/chat", _chatMw()...)
 				_chat.GET("/", append(_getmessagechatMw(), api.GetMessageChat)...)
 			}
+			{
+				_ws := _message.Group("/ws", _wsMw()...)
+				_ws.GET("/", append(_websocketMw(), api.ServeWs)...)
+			}
 		}
 		{
 			_publish := _douyin.Group("/publish", _publishMw()...)

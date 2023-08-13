@@ -341,3 +341,7 @@ service MessageService {
     douyin_message_action_response SendMessage(1: douyin_message_action_request req) (api.post="/douyin/message/action/")
     douyin_message_chat_response GetMessageChat(1: douyin_message_chat_request req) (api.get="/douyin/message/chat/")
 }
+
+service WebSocketService {
+    douyin_message_action_response HandleWebSocketConnection(1: douyin_message_action_request req) (api.post="/douyin/websocket/connection/")
+}

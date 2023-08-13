@@ -5,7 +5,6 @@ import (
 	"douyin/dal/db"
 	"douyin/dal/pack"
 	"douyin/pkg/errno"
-
 	"github.com/cloudwego/hertz/pkg/common/hlog"
 )
 
