@@ -93,16 +93,18 @@ func (h *Hub) Run() {
 		select {
 		case client := <-MannaClient.Register:
 			MannaClient.Clients[client.ID] = client
-			fmt.Printf("有新连接: %v\n", client.ID)
-			ReplyMsg := ReplyMsg{
-				Code:    8888,
-				Content: "已经连接到服务器了",
-			}
-			msg, _ := json.Marshal(ReplyMsg)
-			err := client.Conn.WriteMessage(websocket.TextMessage, msg)
-			if err != nil {
-				hlog.Error("biz.handler.api.hub.WriteMessage err:", err.Error())
-			}
+
+			//fmt.Printf("有新连接: %v\n", client.ID) // 测试用
+			//ReplyMsg := ReplyMsg{
+			//	Code:    8888,
+			//	Content: "已经连接到服务器了",
+			//}
+			//msg, _ := json.Marshal(ReplyMsg)
+			//err := client.Conn.WriteMessage(websocket.TextMessage, msg)
+
+			//if err != nil {
+			//	hlog.Error("biz.handler.api.hub.WriteMessage err:", err.Error())
+			//}
 		case client := <-h.Unregister:
 			fmt.Printf("连接失败%s,", client.ID)
 			if _, ok := MannaClient.Clients[client.ID]; ok {
