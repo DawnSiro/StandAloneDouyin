@@ -1,7 +1,6 @@
 package db
 
 import (
-	"douyin/biz/handler/api"
 	"douyin/pkg/initialize"
 	"reflect"
 	"testing"
@@ -69,7 +68,7 @@ func TestGetMessagesByUserIDAndPreMsgTime(t *testing.T) {
 	tests := []struct {
 		name    string
 		args    args
-		want    []*api.Message
+		want    []*Message
 		wantErr bool
 	}{
 		// TODO: Add test cases.
@@ -106,7 +105,7 @@ func TestMessage_TableName(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			n := &api.Message{
+			n := &Message{
 				ID:         tt.fields.ID,
 				ToUserID:   tt.fields.ToUserID,
 				FromUserID: tt.fields.FromUserID,

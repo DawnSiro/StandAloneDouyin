@@ -15,6 +15,7 @@ require (
 	github.com/golang-jwt/jwt/v4 v4.4.1
 	github.com/hertz-contrib/jwt v1.0.2
 	github.com/hertz-contrib/pprof v0.1.0
+	github.com/hertz-contrib/websocket v0.0.1
 	github.com/spf13/viper v1.16.0
 	github.com/syyongx/go-wordsfilter v0.0.0-20190622081656-74232c786041
 	golang.org/x/crypto v0.9.0
@@ -30,11 +31,9 @@ require (
 	github.com/cloudwego/netpoll v0.3.2 // indirect
 	github.com/go-sql-driver/mysql v1.7.0 // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
-	github.com/gorilla/websocket v1.5.0 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/henrylee2cn/ameda v1.4.10 // indirect
 	github.com/henrylee2cn/goutil v0.0.0-20210127050712-89660552f6f8 // indirect
-	github.com/hertz-contrib/websocket v0.0.1 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
