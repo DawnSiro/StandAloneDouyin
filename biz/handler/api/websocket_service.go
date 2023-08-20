@@ -71,16 +71,6 @@ func (c *Client) writePump() {
 			msg, _ := json.Marshal(ReplyMsg)
 			_ = c.Conn.WriteMessage(websocket.TextMessage, msg)
 
-			//uid, touid, err := ExtractNumbers(c.ToUserID)
-			//if err != nil {
-			//	hlog.Error("api.websocket_service.writePump.ExtractNumbers err:", err.Error())
-			//	return
-			//}
-			//fmt.Println(msg)
-			//err = db.CreateMessage(uid, touid, string(msg[12:len(msg)-2])) // 将消息放到数据库
-			//if err != nil {
-			//	hlog.Error("api.websocket_service.writePump.CreateMessage err:", err.Error())
-			//}
 		case message, ok := <-c.Send: // 不在线逻辑
 			if ok {
 				uid, touid, err := ExtractNumbers(c.ToUserID)
@@ -100,12 +90,6 @@ func (c *Client) writePump() {
 				}
 				msg, _ := json.Marshal(ReplyMsg)
 				_ = c.Conn.WriteMessage(websocket.TextMessage, msg)
-
-				//fmt.Println(msg)
-				//err = db.CreateMessage(uid, touid, string(msg[12:len(msg)-2])) // 将消息放到数据库
-				//if err != nil {
-				//	hlog.Error("api.websocket_service.writePump.CreateMessage err:", err.Error())
-				//}
 			}
 		}
 	}

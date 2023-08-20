@@ -53,12 +53,6 @@ func newHub() *Hub {
 	}
 }
 
-type Message struct {
-	Sender    string `json:"sender,omitempty"`
-	Recipient string `json:"recipient,omitempty"`
-	Content   string `json:"content,omitempty"`
-}
-
 func ExtractNumbers(s string) (uint64, uint64, error) {
 	parts := strings.Split(s, "->")
 	if len(parts) != 2 {
@@ -80,12 +74,11 @@ func ExtractNumbers(s string) (uint64, uint64, error) {
 
 func (h *Hub) Run() {
 	for {
-		hlog.Info("-----监听管道通信-----")
+		hlog.Info("监听管道通信")
 		select {
 		case client := <-MannaClient.Register:
 			MannaClient.Clients[client.ID] = client
 
-			//fmt.Printf("有新连接: %v\n", client.ID) // 测试用
 			ReplyMsg := ReplyMsg{
 				Content: "已经连接到服务器了",
 			}
@@ -96,7 +89,6 @@ func (h *Hub) Run() {
 				hlog.Error("biz.handler.api.hub.Run.WriteMessage err:", err.Error())
 			}
 		case client := <-h.Unregister:
-			//fmt.Printf("连接失败%s,", client.ID)
 			if _, ok := MannaClient.Clients[client.ID]; ok {
 				ReplyMsg := &ReplyMsg{
 					Content: "连接中断",
