@@ -26,7 +26,7 @@ func (c *Client) readPump() {
 		MannaClient.Unregister <- c
 		err := c.Conn.Close()
 		if err != nil {
-			return
+			hlog.Error("api.websocket_service.readPump.websocket_service_close err:", err.Error())
 		}
 	}()
 	for {
@@ -42,7 +42,6 @@ func (c *Client) readPump() {
 		}
 
 		if SendMsg.Type == 1 { // 发送消息
-
 			MannaClient.Broadcast <- &Broadcast{
 				Client:  c,
 				Message: []byte(SendMsg.Content), // 发送过来的消息
@@ -57,57 +56,56 @@ func (c *Client) writePump() {
 	}()
 	for {
 		select {
-		case message, ok := <-c.Send: // 对方在线逻辑
+		case message, ok := <-c.Send: // 拿到Client的消息
 			if !ok {
 				err := c.Conn.WriteMessage(websocket.CloseMessage, []byte{})
 				if err != nil {
+					hlog.Error("api.websocket_service.writePump.WriteMessage err:", err.Error())
 					return
 				}
 				return
 			}
 			ReplyMsg := ReplyMsg{
-				Code:    777777,
 				Content: fmt.Sprintf("%s", string(message)),
 			}
 			msg, _ := json.Marshal(ReplyMsg)
 			_ = c.Conn.WriteMessage(websocket.TextMessage, msg)
 
-			uid, touid, err := ExtractNumbers(c.ToUserID)
-			if err != nil {
-				fmt.Println("Error:", err)
-				return
-			}
+			//uid, touid, err := ExtractNumbers(c.ToUserID)
+			//if err != nil {
+			//	hlog.Error("api.websocket_service.writePump.ExtractNumbers err:", err.Error())
+			//	return
+			//}
 			//fmt.Println(msg)
-			err = db.CreateMessage(uid, touid, string(msg[26:len(msg)-2])) // 将消息放到数据库
-			if err != nil {
-				hlog.Error("api.websocket_service.writePump.CreateMessage err:", err.Error())
-			}
+			//err = db.CreateMessage(uid, touid, string(msg[12:len(msg)-2])) // 将消息放到数据库
+			//if err != nil {
+			//	hlog.Error("api.websocket_service.writePump.CreateMessage err:", err.Error())
+			//}
 		case message, ok := <-c.Send: // 不在线逻辑
 			if ok {
-				ReplyMsg := ReplyMsg{
-					Code:    777777,
-					Content: fmt.Sprintf("%s", string(message)),
-				}
-				msg, _ := json.Marshal(ReplyMsg)
-				_ = c.Conn.WriteMessage(websocket.TextMessage, msg)
-
 				uid, touid, err := ExtractNumbers(c.ToUserID)
 				if err != nil {
-					fmt.Println("Error:", err)
+					hlog.Error("api.websocket_service.writePump.ExtractNumbers err:", err.Error())
 					return
 				}
 				isFriend := db.IsFriend(uid, touid)
 				if !isFriend {
 					errNo := errno.UserRequestParameterError
 					errNo.ErrMsg = "不能给非好友发消息"
+					//fmt.Printf("%d,%d\n", uid, touid)
 					hlog.Error("api.websocket_service.writePump.IsFriend err:", errNo.Error())
 				}
+				ReplyMsg := ReplyMsg{
+					Content: fmt.Sprintf("%s", string(message)),
+				}
+				msg, _ := json.Marshal(ReplyMsg)
+				_ = c.Conn.WriteMessage(websocket.TextMessage, msg)
 
 				//fmt.Println(msg)
-				err = db.CreateMessage(uid, touid, string(msg[26:len(msg)-2])) // 将消息放到数据库
-				if err != nil {
-					hlog.Error("api.websocket_service.writePump.CreateMessage err:", err.Error())
-				}
+				//err = db.CreateMessage(uid, touid, string(msg[12:len(msg)-2])) // 将消息放到数据库
+				//if err != nil {
+				//	hlog.Error("api.websocket_service.writePump.CreateMessage err:", err.Error())
+				//}
 			}
 		}
 	}
@@ -129,10 +127,17 @@ func CreateID(uid, toUid string) string {
 	return builder.String()
 }
 
+// ServeWs .
+// @router /douyin/message/ws/ [POST]
 func ServeWs(ctx context.Context, c *app.RequestContext) {
 	fromUserID := c.GetUint64(global.Config.JWTConfig.IdentityKey)
-	hlog.Info("biz.handler.api.websocket_service.ServeWs GetFromUserID:", fromUserID)
+	hlog.Info("biz.handler.api.websocket_service.ServeWs GetFromUserID err:", fromUserID)
 	toUid := c.Query("to_user_id")
+
+	if strconv.FormatUint(fromUserID, 10) == toUid { // 不能给自己发消息
+		hlog.Info("biz.handler.api.websocket_service.ServeWs FromUserID == toUid err:", fromUserID)
+		return
+	}
 
 	err := upgrader.Upgrade(c, func(conn *websocket.Conn) {
 		client := &Client{
