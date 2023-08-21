@@ -106,7 +106,7 @@ func GetFollowList(userID, selectUserID uint64) (*api.DouyinRelationFollowListRe
 
 	// Store the data in Redis cache
 	responseJSON, _ := json.Marshal(response)
-	err = global.UserInfoRC.Set(cacheKey, responseJSON, 1*time.Hour).Err()
+	err = global.UserInfoRC.Set(cacheKey, responseJSON, 1*time.Minute).Err()
 	if err != nil {
 		hlog.Error("service.relation.GetFollowList err: Error storing data in cache, ", err.Error())
 	}
@@ -158,7 +158,7 @@ func GetFollowerList(userID, selectUserID uint64) (*api.DouyinRelationFollowerLi
 
 	// Store the data in Redis cache
 	responseJSON, _ := json.Marshal(response)
-	err = global.UserInfoRC.Set(cacheKey, responseJSON, 1*time.Hour).Err()
+	err = global.UserInfoRC.Set(cacheKey, responseJSON, 1*time.Minute).Err()
 	if err != nil {
 		hlog.Error("service.relation.GetFollowerList err: Error storing data in cache, ", err.Error())
 	}
@@ -207,7 +207,7 @@ func GetFriendList(userID uint64) (*api.DouyinRelationFriendListResponse, error)
 
 	// Store the data in Redis cache
 	responseJSON, _ := json.Marshal(response)
-	err = global.UserInfoRC.Set(cacheKey, responseJSON, 1*time.Hour).Err()
+	err = global.UserInfoRC.Set(cacheKey, responseJSON, 1*time.Minute).Err()
 	if err != nil {
 		hlog.Error("service.relation.GetFriendList err: Error storing data in cache, ", err.Error())
 	}
