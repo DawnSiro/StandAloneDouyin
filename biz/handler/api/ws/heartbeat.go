@@ -2,7 +2,7 @@ package ws
 
 import (
 	"github.com/cloudwego/hertz/pkg/common/hlog"
-	"github.com/gorilla/websocket"
+	"github.com/hertz-contrib/websocket"
 	"time"
 )
 

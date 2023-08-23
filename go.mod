@@ -14,6 +14,7 @@ require (
 	github.com/go-redis/redis v6.15.9+incompatible
 	github.com/gofrs/uuid v4.4.0+incompatible
 	github.com/golang-jwt/jwt/v4 v4.4.1
+	github.com/gorilla/websocket v1.5.0
 	github.com/hertz-contrib/jwt v1.0.2
 	github.com/hertz-contrib/pprof v0.1.0
 	github.com/hertz-contrib/websocket v0.0.1
