@@ -8,6 +8,7 @@ require (
 	github.com/aliyun/alibaba-cloud-sdk-go v1.62.486
 	github.com/aliyun/aliyun-oss-go-sdk v2.2.6+incompatible
 	github.com/apache/thrift v0.0.0-00010101000000-000000000000
+	github.com/bits-and-blooms/bloom/v3 v3.5.0
 	github.com/cloudwego/hertz v0.6.6
 	github.com/fsnotify/fsnotify v1.6.0
 	github.com/go-redis/redis v6.15.9+incompatible
@@ -25,7 +26,6 @@ require (
 
 require (
 	github.com/bits-and-blooms/bitset v1.8.0 // indirect
-	github.com/bits-and-blooms/bloom/v3 v3.5.0 // indirect
 	github.com/bytedance/go-tagexpr/v2 v2.9.2 // indirect
 	github.com/bytedance/gopkg v0.0.0-20220413063733-65bf48ffb3a7 // indirect
 	github.com/bytedance/sonic v1.9.1 // indirect

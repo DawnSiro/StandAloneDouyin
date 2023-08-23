@@ -7,11 +7,12 @@ import (
 	"douyin/pkg/global"
 	"encoding/json"
 	"fmt"
+	"strconv"
+	"strings"
+
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/common/hlog"
 	"github.com/hertz-contrib/websocket"
-	"strconv"
-	"strings"
 )
 
 type Client struct {
@@ -56,7 +57,7 @@ func (c *Client) writePump() {
 	}()
 	for {
 		select {
-		case message, ok := <-c.Send: // 拿到Client的消息
+		case message, ok := <-c.Send: // 好友在线
 			if !ok {
 				err := c.Conn.WriteMessage(websocket.CloseMessage, []byte{})
 				if err != nil {
@@ -71,7 +72,7 @@ func (c *Client) writePump() {
 			msg, _ := json.Marshal(ReplyMsg)
 			_ = c.Conn.WriteMessage(websocket.TextMessage, msg)
 
-		case message, ok := <-c.Send: // 不在线逻辑
+		case message, ok := <-c.Send: // 好友不在线
 			if ok {
 				uid, touid, err := ExtractNumbers(c.ToUserID)
 				if err != nil {
@@ -81,8 +82,7 @@ func (c *Client) writePump() {
 				isFriend := db.IsFriend(uid, touid)
 				if !isFriend {
 					errNo := errno.UserRequestParameterError
-					errNo.ErrMsg = "不能给非好友发消息"
-					//fmt.Printf("%d,%d\n", uid, touid)
+					errNo.ErrMsg = "Cannot send messages to non-friends"
 					hlog.Error("api.websocket_service.writePump.IsFriend err:", errNo.Error())
 				}
 				ReplyMsg := ReplyMsg{
@@ -112,7 +112,7 @@ func CreateID(uid, toUid string) string {
 }
 
 // ServeWs .
-// @router /douyin/message/ws/ [POST]
+// @router /douyin/message/ws/ [WebSocket]
 func ServeWs(ctx context.Context, c *app.RequestContext) {
 	fromUserID := c.GetUint64(global.Config.JWTConfig.IdentityKey)
 	hlog.Info("biz.handler.api.websocket_service.ServeWs GetFromUserID err:", fromUserID)

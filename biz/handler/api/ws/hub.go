@@ -8,14 +8,23 @@
 package api
 
 import (
+	"fmt"
+	"strconv"
+	"strings"
+	"time"
+
 	"douyin/dal/db"
 	"douyin/pkg/errno"
 	"encoding/json"
-	"fmt"
+
 	"github.com/cloudwego/hertz/pkg/common/hlog"
 	"github.com/hertz-contrib/websocket"
-	"strconv"
-	"strings"
+)
+
+const (
+	HeartbeatInterval = 30 * time.Second // 心跳消息发送间隔
+	TimeoutDuration   = 60 * time.Second // 连接超时时间
+	PongWait          = 60 * time.Second
 )
 
 type SendMsg struct {
@@ -74,13 +83,13 @@ func ExtractNumbers(s string) (uint64, uint64, error) {
 
 func (h *Hub) Run() {
 	for {
-		hlog.Info("监听管道通信")
+		hlog.Info("Monitor pipe communication")
 		select {
 		case client := <-MannaClient.Register:
 			MannaClient.Clients[client.ID] = client
 
 			ReplyMsg := ReplyMsg{
-				Content: "已经连接到服务器了",
+				Content: "Already connected to the websocket server",
 			}
 			msg, _ := json.Marshal(ReplyMsg)
 			err := client.Conn.WriteMessage(websocket.TextMessage, msg)
@@ -115,32 +124,17 @@ func (h *Hub) Run() {
 				}
 			}
 			if flag {
-				replyMsg := &ReplyMsg{
-					Content: "对方在线应答",
-				}
-				msg, _ := json.Marshal(replyMsg)
-				_ = broadcast.Client.Conn.WriteMessage(websocket.TextMessage, msg) // 对消息进行广播
-
 				uid, touid, err := ExtractNumbers(broadcast.Client.ToUserID)
 				if err != nil {
-					//fmt.Println("Error:", err)
 					hlog.Error("biz.handler.api.hub.ExtractNumbers err:", err)
 				}
 				isFriend := db.IsFriend(uid, touid)
 				if !isFriend { // 是好友将消息插入数据库，不是就退出
 					errNo := errno.UserRequestParameterError
-					errNo.ErrMsg = "不能给非好友发消息"
+					errNo.ErrMsg = "Cannot send messages to non-friends"
 					hlog.Error("biz.handler.api.hub.IsFriend err:", errNo.Error())
-
 				} else {
-					//fmt.Println(msg)
-					ReplyMsg := ReplyMsg{
-						Content: fmt.Sprintf("%s", string(message)),
-					}
-					msg, _ := json.Marshal(ReplyMsg)
-					_ = broadcast.Client.Conn.WriteMessage(websocket.TextMessage, msg)
-
-					err = db.CreateMessage(uid, touid, string(msg[12:len(msg)-2])) // 将消息放到数据库
+					err = db.CreateMessage(uid, touid, string(message)) // 将消息放到数据库
 					if err != nil {
 						hlog.Error("biz.handler.api.hub.CreateMessage err:", err.Error())
 					}
@@ -148,24 +142,16 @@ func (h *Hub) Run() {
 			} else { // 好友不在线
 				uid, touid, err := ExtractNumbers(broadcast.Client.ToUserID)
 				if err != nil {
-					//fmt.Println("Error:", err)
 					hlog.Error("biz.handler.api.hub.ExtractNumbers err:", err)
 				}
 				isFriend := db.IsFriend(uid, touid)
 				if !isFriend { // 是好友将消息插入数据库，不是就退出
 					errNo := errno.UserRequestParameterError
-					errNo.ErrMsg = "不能给非好友发消息"
+					errNo.ErrMsg = "Cannot send messages to non-friends"
 					hlog.Error("biz.handler.api.hub.IsFriend err:", errNo.Error())
 
 				} else {
-					//fmt.Println(msg)
-					ReplyMsg := ReplyMsg{
-						Content: fmt.Sprintf("%s", string(message)),
-					}
-					msg, _ := json.Marshal(ReplyMsg)
-					_ = broadcast.Client.Conn.WriteMessage(websocket.TextMessage, msg)
-
-					err = db.CreateMessage(uid, touid, string(msg[12:len(msg)-2])) // 将消息放到数据库
+					err = db.CreateMessage(uid, touid, string(message)) // 将消息放到数据库
 					if err != nil {
 						hlog.Error("biz.handler.api.hub.CreateMessage err:", err.Error())
 					}
