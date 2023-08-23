@@ -5,26 +5,18 @@
 // This file may have been modified by CloudWeGo authors. All CloudWeGo
 // Modifications are Copyright 2022 CloudWeGo Authors.
 
-package api
+package ws
 
 import (
-	"fmt"
-	"strconv"
-	"strings"
-	"time"
-
 	"douyin/dal/db"
 	"douyin/pkg/errno"
 	"encoding/json"
+	"fmt"
+	"strconv"
+	"strings"
 
 	"github.com/cloudwego/hertz/pkg/common/hlog"
 	"github.com/hertz-contrib/websocket"
-)
-
-const (
-	HeartbeatInterval = 30 * time.Second // 心跳消息发送间隔
-	TimeoutDuration   = 60 * time.Second // 连接超时时间
-	PongWait          = 60 * time.Second
 )
 
 type SendMsg struct {
@@ -95,7 +87,7 @@ func (h *Hub) Run() {
 			err := client.Conn.WriteMessage(websocket.TextMessage, msg)
 
 			if err != nil {
-				hlog.Error("biz.handler.api.hub.Run.WriteMessage err:", err.Error())
+				hlog.Error("biz.handler.api.ws.hub.Run.WriteMessage err:", err.Error())
 			}
 		case client := <-h.Unregister:
 			if _, ok := MannaClient.Clients[client.ID]; ok {
@@ -126,34 +118,34 @@ func (h *Hub) Run() {
 			if flag {
 				uid, touid, err := ExtractNumbers(broadcast.Client.ToUserID)
 				if err != nil {
-					hlog.Error("biz.handler.api.hub.ExtractNumbers err:", err)
+					hlog.Error("biz.handler.api.ws.hub.ExtractNumbers err:", err)
 				}
 				isFriend := db.IsFriend(uid, touid)
 				if !isFriend { // 是好友将消息插入数据库，不是就退出
 					errNo := errno.UserRequestParameterError
 					errNo.ErrMsg = "Cannot send messages to non-friends"
-					hlog.Error("biz.handler.api.hub.IsFriend err:", errNo.Error())
+					hlog.Error("biz.handler.api.ws.hub.IsFriend err:", errNo.Error())
 				} else {
 					err = db.CreateMessage(uid, touid, string(message)) // 将消息放到数据库
 					if err != nil {
-						hlog.Error("biz.handler.api.hub.CreateMessage err:", err.Error())
+						hlog.Error("biz.handler.api.ws.hub.CreateMessage err:", err.Error())
 					}
 				}
 			} else { // 好友不在线
 				uid, touid, err := ExtractNumbers(broadcast.Client.ToUserID)
 				if err != nil {
-					hlog.Error("biz.handler.api.hub.ExtractNumbers err:", err)
+					hlog.Error("biz.handler.api.ws.hub.ExtractNumbers err:", err)
 				}
 				isFriend := db.IsFriend(uid, touid)
 				if !isFriend { // 是好友将消息插入数据库，不是就退出
 					errNo := errno.UserRequestParameterError
 					errNo.ErrMsg = "Cannot send messages to non-friends"
-					hlog.Error("biz.handler.api.hub.IsFriend err:", errNo.Error())
+					hlog.Error("biz.handler.api.ws.hub.IsFriend err:", errNo.Error())
 
 				} else {
 					err = db.CreateMessage(uid, touid, string(message)) // 将消息放到数据库
 					if err != nil {
-						hlog.Error("biz.handler.api.hub.CreateMessage err:", err.Error())
+						hlog.Error("biz.handler.api.ws.hub.CreateMessage err:", err.Error())
 					}
 				}
 			}
