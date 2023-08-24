@@ -5,6 +5,10 @@ import (
 	"douyin/dal/db"
 	"douyin/dal/pack"
 	"douyin/pkg/errno"
+	"douyin/pkg/global"
+	"fmt"
+	"github.com/cloudwego/hertz/pkg/common/json"
+	"time"
 
 	"github.com/cloudwego/hertz/pkg/common/hlog"
 )
@@ -74,18 +78,40 @@ func GetFollowList(userID, selectUserID uint64) (*api.DouyinRelationFollowListRe
 	//	}
 	//}
 
+	// Check if data is available in Redis
+	cacheKey := fmt.Sprintf("followlist:%d", userID)
+	cachedData, err := global.UserInfoRC.Get(cacheKey).Result()
+	if err == nil {
+		// Cache hit, return cached data
+		var cachedResponse api.DouyinRelationFollowListResponse
+		if err := json.Unmarshal([]byte(cachedData), &cachedResponse); err != nil {
+			hlog.Error("service.relation.GetFollowList err: Error decoding cached data, ", err.Error())
+		} else {
+			return &cachedResponse, nil
+		}
+	}
+
+	// Cache miss, query the database
 	relationDataList, err := db.SelectFollowDataListByUserID(userID)
 	if err != nil {
 		hlog.Error("service.relation.GetFollowList err:", err.Error())
 		return nil, err
 	}
 
-	hlog.Info(relationDataList)
-
-	return &api.DouyinRelationFollowListResponse{
+	// Convert to response format
+	response := &api.DouyinRelationFollowListResponse{
 		StatusCode: errno.Success.ErrCode,
 		UserList:   pack.RelationDataList(relationDataList),
-	}, nil
+	}
+
+	// Store the data in Redis cache
+	responseJSON, _ := json.Marshal(response)
+	err = global.UserInfoRC.Set(cacheKey, responseJSON, 1*time.Minute).Err()
+	if err != nil {
+		hlog.Error("service.relation.GetFollowList err: Error storing data in cache, ", err.Error())
+	}
+
+	return response, nil
 
 }
 
@@ -104,22 +130,61 @@ func GetFollowerList(userID, selectUserID uint64) (*api.DouyinRelationFollowerLi
 	//	userList = append(userList, pack.User(v, db.IsFollow(userID, v.ID)))
 	//}
 
+	// Check if data is available in Redis
+	cacheKey := fmt.Sprintf("followerlist:%d", userID)
+	cachedData, err := global.UserInfoRC.Get(cacheKey).Result()
+	if err == nil {
+		// Cache hit, return cached data
+		var cachedResponse api.DouyinRelationFollowerListResponse
+		if err := json.Unmarshal([]byte(cachedData), &cachedResponse); err != nil {
+			hlog.Error("service.relation.GetFollowerList err: Error decoding cached data, ", err.Error())
+		} else {
+			return &cachedResponse, nil
+		}
+	}
+
+	// Cache miss, query the database
 	relationDataList, err := db.SelectFollowerDataListByUserID(userID)
 	if err != nil {
-		hlog.Error("service.relation.GetFollowList err:", err.Error())
+		hlog.Error("service.relation.GetFollowerList err: ", err.Error())
 		return nil, err
 	}
 
-	return &api.DouyinRelationFollowerListResponse{
+	// Convert to response format
+	response := &api.DouyinRelationFollowerListResponse{
 		StatusCode: errno.Success.ErrCode,
 		UserList:   pack.RelationDataList(relationDataList),
-	}, nil
+	}
+
+	// Store the data in Redis cache
+	responseJSON, _ := json.Marshal(response)
+	err = global.UserInfoRC.Set(cacheKey, responseJSON, 1*time.Minute).Err()
+	if err != nil {
+		hlog.Error("service.relation.GetFollowerList err: Error storing data in cache, ", err.Error())
+	}
+
+	return response, nil
+
 }
 
 func GetFriendList(userID uint64) (*api.DouyinRelationFriendListResponse, error) {
+	// Check if data is available in Redis
+	cacheKey := fmt.Sprintf("friendlist:%d", userID)
+	cachedData, err := global.UserInfoRC.Get(cacheKey).Result()
+	if err == nil {
+		// Cache hit, return cached data
+		var cachedResponse api.DouyinRelationFriendListResponse
+		if err := json.Unmarshal([]byte(cachedData), &cachedResponse); err != nil {
+			hlog.Error("service.relation.GetFriendList err: Error decoding cached data, ", err.Error())
+		} else {
+			return &cachedResponse, nil
+		}
+	}
+
+	// Cache miss, query the database
 	userList, err := db.GetFriendList(userID)
 	if err != nil {
-		hlog.Error("service.relation.GetFollowerList err:", err.Error())
+		hlog.Error("service.relation.GetFriendList err: ", err.Error())
 		return nil, err
 	}
 
@@ -128,14 +193,24 @@ func GetFriendList(userID uint64) (*api.DouyinRelationFriendListResponse, error)
 	for _, u := range userList {
 		msg, err := db.GetLatestMsg(userID, u.ID)
 		if err != nil {
-			hlog.Error("service.relation.GetFollowerList err:", err.Error())
+			hlog.Error("service.relation.GetFriendList err: ", err.Error())
 			return nil, err
 		}
 		friendUserList = append(friendUserList, pack.FriendUser(u, db.IsFollow(userID, u.ID), msg.Content, msg.MsgType))
 	}
 
-	return &api.DouyinRelationFriendListResponse{
+	// Convert to response format
+	response := &api.DouyinRelationFriendListResponse{
 		StatusCode: errno.Success.ErrCode,
 		UserList:   friendUserList,
-	}, nil
+	}
+
+	// Store the data in Redis cache
+	responseJSON, _ := json.Marshal(response)
+	err = global.UserInfoRC.Set(cacheKey, responseJSON, 1*time.Minute).Err()
+	if err != nil {
+		hlog.Error("service.relation.GetFriendList err: Error storing data in cache, ", err.Error())
+	}
+
+	return response, nil
 }
