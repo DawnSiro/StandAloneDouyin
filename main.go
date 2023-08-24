@@ -3,12 +3,17 @@
 package main
 
 import (
+	"flag"
+
 	"douyin/biz/handler/api"
 	"douyin/biz/mw"
+	"douyin/pkg/global"
 	"douyin/pkg/initialize"
 )
 
 func Init() {
+	flag.StringVar(&global.ConfigPath, "c", "./pkg/config/config.yml", "config file path")
+	flag.Parse()
 
 	initialize.Viper()
 	initialize.MySQL()
