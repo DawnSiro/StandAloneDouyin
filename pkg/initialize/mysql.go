@@ -46,5 +46,4 @@ func MySQL() {
 	} else {
 		panic("connect server failed")
 	}
-	migration()
 }
