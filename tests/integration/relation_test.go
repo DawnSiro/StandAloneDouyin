@@ -178,22 +178,22 @@ var _ = Describe("relation test", func() {
 				Expect(err).To(BeNil())
 			})
 
-			// It("should get following list", func() {
-			// 	resp, err := http.Get(util.CreateURL(path, query))
-			// 	Expect(err).To(BeNil())
-			// 	Expect(resp.StatusCode).To(Equal(200))
-			// 	respData, err := util.GetDouyinResponse[util.DouyinRelationFollowListResponse](resp)
-			// 	Expect(err).To(BeNil())
-			// 	Expect(respData.StatusCode).To(Equal(int64(0)))
-			// 	Expect(len(respData.UserList)).To(Equal(fansNumber))
-			// 	num := 0
-			// 	for _, u := range respData.UserList {
-			// 		if u.IsFollow {
-			// 			num++
-			// 		}
-			// 	}
-			// 	Expect(num).To(Equal(fansNumber))
-			// })
+			It("should get following list", func() {
+				resp, err := http.Get(util.CreateURL(path, query))
+				Expect(err).To(BeNil())
+				Expect(resp.StatusCode).To(Equal(200))
+				respData, err := util.GetDouyinResponse[util.DouyinRelationFollowListResponse](resp)
+				Expect(err).To(BeNil())
+				Expect(respData.StatusCode).To(Equal(int64(0)))
+				Expect(len(respData.UserList)).To(Equal(fansNumber))
+				num := 0
+				for _, u := range respData.UserList {
+					if u.IsFollow {
+						num++
+					}
+				}
+				Expect(num).To(Equal(fansNumber))
+			})
 
 			It("wrong token", func() {
 				query["token"] += "0"
@@ -266,15 +266,15 @@ var _ = Describe("relation test", func() {
 				Expect(err).To(BeNil())
 			})
 
-			// It("should get follower list", func() {
-			// 	resp, err := http.Get(util.CreateURL(path, query))
-			// 	Expect(err).To(BeNil())
-			// 	Expect(resp.StatusCode).To(Equal(200))
-			// 	respData, err := util.GetDouyinResponse[util.DouyinRelationFollowListResponse](resp)
-			// 	Expect(err).To(BeNil())
-			// 	Expect(respData.StatusCode).To(Equal(int64(0)))
-			// 	Expect(len(respData.UserList)).To(Equal(fansNumber))
-			// })
+			It("should get follower list", func() {
+				resp, err := http.Get(util.CreateURL(path, query))
+				Expect(err).To(BeNil())
+				Expect(resp.StatusCode).To(Equal(200))
+				respData, err := util.GetDouyinResponse[util.DouyinRelationFollowListResponse](resp)
+				Expect(err).To(BeNil())
+				Expect(respData.StatusCode).To(Equal(int64(0)))
+				Expect(len(respData.UserList)).To(Equal(fansNumber))
+			})
 
 			It("wrong token", func() {
 				query["token"] += "0"
@@ -371,16 +371,16 @@ var _ = Describe("relation test", func() {
 				})
 			})
 
-			// It("should get friend list of A", func() {
-			// 	resp, err := http.Get(util.CreateURL(path, queryA))
-			// 	Expect(err).To(BeNil())
-			// 	Expect(resp.StatusCode).To(Equal(200))
-			// 	respData, err := util.GetDouyinResponse[util.DouyinRelationFriendListResponse](resp)
-			// 	Expect(err).To(BeNil())
-			// 	Expect(respData.StatusCode).To(Equal(int64(0)))
-			// 	Expect(len(respData.UserList)).NotTo(BeZero())
-			// 	Expect(respData.UserList[0].Name).To(Equal(userB))
-			// })
+			It("should get friend list of A", func() {
+				resp, err := http.Get(util.CreateURL(path, queryA))
+				Expect(err).To(BeNil())
+				Expect(resp.StatusCode).To(Equal(200))
+				respData, err := util.GetDouyinResponse[util.DouyinRelationFriendListResponse](resp)
+				Expect(err).To(BeNil())
+				Expect(respData.StatusCode).To(Equal(int64(0)))
+				Expect(len(respData.UserList)).NotTo(BeZero())
+				Expect(respData.UserList[0].Name).To(Equal(userB))
+			})
 
 			It("should get friend list of B", func() {
 				resp, err := http.Get(util.CreateURL(path, queryB))
