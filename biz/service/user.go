@@ -101,7 +101,7 @@ func GetUserInfo(userID, infoUserID uint64) (*api.DouyinUserResponse, error) {
 
 	// Store user info in Redis cache
 	responseJSON, _ := json.Marshal(response)
-	err = global.UserInfoRC.Set(cacheKey, responseJSON, 1*time.Hour).Err()
+	err = global.UserInfoRC.Set(cacheKey, responseJSON, 24*time.Hour).Err()
 	if err != nil {
 		hlog.Error("service.user.GetUserInfo err: Error storing data in cache, ", err.Error())
 	}

@@ -6,6 +6,10 @@ import (
 	"douyin/dal/pack"
 	"douyin/pkg/constant"
 	"douyin/pkg/errno"
+	"douyin/pkg/global"
+	"fmt"
+	"github.com/cloudwego/hertz/pkg/common/json"
+	"time"
 
 	"github.com/cloudwego/hertz/pkg/common/hlog"
 )
@@ -49,13 +53,27 @@ func GetFeed(latestTime *int64, userID uint64) (*api.DouyinFeedResponse, error) 
 	//}
 
 	// 方案二，直接使用 JOIN 连接多个表数据，一次性查出所有数据。
+	// Check if feed data is available in Redis cache
+	cacheKey := fmt.Sprintf("feed:%d:%d", userID, latestTime)
+	cachedData, err := global.UserInfoRC.Get(cacheKey).Result()
+	if err == nil {
+		// Cache hit, return cached feed data
+		var cachedResponse api.DouyinFeedResponse
+		if err := json.Unmarshal([]byte(cachedData), &cachedResponse); err != nil {
+			hlog.Error("service.feed.GetFeed err: Error decoding cached data, ", err.Error())
+		} else {
+			return &cachedResponse, nil
+		}
+	}
+
+	// Cache miss, query the database
 	videoData, err := db.MSelectFeedVideoDataListByUserID(constant.MaxVideoNum, latestTime, userID)
 	if err != nil {
 		hlog.Error("service.feed.GetFeed err:", err.Error())
 		return nil, err
 	}
+
 	var nextTime *int64
-	// 没有视频的时候 nextTime 为 nil，会重置时间
 	if len(videoData) != 0 {
 		nextTime = new(int64)
 		*nextTime, err = db.SelectPublishTimeByVideoID(videoData[len(videoData)-1].VID)
@@ -65,9 +83,19 @@ func GetFeed(latestTime *int64, userID uint64) (*api.DouyinFeedResponse, error) 
 		}
 	}
 
-	return &api.DouyinFeedResponse{
+	// Pack and return the response
+	response := &api.DouyinFeedResponse{
 		StatusCode: errno.Success.ErrCode,
 		VideoList:  pack.VideoDataList(videoData),
 		NextTime:   nextTime,
-	}, nil
+	}
+
+	// Store feed data in Redis cache
+	responseJSON, _ := json.Marshal(response)
+	err = global.UserInfoRC.Set(cacheKey, responseJSON, 10*time.Minute).Err()
+	if err != nil {
+		hlog.Error("service.feed.GetFeed err: Error storing data in cache, ", err.Error())
+	}
+
+	return response, nil
 }
