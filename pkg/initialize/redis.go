@@ -2,11 +2,13 @@ package initialize
 
 import (
 	"context"
+	"douyin/dal/db"
 	"fmt"
 	"github.com/cloudwego/hertz/pkg/common/hlog"
 	"strings"
 	"sync"
 
+	"douyin/biz/service"
 	"douyin/pkg/global"
 
 	"github.com/go-redis/redis"
@@ -56,6 +58,14 @@ func Redis() {
 	// Subscribe redis cache topics
 	_, cancelSubscription = context.WithCancel(ctx)
 	go SubscribeToTopicChanges()
+
+	// Warm-up cache
+	err := WarmUpCacheForTopFollowers()
+	err = WarmUpCacheForTopRelationData()
+	if err != nil {
+		hlog.Error("pkg.initialize.redis err: " + err.Error())
+		return
+	}
 
 }
 
@@ -120,4 +130,51 @@ func SubscribeToTopicChanges() {
 	}
 
 	wg.Wait()
+}
+
+func WarmUpCacheForTopFollowers() error {
+	// Retrieve the top-100 users with the most followers
+	topFollowers, err := db.SelectTopFollowers(200)
+	if err != nil {
+		return err
+	}
+
+	for _, follower := range topFollowers {
+		_, err := service.GetUserInfo(0, follower.ID)
+		if err != nil {
+			hlog.Error("pkg.initialize.redis.WarmUpCacheForTopFollowers: ", err.Error())
+		}
+	}
+
+	return nil
+}
+
+func WarmUpCacheForTopRelationData() error {
+	// Retrieve the top-100 users with the most followers
+	topFollowers, err := db.SelectTopFollowers(100)
+	if err != nil {
+		return err
+	}
+
+	for _, follower := range topFollowers {
+		// Warm up cache for follow list
+		_, err := service.GetFollowList(follower.ID, 0)
+		if err != nil {
+			hlog.Error("pkg.initialize.redis.WarmUpCacheForTopRelationData.GetFollowList: ", err.Error())
+		}
+
+		// Warm up cache for follower list
+		_, err = service.GetFollowerList(follower.ID, 0)
+		if err != nil {
+			hlog.Error("pkg.initialize.redis.WarmUpCacheForTopRelationData.GetFollowerList: ", err.Error())
+		}
+
+		// Warm up cache for friend list
+		_, err = service.GetFriendList(follower.ID)
+		if err != nil {
+			hlog.Error("pkg.initialize.redis.WarmUpCacheForTopRelationData.GetFriendList: ", err.Error())
+		}
+	}
+
+	return nil
 }
