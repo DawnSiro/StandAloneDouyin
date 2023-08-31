@@ -8,6 +8,7 @@ require (
 	github.com/aliyun/alibaba-cloud-sdk-go v1.62.486
 	github.com/aliyun/aliyun-oss-go-sdk v2.2.6+incompatible
 	github.com/apache/thrift v0.0.0-00010101000000-000000000000
+	github.com/bits-and-blooms/bloom/v3 v3.5.0
 	github.com/cloudwego/hertz v0.6.6
 	github.com/fsnotify/fsnotify v1.6.0
 	github.com/go-redis/redis v6.15.9+incompatible
@@ -16,6 +17,7 @@ require (
 	github.com/gorilla/websocket v1.5.0
 	github.com/hertz-contrib/jwt v1.0.2
 	github.com/hertz-contrib/pprof v0.1.0
+	github.com/hertz-contrib/websocket v0.0.1
 	github.com/spf13/viper v1.16.0
 	github.com/syyongx/go-wordsfilter v0.0.0-20190622081656-74232c786041
 	golang.org/x/crypto v0.9.0
@@ -25,7 +27,6 @@ require (
 
 require (
 	github.com/bits-and-blooms/bitset v1.8.0 // indirect
-	github.com/bits-and-blooms/bloom/v3 v3.5.0 // indirect
 	github.com/bytedance/go-tagexpr/v2 v2.9.2 // indirect
 	github.com/bytedance/gopkg v0.0.0-20220413063733-65bf48ffb3a7 // indirect
 	github.com/bytedance/sonic v1.9.1 // indirect
@@ -33,11 +34,9 @@ require (
 	github.com/cloudwego/netpoll v0.3.2 // indirect
 	github.com/go-sql-driver/mysql v1.7.0 // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
-	github.com/gorilla/websocket v1.5.0 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/henrylee2cn/ameda v1.4.10 // indirect
 	github.com/henrylee2cn/goutil v0.0.0-20210127050712-89660552f6f8 // indirect
-	github.com/hertz-contrib/websocket v0.0.1 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect

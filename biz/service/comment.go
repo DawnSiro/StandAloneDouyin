@@ -12,6 +12,7 @@ import (
 	"github.com/cloudwego/hertz/pkg/common/hlog"
 	"github.com/cloudwego/hertz/pkg/common/json"
 	"math/rand"
+	"strconv"
 	"sync"
 	"time"
 )
@@ -59,6 +60,10 @@ func PostComment(userID, videoID uint64, commentText string) (*api.DouyinComment
 		return nil, err
 	}
 
+	// Notify cache invalidation
+	// Publish a message to the Redis channel indicating a comment list change
+	global.UserInfoRC.Publish("commentList_changes", "comment_added"+"&"+strconv.FormatUint(userID, 10)+"&"+strconv.FormatUint(videoID, 10))
+
 	return &api.DouyinCommentActionResponse{
 		StatusCode: 0,
 		Comment:    pack.Comment(dbc, dbu, db.IsFollow(userID, authorID)),
@@ -90,6 +95,10 @@ func DeleteComment(userID, videoID, commentID uint64) (*api.DouyinCommentActionR
 		return nil, err
 	}
 
+	// Notify cache invalidation
+	// Publish a message to the Redis channel indicating a comment list change
+	global.UserInfoRC.Publish("commentList_changes", "comment_deleted"+"&"+strconv.FormatUint(userID, 10)+"&"+strconv.FormatUint(videoID, 10))
+
 	return &api.DouyinCommentActionResponse{
 		StatusCode: 0,
 		Comment:    pack.Comment(dbc, dbu, db.IsFollow(userID, authorID)),
@@ -98,7 +107,7 @@ func DeleteComment(userID, videoID, commentID uint64) (*api.DouyinCommentActionR
 
 func GetCommentList(userID, videoID uint64) (*api.DouyinCommentListResponse, error) {
 	// Check if comment data is available in Redis cache
-	cacheKey := fmt.Sprintf("commentlist:%d:%d", userID, videoID)
+	cacheKey := fmt.Sprintf("commentList:%d:%d", userID, videoID)
 
 	// 解决缓存穿透 -- 添加布隆过滤器判断值是否在于RC或DB
 	if bloomFilter.TestString(cacheKey) {

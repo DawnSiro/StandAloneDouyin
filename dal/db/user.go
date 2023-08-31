@@ -79,3 +79,12 @@ func DecreaseUserFavoriteCount(userID uint64) (int64, error) {
 	}
 	return user.FavoriteCount, nil
 }
+
+func SelectTopFollowers(limit int) ([]*User, error) {
+	res := make([]*User, 0)
+	err := global.DB.Order("follower_count DESC").Limit(limit).Find(&res).Error
+	if err != nil {
+		return nil, err
+	}
+	return res, nil
+}
