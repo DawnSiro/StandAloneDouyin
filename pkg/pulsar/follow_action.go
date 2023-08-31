@@ -53,7 +53,7 @@ func (mq *FollowActionMQ) Consume() error {
 	for {
 		msg, err := mq.Consumer.Receive(context.Background())
 		if err != nil {
-			return err 
+			return err
 		}
 		hlog.Debugf("Recieve message(id=%v)", msg.ID().String())
 
@@ -90,26 +90,26 @@ func (mq *FollowActionMQ) RunConsume() {
 	}()
 }
 
-func (mq *FollowActionMQ) FollowAction(upid, fanid uint64) (err error) {
+func (mq *FollowActionMQ) FollowAction(upid, fanid uint64) error {
 	msg := FollowActionMessage{upid, fanid, constant.Follow}
 	payload, err := json.Marshal(msg)
 	if err != nil {
-		return
+		return err
 	}
 	_, err = mq.Producer.Send(context.Background(), &pulsar.ProducerMessage{
 		Payload: payload,
 	})
-	return
+	return err
 }
 
-func (mq *FollowActionMQ) CancelFollowAction(upid, fanid uint64) (err error) {
+func (mq *FollowActionMQ) CancelFollowAction(upid, fanid uint64) error {
 	msg := FollowActionMessage{upid, fanid, constant.CancelFollow}
 	payload, err := json.Marshal(msg)
 	if err != nil {
-		return
+		return err
 	}
 	_, err = mq.Producer.Send(context.Background(), &pulsar.ProducerMessage{
 		Payload: payload,
 	})
-	return
+	return err
 }
