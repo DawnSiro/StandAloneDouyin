@@ -3,9 +3,9 @@
 package main
 
 import (
+	"douyin/ws"
 	"flag"
 
-	"douyin/biz/handler/api/ws"
 	"douyin/biz/mw"
 	"douyin/pkg/global"
 	"douyin/pkg/initialize"
