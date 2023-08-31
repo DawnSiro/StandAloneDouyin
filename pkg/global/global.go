@@ -5,6 +5,7 @@ import (
 
 	"douyin/pkg/config"
 
+	"github.com/apache/pulsar-client-go/pulsar"
 	"github.com/go-redis/redis"
 	"gorm.io/gorm"
 )
@@ -17,5 +18,6 @@ var (
 	VideoCRC            *redis.Client // 视频评论列表
 	VideoFRC            *redis.Client // 视频点赞
 	UserInfoRC          *redis.Client // 用户信息
+	PulsarClient        pulsar.Client // pulsar消息队列
 	FileSuffixWhiteList = map[string]bool{".mp4": true}
 )
