@@ -35,8 +35,9 @@ jobs:
       with:
         redis-port: 6379
 
-    - name: start test
+    - name: Start test
       run: |
+        sudo apt install ginkgo
         cd tests 
         bash ./start_douyin.sh
-        go test ./integration
+        ginkgo ./integration
