@@ -50,6 +50,13 @@ type JWTConfig struct {
 	IdentityKey string `mapstructure:"identityKey"`
 }
 
+// pulsar
+type PulsarConfig struct {
+	URL               string `mapstructure:"url"`
+	ConnectionTimeout int64  `mapstructure:"connectTimeout"`
+	OperationTimeout  int64  `mapstructure:"operatorTimeout"`
+}
+
 // System 定义项目配置文件结构体
 type System struct {
 	HertzConfig           *HertzConfig           `mapstructure:"hertz"`
@@ -58,4 +65,5 @@ type System struct {
 	VideoFRCRedisConfig   *VideoFRCRedisConfig   `mapstructure:"videoFRCRedis"`
 	UserInfoRCRedisConfig *UserInfoRCRedisConfig `mapstructure:"userInfoRCRedis"`
 	JWTConfig             *JWTConfig             `mapstructure:"jwt"`
+	PulsarConfig          *PulsarConfig          `mapstructure:"pulsar"`
 }

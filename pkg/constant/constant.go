@@ -67,12 +67,7 @@ const (
 	TCP                 = "tcp"
 )
 
-// 消息队列相关
+// 消息队列 Topic
 const (
 	FollowActionTopic = "follow-action"
-)
-
-const (
-	FollowAction   = 1
-	UnFollowAction = 2
 )
