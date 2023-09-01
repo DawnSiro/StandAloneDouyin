@@ -5,17 +5,18 @@
 // This file may have been modified by CloudWeGo authors. All CloudWeGo
 // Modifications are Copyright 2022 CloudWeGo Authors.
 
-package api
+package ws
 
 import (
 	"douyin/dal/db"
 	"douyin/pkg/errno"
 	"encoding/json"
 	"fmt"
-	"github.com/cloudwego/hertz/pkg/common/hlog"
-	"github.com/hertz-contrib/websocket"
 	"strconv"
 	"strings"
+
+	"github.com/cloudwego/hertz/pkg/common/hlog"
+	"github.com/hertz-contrib/websocket"
 )
 
 type SendMsg struct {
@@ -24,7 +25,6 @@ type SendMsg struct {
 }
 
 type ReplyMsg struct {
-	Code    int    `json:"code"`
 	Content string `json:"content"`
 }
 
@@ -42,14 +42,6 @@ type Hub struct {
 	Unregister chan *Client
 }
 
-var Manager = Hub{
-	Broadcast:  make(chan *Broadcast),
-	Register:   make(chan *Client),
-	Reply:      make(chan *Client),
-	Unregister: make(chan *Client),
-	Clients:    make(map[string]*Client),
-}
-
 var MannaClient = newHub()
 
 func newHub() *Hub {
@@ -60,12 +52,6 @@ func newHub() *Hub {
 		Unregister: make(chan *Client),
 		Clients:    make(map[string]*Client),
 	}
-}
-
-type Message struct {
-	Sender    string `json:"sender,omitempty"`
-	Recipient string `json:"recipient,omitempty"`
-	Content   string `json:"content,omitempty"`
 }
 
 func ExtractNumbers(s string) (uint64, uint64, error) {
@@ -89,25 +75,23 @@ func ExtractNumbers(s string) (uint64, uint64, error) {
 
 func (h *Hub) Run() {
 	for {
-		fmt.Println("------监听管道通信-------")
+		hlog.Info("Monitor pipe communication")
 		select {
 		case client := <-MannaClient.Register:
 			MannaClient.Clients[client.ID] = client
-			fmt.Printf("有新连接: %v\n", client.ID)
+
 			ReplyMsg := ReplyMsg{
-				Code:    8888,
-				Content: "已经连接到服务器了",
+				Content: "Already connected to the websocket server",
 			}
 			msg, _ := json.Marshal(ReplyMsg)
 			err := client.Conn.WriteMessage(websocket.TextMessage, msg)
+
 			if err != nil {
-				hlog.Error("biz.handler.api.hub.WriteMessage err:", err.Error())
+				hlog.Error("biz.handler.api.ws.hub.Run.WriteMessage err:", err.Error())
 			}
 		case client := <-h.Unregister:
-			fmt.Printf("连接失败%s,", client.ID)
 			if _, ok := MannaClient.Clients[client.ID]; ok {
 				ReplyMsg := &ReplyMsg{
-					Code:    99999,
 					Content: "连接中断",
 				}
 				msg, _ := json.Marshal(ReplyMsg)
@@ -118,7 +102,7 @@ func (h *Hub) Run() {
 		case broadcast := <-MannaClient.Broadcast:
 			message := broadcast.Message
 			sendId := broadcast.Client.ToUserID // 2->1
-			flag := false                       // 默认对方是不在线的 false表示不在线，ture为在线
+			flag := false                       // 默认对方是不在线的 false表示不在线，ture为在线（用来标记消息是否已读）
 			for id, conn := range MannaClient.Clients {
 				if id != sendId {
 					continue
@@ -132,35 +116,36 @@ func (h *Hub) Run() {
 				}
 			}
 			if flag {
-				replyMsg := &ReplyMsg{
-					Code:    100000,
-					Content: "对方在线应答",
-				}
-				msg, _ := json.Marshal(replyMsg)
-				_ = broadcast.Client.Conn.WriteMessage(websocket.TextMessage, msg) // 对消息进行广播
-			} else { // 不在线判断
-				ReplyMsg := ReplyMsg{
-					Code:    777777,
-					Content: fmt.Sprintf("%s", string(message)),
-				}
-				msg, _ := json.Marshal(ReplyMsg)
-				_ = broadcast.Client.Conn.WriteMessage(websocket.TextMessage, msg)
-
 				uid, touid, err := ExtractNumbers(broadcast.Client.ToUserID)
 				if err != nil {
-					//fmt.Println("Error:", err)
-					hlog.Error("biz.handler.api.hub err:", err)
+					hlog.Error("biz.handler.api.ws.hub.ExtractNumbers err:", err)
 				}
 				isFriend := db.IsFriend(uid, touid)
 				if !isFriend { // 是好友将消息插入数据库，不是就退出
 					errNo := errno.UserRequestParameterError
-					errNo.ErrMsg = "不能给非好友发消息"
-					hlog.Error("biz.handler.api.hub.IsFriend err:", errNo.Error())
+					errNo.ErrMsg = "Cannot send messages to non-friends"
+					hlog.Error("biz.handler.api.ws.hub.IsFriend err:", errNo.Error())
 				} else {
-					//fmt.Println(msg)
-					err = db.CreateMessage(uid, touid, string(msg[26:len(msg)-2])) // 将消息放到数据库
+					err = db.CreateMessage(uid, touid, string(message)) // 将消息放到数据库
 					if err != nil {
-						hlog.Error("biz.handler.api.hub.CreateMessage err:", err.Error())
+						hlog.Error("biz.handler.api.ws.hub.CreateMessage err:", err.Error())
+					}
+				}
+			} else { // 好友不在线
+				uid, touid, err := ExtractNumbers(broadcast.Client.ToUserID)
+				if err != nil {
+					hlog.Error("biz.handler.api.ws.hub.ExtractNumbers err:", err)
+				}
+				isFriend := db.IsFriend(uid, touid)
+				if !isFriend { // 是好友将消息插入数据库，不是就退出
+					errNo := errno.UserRequestParameterError
+					errNo.ErrMsg = "Cannot send messages to non-friends"
+					hlog.Error("biz.handler.api.ws.hub.IsFriend err:", errNo.Error())
+
+				} else {
+					err = db.CreateMessage(uid, touid, string(message)) // 将消息放到数据库
+					if err != nil {
+						hlog.Error("biz.handler.api.ws.hub.CreateMessage err:", err.Error())
 					}
 				}
 			}

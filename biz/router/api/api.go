@@ -4,6 +4,7 @@ package Api
 
 import (
 	api "douyin/biz/handler/api"
+	ws "douyin/ws"
 	"github.com/cloudwego/hertz/pkg/app/server"
 )
 
@@ -57,7 +58,7 @@ func Register(r *server.Hertz) {
 			}
 			{
 				_ws := _message.Group("/ws", _wsMw()...)
-				_ws.GET("/", append(_websocketMw(), api.ServeWs)...)
+				_ws.GET("/", append(_websocketMw(), ws.ServeWs)...)
 			}
 		}
 		{

@@ -3,9 +3,9 @@
 package main
 
 import (
+	"douyin/ws"
 	"flag"
 
-	"douyin/biz/handler/api"
 	"douyin/biz/mw"
 	"douyin/pkg/global"
 	"douyin/pkg/initialize"
@@ -22,7 +22,7 @@ func Init() {
 	mw.InitJWT()
 
 	// initialize.Hertz() 需要保持在最下方，因为调用完后 Hertz 就启动完毕了
-	go api.MannaClient.Run()
+	go ws.MannaClient.Run()
 	initialize.Hertz()
 }
 
