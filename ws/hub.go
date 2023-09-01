@@ -12,11 +12,11 @@ import (
 	"douyin/pkg/errno"
 	"encoding/json"
 	"fmt"
-	"strconv"
-	"strings"
-
 	"github.com/cloudwego/hertz/pkg/common/hlog"
 	"github.com/hertz-contrib/websocket"
+	"strconv"
+	"strings"
+	"time"
 )
 
 type SendMsg struct {
@@ -26,6 +26,7 @@ type SendMsg struct {
 
 type ReplyMsg struct {
 	Content string `json:"content"`
+	//CreateTime *int64 `json:"create_time" `
 }
 
 type Broadcast struct {
@@ -74,8 +75,11 @@ func ExtractNumbers(s string) (uint64, uint64, error) {
 }
 
 func (h *Hub) Run() {
+	go MannaClient.RunHeartbeatCheck() // 打开心跳检测
+
 	for {
 		hlog.Info("Monitor pipe communication")
+
 		select {
 		case client := <-MannaClient.Register:
 			MannaClient.Clients[client.ID] = client
@@ -94,15 +98,18 @@ func (h *Hub) Run() {
 				ReplyMsg := &ReplyMsg{
 					Content: "连接中断",
 				}
+
 				msg, _ := json.Marshal(ReplyMsg)
 				_ = client.Conn.WriteMessage(websocket.TextMessage, msg)
+
 				close(client.Send)
 				delete(MannaClient.Clients, client.ID)
 			}
 		case broadcast := <-MannaClient.Broadcast:
 			message := broadcast.Message
 			sendId := broadcast.Client.ToUserID // 2->1
-			flag := false                       // 默认对方是不在线的 false表示不在线，ture为在线（用来标记消息是否已读）
+			flag := false                       // 默认对方是不在线的 false 表示不在线，ture 为在线（用来标记消息是否已读）
+
 			for id, conn := range MannaClient.Clients {
 				if id != sendId {
 					continue
@@ -115,6 +122,7 @@ func (h *Hub) Run() {
 					delete(MannaClient.Clients, conn.ID)
 				}
 			}
+
 			if flag {
 				uid, touid, err := ExtractNumbers(broadcast.Client.ToUserID)
 				if err != nil {
@@ -126,7 +134,11 @@ func (h *Hub) Run() {
 					errNo.ErrMsg = "Cannot send messages to non-friends"
 					hlog.Error("biz.handler.api.ws.hub.IsFriend err:", errNo.Error())
 				} else {
+					broadcast.Client.LastHeartbeatTime = time.Now() // 更新心跳时间
+					hlog.Info("Update client lastHeartbeatTime time")
+
 					err = db.CreateMessage(uid, touid, string(message)) // 将消息放到数据库
+
 					if err != nil {
 						hlog.Error("biz.handler.api.ws.hub.CreateMessage err:", err.Error())
 					}
@@ -143,7 +155,11 @@ func (h *Hub) Run() {
 					hlog.Error("biz.handler.api.ws.hub.IsFriend err:", errNo.Error())
 
 				} else {
+					broadcast.Client.LastHeartbeatTime = time.Now() // 更新心跳时间
+					hlog.Info("Update client lastHeartbeatTime time")
+
 					err = db.CreateMessage(uid, touid, string(message)) // 将消息放到数据库
+
 					if err != nil {
 						hlog.Error("biz.handler.api.ws.hub.CreateMessage err:", err.Error())
 					}

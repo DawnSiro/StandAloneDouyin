@@ -2,11 +2,15 @@ package ws
 
 import (
 	"context"
+	"douyin/biz/service"
 	"douyin/dal/db"
 	"douyin/pkg/errno"
 	"douyin/pkg/global"
 	"encoding/json"
 	"fmt"
+	"log"
+	"net/http"
+
 	"strconv"
 	"strings"
 	"sync"
@@ -22,7 +26,7 @@ type Client struct {
 	ToUserID          string
 	Conn              *websocket.Conn
 	Send              chan []byte
-	lastHeartbeatTime time.Time
+	LastHeartbeatTime time.Time
 	ConnMutex         sync.Mutex // 互斥锁用来保护连接操作
 }
 
@@ -50,6 +54,36 @@ func (c *Client) readPump() {
 			MannaClient.Broadcast <- &Broadcast{
 				Client:  c,
 				Message: []byte(SendMsg.Content), // 发送过来的消息
+			}
+		} else if SendMsg.Type == 2 { // 获取历史消息
+			uid, touid, err := ExtractNumbers(c.ToUserID)
+			if err != nil {
+				hlog.Error("ws.hub.readPump.ExtractNumbers err:", err)
+			}
+
+			preMsgTime := int64(0)
+			resp, err := service.GetMessageChat(uid, touid, preMsgTime)
+
+			message := resp.MessageList
+			messageCount := len(message)
+			if messageCount > 100 {
+				// 计算起始索引，以获取最后的100条消息
+				startIndex := messageCount - 100
+				for _, message := range message[startIndex:] {
+					ReplyMsg := ReplyMsg{
+						Content: message.Content,
+					}
+					//msg, _ := json.Marshal(ReplyMsg)
+					_ = c.Conn.WriteJSON(ReplyMsg)
+				}
+			} else {
+				for _, message := range message {
+					ReplyMsg := ReplyMsg{
+						Content: message.Content,
+					}
+					//msg, _ := json.Marshal(ReplyMsg)
+					_ = c.Conn.WriteJSON(ReplyMsg)
+				}
 			}
 		}
 	}
@@ -118,6 +152,11 @@ func CreateID(uid, toUid string) string {
 // ServeWs .
 // @router /douyin/message/ws/ [WebSocket]
 func ServeWs(ctx context.Context, c *app.RequestContext) {
+
+	go func() {
+		log.Println(http.ListenAndServe("localhost:6060", nil))
+	}()
+
 	fromUserID := c.GetUint64(global.Config.JWTConfig.IdentityKey)
 	hlog.Info("biz.handler.api.ws.websocket_service.ServeWs GetFromUserID:", fromUserID)
 	toUid := c.Query("to_user_id")
@@ -126,7 +165,6 @@ func ServeWs(ctx context.Context, c *app.RequestContext) {
 		hlog.Info("biz.handler.api.ws.websocket_service.ServeWs FromUserID == toUid err:", fromUserID)
 		return
 	}
-	go MannaClient.RunHeartbeatCheck() // 打开心跳检测
 
 	err := upgrader.Upgrade(c, func(conn *websocket.Conn) {
 		client := &Client{
@@ -134,13 +172,14 @@ func ServeWs(ctx context.Context, c *app.RequestContext) {
 			ToUserID:          CreateID(toUid, strconv.FormatUint(fromUserID, 10)),
 			Conn:              conn,
 			Send:              make(chan []byte),
-			lastHeartbeatTime: time.Now(),
+			LastHeartbeatTime: time.Now(),
 		}
-		heartbeats[client] = struct{}{}
-		defer delete(heartbeats, client)
+		Heartbeats[client] = struct{}{}
+		defer delete(Heartbeats, client)
 
 		client.Conn.SetPongHandler(func(string) error {
-			client.lastHeartbeatTime = time.Now()
+			client.LastHeartbeatTime = time.Now()
+			hlog.Info("Update client lastHeartbeatTime time")
 			return nil
 		})
 
