@@ -132,3 +132,13 @@ func SelectCommentDataByVideoIDANDUserID(videoID, userID uint64) ([]*CommentData
 	}
 	return cs, nil
 }
+
+func SelectCommentDataByVideoID(videoID uint64) ([]Comment, error) {
+	var comments []Comment
+
+	if err := global.DB.Where("video_id = ?", videoID).Find(&comments).Error; err != nil {
+		return nil, err
+	}
+
+	return comments, nil
+}
