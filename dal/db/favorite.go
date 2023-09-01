@@ -132,3 +132,13 @@ func IsFavoriteVideo(userID, videoID uint64) bool {
 		userID, videoID, constant.DataNotDeleted).Limit(1).Find(&ufv)
 	return res.RowsAffected == 1
 }
+
+func SelectTopFavoriteVideos(limit int) ([]Video, error) {
+	var videos []Video
+
+	if err := global.DB.Order("favorite_count desc").Limit(limit).Find(&videos).Error; err != nil {
+		return nil, err
+	}
+
+	return videos, nil
+}
