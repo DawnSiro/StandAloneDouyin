@@ -20,28 +20,7 @@ func (h *Hub) GetConnectedClients() []*Client {
 	return clients
 }
 
-var heartbeats = make(map[*Client]struct{})
-
-// Todo: 心跳检测，超时重连
-//func (c *Client) Reconnect() error {
-//	// 创建新的 WebSocket 连接
-//	newConn, _, err := websocket.DefaultDialer.Dial("ws://your-server-address", nil)
-//	if err != nil {
-//		return err // 返回连接错误
-//	}
-//
-//	// 关闭旧连接
-//	err = c.Conn.Close()
-//	if err != nil {
-//		return err // 返回关闭连接错误
-//	}
-//
-//	// 更新连接
-//	c.Conn = newConn
-//	c.lastHeartbeatTime = time.Now()
-//
-//	return nil // 返回 nil 表示重新连接成功
-//}
+var Heartbeats = make(map[*Client]struct{})
 
 func (h *Hub) RunHeartbeatCheck() {
 	ticker := time.NewTicker(HeartbeatInterval)
@@ -51,9 +30,9 @@ func (h *Hub) RunHeartbeatCheck() {
 		select {
 		case <-ticker.C:
 			// 对所有连接进行心跳检测
-			for client := range heartbeats {
+			for client := range Heartbeats {
 				// 检查心跳是否超时
-				if time.Since(client.lastHeartbeatTime) > TimeoutDuration {
+				if time.Since(client.LastHeartbeatTime) > TimeoutDuration {
 					hlog.Info("Heartbeat timeout, closing connection for client:", client.ID)
 					h.Unregister <- client
 					_ = client.Conn.Close()
