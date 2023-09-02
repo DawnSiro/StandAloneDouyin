@@ -3,12 +3,14 @@ package pulsar
 import (
 	"context"
 	"encoding/json"
+	"sync"
 
 	"github.com/apache/pulsar-client-go/pulsar"
 	"github.com/cloudwego/hertz/pkg/common/hlog"
 
 	"douyin/dal/db"
 	"douyin/pkg/constant"
+	"douyin/pkg/global"
 )
 
 type FollowActionMessage struct {
@@ -18,29 +20,30 @@ type FollowActionMessage struct {
 }
 
 type FollowActionMQ struct {
-	Topic        string
-	Subscription string
-	Producer     pulsar.Producer
-	Consumer     pulsar.Consumer
+	*PulsarMQ
 }
 
-func NewFollowActionMQ(client pulsar.Client) (*FollowActionMQ, error) {
-	producer, err := client.CreateProducer(pulsar.ProducerOptions{
-		Topic: constant.FollowActionTopic,
-	})
-	if err != nil {
-		return nil, err
-	}
+var (
+	instance *FollowActionMQ
+	once     sync.Once
+)
 
-	consumer, err := client.Subscribe(pulsar.ConsumerOptions{
-		Topic:            constant.FollowActionTopic,
-		SubscriptionName: constant.FollowActionTopic + "sub",
-	})
-	if err != nil {
-		return nil, err
+func GetFollowActionMQInstance() *FollowActionMQ {
+	// 懒汉式单例模式，同时保证线程安全
+	if instance == nil {
+		once.Do(func() {
+			instance = newFollowActionMQ()
+		})
 	}
+	return instance
+}
 
-	return &FollowActionMQ{constant.FollowActionTopic, consumer.Subscription(), producer, consumer}, nil
+func newFollowActionMQ() *FollowActionMQ {
+	res := &FollowActionMQ{
+		PulsarMQ: NewPulsarMQ(global.PulsarClient, constant.FollowActionTopic, constant.FollowActionSubscription),
+	}
+	res.RunConsume()
+	return res
 }
 
 func (mq *FollowActionMQ) Close() {
@@ -49,25 +52,31 @@ func (mq *FollowActionMQ) Close() {
 }
 
 func (mq *FollowActionMQ) Consume() error {
-	hlog.Info("service.relation.Follow: follow action consumer start")
+	hlog.Info("follow action consumer start")
 	for {
 		msg, err := mq.Consumer.Receive(context.Background())
 		if err != nil {
 			return err
 		}
-		hlog.Debugf("Recieve message(id=%v)", msg.ID().String())
+		hlog.Debugf("follow action consumer: recieve message (id=%v)", msg.ID())
 
 		var res FollowActionMessage
 		err = json.Unmarshal(msg.Payload(), &res)
 		if err != nil {
-			return err
+			// 解析错误后丢弃信息但不终止
+			hlog.Errorf("follow action consumer: parse message failed (id=%v)", msg.ID())
+			err = mq.Consumer.Ack(msg)
+			if err != nil {
+				return err
+			}
+			continue
 		}
 
 		err = mq.Consumer.Ack(msg)
 		if err != nil {
 			return err
 		}
-		hlog.Debugf("Acknowlege message(id=%v)", msg.ID().String())
+		hlog.Debugf("follow action consumer: acknowlege message (id=%v)", msg.ID())
 
 		switch res.Action {
 		case 1:
@@ -76,7 +85,9 @@ func (mq *FollowActionMQ) Consume() error {
 			db.CancelFollow(res.FanID, res.UpID)
 		}
 		if err != nil {
-			hlog.Errorf("follow action cosumer db error: %v, message id: %v", err, msg.ID()) // 数据库错误打印日志，但不停止逻辑
+			hlog.Errorf("follow action consumer: db error: %v, message (id=%v)", err, msg.ID()) // 数据库错误打印日志，但不停止逻辑
+		} else {
+			hlog.Debugf("follow action consumer: handle a message successfully")
 		}
 	}
 }
@@ -85,7 +96,7 @@ func (mq *FollowActionMQ) RunConsume() {
 	go func() {
 		err := mq.Consume()
 		if err != nil {
-			hlog.Errorf("follow action consumer error: %v", err)
+			hlog.Errorf("follow action cosumer error: %v", err)
 		}
 	}()
 }

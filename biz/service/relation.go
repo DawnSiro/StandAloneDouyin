@@ -16,19 +16,6 @@ import (
 	"github.com/cloudwego/hertz/pkg/common/json"
 )
 
-var fmq *pulsar.FollowActionMQ
-
-func InitMQ() {
-	var err error
-	fmq, err = pulsar.NewFollowActionMQ(global.PulsarClient)
-	if err != nil {
-		hlog.Fatalf("service.relation.Follow err: MQ faild to initialize, %v", err)
-	}
-	hlog.Info("service.relation.Follow: MQ initialized successfully")
-
-	fmq.RunConsume()
-}
-
 func Follow(userID, toUserID uint64) (*api.DouyinRelationActionResponse, error) {
 	if userID == toUserID {
 		errNo := errno.UserRequestParameterError
@@ -42,17 +29,14 @@ func Follow(userID, toUserID uint64) (*api.DouyinRelationActionResponse, error) 
 		return nil, errno.RepeatOperationError
 	}
 
-	if fmq == nil {
-		InitMQ()
-	}
 	//关注操作
 	// publish a message to pulsar
-	err := fmq.FollowAction(toUserID, userID)
+	err := pulsar.GetFollowActionMQInstance().FollowAction(toUserID, userID)
 	if err != nil {
 		hlog.Error(err)
 		return nil, err // TODO: errno
 	}
-	hlog.Debug("service.relation.Follow: send a message to follow action MQ")
+	hlog.Debug("service.relation.Follow: publish a message")
 
 	// Notify cache invalidation
 	// Publish a message to the Redis channel indicating a friend list change
@@ -71,17 +55,14 @@ func CancelFollow(userID, toUserID uint64) (*api.DouyinRelationActionResponse, e
 		return nil, errNo
 	}
 
-	if fmq == nil {
-		InitMQ()
-	}
 	//取消关注
 	// publish a message to pulsar
-	err := fmq.CancelFollowAction(toUserID, userID)
+	err := pulsar.GetFollowActionMQInstance().CancelFollowAction(toUserID, userID)
 	if err != nil {
 		hlog.Error(err)
 		return nil, err // TODO: errno
 	}
-	hlog.Debug("service.relation.Follow: send a message to follow action MQ")
+	hlog.Debug("service.relation.CancelFollow: publish a message")
 
 	// Notify cache invalidation
 	// Publish a message to the Redis channel indicating a friend list change

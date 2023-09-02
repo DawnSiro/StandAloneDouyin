@@ -70,4 +70,5 @@ const (
 // 消息队列 Topic
 const (
 	FollowActionTopic = "follow-action"
+	FollowActionSubscription = "follow-action-sub"
 )
