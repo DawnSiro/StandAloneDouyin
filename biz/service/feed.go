@@ -8,8 +8,9 @@ import (
 	"douyin/pkg/errno"
 	"douyin/pkg/global"
 	"fmt"
-	"github.com/cloudwego/hertz/pkg/common/json"
 	"time"
+
+	"github.com/cloudwego/hertz/pkg/common/json"
 
 	"github.com/cloudwego/hertz/pkg/common/hlog"
 )
@@ -67,7 +68,7 @@ func GetFeed(latestTime *int64, userID uint64) (*api.DouyinFeedResponse, error) 
 	}
 
 	// Cache miss, query the database
-	videoData, err := db.MSelectFeedVideoDataListByUserID(constant.MaxVideoNum, latestTime, userID)
+	videoData, err := db.MSelectFeedVideoDataListByUserID2(constant.MaxVideoNum, latestTime, userID)
 	if err != nil {
 		hlog.Error("service.feed.GetFeed err:", err.Error())
 		return nil, err

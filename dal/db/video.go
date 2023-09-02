@@ -1,10 +1,11 @@
 package db
 
 import (
-	"douyin/pkg/global"
-	"time"
-
 	"douyin/pkg/constant"
+	"douyin/pkg/global"
+	"math"
+	"sort"
+	"time"
 
 	"gorm.io/gorm"
 )
@@ -212,6 +213,8 @@ type VideoData struct {
 	TotalFavorited    int64
 	WorkCount         int64
 	UserFavoriteCount int64
+	HotValue          float64
+	PublishTime       time.Time
 }
 
 // SelectFavoriteVideoDataListByUserID 查询点赞视频列表
@@ -283,4 +286,76 @@ func SelectPublishVideoDataListByUserID(userID, selectUserID uint64) ([]*VideoDa
 		return nil, err
 	}
 	return res, nil
+}
+
+func MSelectFeedVideoDataListByUserID2(maxVideoNum int, latestTime *int64, userID uint64) ([]*VideoData, error) {
+	res := make([]*VideoData, 0)
+	if latestTime == nil || *latestTime == 0 {
+		// This part remains the same as in your original function.
+		currentTime := time.Now().UnixMilli()
+		latestTime = &currentTime
+	}
+
+	// Fetch video data from the database without any filtering based on hotness.
+	err := global.DB.Select("v.id AS vid, v.play_url, v.cover_url, v.favorite_count, v.comment_count, v.title,"+
+		"u.id AS uid, u.username, u.following_count, u.follower_count, u.avatar,"+
+		"u.background_image, u.signature, u.total_favorited, u.work_count, u.favorite_count as user_favorite_count,"+
+		"IF(r.is_deleted = ?, TRUE, FALSE) AS is_follow, IF(ufv.is_deleted = ?, TRUE, FALSE) AS is_favorite",
+		constant.DataNotDeleted, constant.DataNotDeleted).Table("user AS u").
+		Joins("RIGHT JOIN video AS v ON u.id = v.author_id").
+		Joins("LEFT JOIN relation AS r ON r.to_user_id = u.id AND r.user_id = 6", userID).
+		Joins("LEFT JOIN user_favorite_video AS ufv ON v.id = ufv.video_id AND ufv.user_id = ?", userID).
+		Where("v.publish_time < ?", time.UnixMilli(*latestTime)).Limit(maxVideoNum).Scan(&res).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Calculate and set the hotness for each video.
+	decayFactor := 0.95
+	for _, video := range res {
+		hotValue := calculateHotValue(video, *latestTime, decayFactor)
+		video.HotValue = hotValue
+	}
+
+	// Apply hotness-based filtering and return the filtered videos.
+	recommendedVideoData := filterByHotness(res, maxVideoNum)
+
+	return recommendedVideoData, nil
+}
+
+func calculateHotValue(video *VideoData, currentTime int64, decayFactor float64) float64 {
+	// Fetch the publish time for the video
+	publishTime, err := SelectPublishTimeByVideoID(video.VID)
+	if err != nil {
+		// Handle error (you can log it or return a default value)
+		return 0.0
+	}
+
+	// Calculate the elapsed time in hours
+	elapsedHours := float64(currentTime-publishTime) / float64(time.Hour)
+
+	// Calculate the original hotness value based on likes and comments (adjust weights as needed)
+	originalHotValue := float64(video.FavoriteCount)*0.4 + float64(video.CommentCount)*0.5
+
+	// Calculate the decayed hotness value based on the elapsed time and decay factor
+	decayedHotValue := originalHotValue * math.Pow(decayFactor, elapsedHours)
+
+	return decayedHotValue
+}
+
+func filterByHotness(videos []*VideoData, maxNum int) []*VideoData {
+	// Sort the videos by hotness in descending order.
+	sort.SliceStable(videos, func(i, j int) bool {
+		return videos[i].HotValue > videos[j].HotValue
+	})
+
+	// Determine the number of videos to return (up to the maximum specified).
+	numToReturn := len(videos)
+	if numToReturn > maxNum {
+		numToReturn = maxNum
+	}
+
+	// Return the top numToReturn videos based on hotness.
+	return videos[:numToReturn]
 }
