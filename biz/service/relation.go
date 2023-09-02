@@ -33,7 +33,7 @@ func Follow(userID, toUserID uint64) (*api.DouyinRelationActionResponse, error) 
 	// publish a message to pulsar
 	err := pulsar.GetFollowActionMQInstance().FollowAction(toUserID, userID)
 	if err != nil {
-		hlog.Error(err)
+		hlog.Error("service.relation.Follow err:", err.Error())
 		return nil, err // TODO: errno
 	}
 	hlog.Debug("service.relation.Follow: publish a message")
@@ -59,7 +59,7 @@ func CancelFollow(userID, toUserID uint64) (*api.DouyinRelationActionResponse, e
 	// publish a message to pulsar
 	err := pulsar.GetFollowActionMQInstance().CancelFollowAction(toUserID, userID)
 	if err != nil {
-		hlog.Error(err)
+		hlog.Error("service.relation.CancelFollow err:", err.Error())
 		return nil, err // TODO: errno
 	}
 	hlog.Debug("service.relation.CancelFollow: publish a message")

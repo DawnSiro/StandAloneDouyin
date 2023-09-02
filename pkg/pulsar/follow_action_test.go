@@ -1,9 +1,13 @@
 package pulsar
+
 import (
+	"douyin/pkg/global"
 	"testing"
 	"time"
 
 	"github.com/apache/pulsar-client-go/pulsar"
+	"gorm.io/driver/mysql"
+	"gorm.io/gorm"
 )
 
 func GetClient() (client pulsar.Client, err error) {
@@ -23,54 +27,24 @@ func GetClient() (client pulsar.Client, err error) {
 	return
 }
 
-func TestFollowActionMQProducer(t *testing.T) {
-	client, err := GetClient()
+func TestFollowActionMQ(t *testing.T) {
+	var err error
+	global.PulsarClient, err = GetClient()
+	if err != nil {
+		t.Fatal(err)
+	}
+	global.DB, err = gorm.Open(mysql.Open("root:root@tcp(127.0.0.1)/douyin"))
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	fmq, err := NewFollowActionMQ(client)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	// fmq.RunConsume()
-
-	err = fmq.FollowAction(1, 2)
+	err = GetFollowActionMQInstance().FollowAction(1, 2)
 	if err != nil {
 		t.Error(err)
 	}
 
-	err = fmq.CancelFollowAction(1, 2)
+	err = GetFollowActionMQInstance().CancelFollowAction(1, 2)
 	if err != nil {
 		t.Error(err)
 	}
 }
-
-// func TestFollowActionConsumer(t *testing.T) {
-// 	client, err := GetClient()
-// 	if err != nil {
-// 		t.Fatal(err)
-// 	}
-
-// 	fmq, err := NewFollowActionMQ(client)
-// 	if err != nil {
-// 		t.Fatal(err)
-// 	}
-
-// 	go func () {
-// 		err := fmq.FollowAction(1, 2)
-// 		if err != nil {
-// 			t.Error(err)
-// 		}
-// 		err = fmq.CancelFollowAction(1, 2)
-// 		if err != nil {
-// 			t.Error(err)
-// 		}
-// 	}()
-
-// 	err = fmq.Consume()
-// 	if err != nil {
-// 		t.Fatal(err)
-// 	}
-// }
