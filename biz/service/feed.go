@@ -8,10 +8,11 @@ import (
 	"douyin/pkg/errno"
 	"douyin/pkg/global"
 	"fmt"
-	"github.com/cloudwego/hertz/pkg/common/json"
 	"math/rand"
 	"sync"
 	"time"
+
+	"github.com/cloudwego/hertz/pkg/common/json"
 
 	"github.com/cloudwego/hertz/pkg/common/hlog"
 )
@@ -93,7 +94,39 @@ func GetFeed(latestTime *int64, userID uint64) (*api.DouyinFeedResponse, error) 
 	cacheMutex.Unlock()
 
 	// Cache miss, query the database
-	videoData, err := db.MSelectFeedVideoDataListByUserID(constant.MaxVideoNum, latestTime, userID)
+	// Create closures that capture the required arguments.
+	generateItemCF := func() ([]*db.VideoData, error) {
+		return db.GenerateItemCFRecommendations(constant.MaxVideoNum, latestTime, userID)
+	}
+
+	fetchByUserID2 := func() ([]*db.VideoData, error) {
+		return db.MSelectFeedVideoDataListByUserID_hotvalue(constant.MaxVideoNum, latestTime, userID)
+	}
+
+	fetchByUserID := func() ([]*db.VideoData, error) {
+		return db.MSelectFeedVideoDataListByUserID(constant.MaxVideoNum, latestTime, userID)
+	}
+
+	// Add the closures to the fetchMethods slice in the order of preference.
+	fetchMethods := []func() ([]*db.VideoData, error){
+		generateItemCF, // First preference
+		fetchByUserID2, // Second preference
+		fetchByUserID,  // Third preference
+	}
+
+	var videoData []*db.VideoData
+
+	// Iterate through fetch methods and stop when successfully fetching data or all methods fail.
+	var err error
+	for _, fetchMethod := range fetchMethods {
+		videoData, err = fetchMethod()
+
+		// Check if there was an error or if videoData is not empty.
+		if err == nil && len(videoData) > 0 {
+			break
+		}
+	}
+	// Handle the case when all fetch methods fail.
 	if err != nil {
 		hlog.Error("service.feed.GetFeed err:", err.Error())
 		// Release cache status flag to allow other threads to update cache
