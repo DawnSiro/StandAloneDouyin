@@ -5,7 +5,11 @@ import (
 	"douyin/dal/db"
 	"douyin/dal/pack"
 	"douyin/pkg/errno"
+	"douyin/pkg/global"
 	"douyin/pkg/util"
+	"fmt"
+	"github.com/cloudwego/hertz/pkg/common/json"
+	"time"
 
 	"github.com/cloudwego/hertz/pkg/common/hlog"
 )
@@ -68,18 +72,39 @@ func Login(username, password string) (*api.DouyinUserLoginResponse, error) {
 }
 
 func GetUserInfo(userID, infoUserID uint64) (*api.DouyinUserResponse, error) {
+	// Check if user info is available in Redis cache
+	cacheKey := fmt.Sprintf("userinfo:%d", infoUserID)
+	cachedData, err := global.UserInfoRC.Get(cacheKey).Result()
+	if err == nil {
+		// Cache hit, return cached user info
+		var cachedResponse api.DouyinUserResponse
+		if err := json.Unmarshal([]byte(cachedData), &cachedResponse); err != nil {
+			hlog.Error("service.user.GetUserInfo err: Error decoding cached data, ", err.Error())
+		} else {
+			return &cachedResponse, nil
+		}
+	}
+
+	// Cache miss, query the database
 	u, err := db.SelectUserByID(infoUserID)
 	if err != nil {
 		hlog.Error("service.user.GetUserInfo err:", err.Error())
 		return nil, err
 	}
 
-	// TODO 使用 Redis Hash 来对用户数据进行缓存
-
-	// pack
+	// Pack user info
 	userInfo := pack.UserInfo(u, db.IsFollow(userID, infoUserID))
-	return &api.DouyinUserResponse{
+	response := &api.DouyinUserResponse{
 		StatusCode: errno.Success.ErrCode,
 		User:       userInfo,
-	}, nil
+	}
+
+	// Store user info in Redis cache
+	responseJSON, _ := json.Marshal(response)
+	err = global.UserInfoRC.Set(cacheKey, responseJSON, 24*time.Hour).Err()
+	if err != nil {
+		hlog.Error("service.user.GetUserInfo err: Error storing data in cache, ", err.Error())
+	}
+
+	return response, nil
 }

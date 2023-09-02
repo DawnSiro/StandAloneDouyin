@@ -4,7 +4,10 @@ import (
 	"bytes"
 	"douyin/dal/pack"
 	"douyin/pkg/errno"
+	"douyin/pkg/global"
 	"errors"
+	"fmt"
+	"github.com/cloudwego/hertz/pkg/common/json"
 	"io"
 	"time"
 
@@ -80,14 +83,60 @@ func GetPublishVideos(userID, selectUserID uint64) (*api.DouyinPublishListRespon
 	//	videoList = append(videoList, video)
 	//}
 
+	// Check if user info is available in Redis cache
+	cacheKey := fmt.Sprintf("publishedVideoList:%d", selectUserID)
+	cachedData, err := global.UserInfoRC.Get(cacheKey).Result()
+
+	if err == nil {
+		// Cache hit, judge if they are friends
+		isFriend, err := AreUsersFriends(userID, selectUserID)
+		if err != nil {
+			hlog.Error("service.publish.GetPublishVideos err: Error checking if users are friends, ", err.Error())
+		} else if isFriend {
+			// Return cached published video list
+			var cachedResponse api.DouyinPublishListResponse
+			if err := json.Unmarshal([]byte(cachedData), &cachedResponse); err != nil {
+				hlog.Error("service.publish.GetPublishVideos err: Error decoding cached data, ", err.Error())
+			} else {
+				return &cachedResponse, nil
+			}
+		}
+	}
+
+	// Cache miss, query the database
 	videoData, err := db.SelectPublishVideoDataListByUserID(userID, selectUserID)
 	if err != nil {
 		hlog.Error("service.publish.GetPublishVideos err:", err.Error())
 		return nil, err
 	}
 
-	return &api.DouyinPublishListResponse{
+	// Pack video data
+	response := &api.DouyinPublishListResponse{
 		StatusCode: errno.Success.ErrCode,
 		VideoList:  pack.VideoDataList(videoData),
-	}, nil
+	}
+
+	// Store the published video list in Redis cache
+	responseJSON, _ := json.Marshal(response)
+	err = global.UserInfoRC.Set(cacheKey, responseJSON, 24*time.Hour).Err()
+	if err != nil {
+		hlog.Error("service.publish.GetPublishVideos err: Error storing data in cache, ", err.Error())
+	}
+
+	return response, nil
+}
+
+func AreUsersFriends(userID, selectUserID uint64) (bool, error) {
+	friendListResponse, err := GetFriendList(userID)
+	if err != nil {
+		return false, err
+	}
+
+	for _, friend := range friendListResponse.UserList {
+		if friend.ID == int64(selectUserID) {
+			return true, nil
+		}
+	}
+	// Not friends
+	return false, nil
 }
