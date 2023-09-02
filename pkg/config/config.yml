@@ -3,14 +3,14 @@ hertz:
   port: 30000
 
 jwt:
-  signingKey: CloudWeRun
+  signingKey: CloudWeDance
   identityKey: id
 
 mysql:
   host: 127.0.0.1
   port: 3306
   username: root
-  password: 
+  password: 123456
   dbName: douyin
   maxOpenConn: 100
   maxIdleConn: 10

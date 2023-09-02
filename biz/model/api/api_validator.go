@@ -125,6 +125,18 @@ func (p *DouyinFeedRequest) IsValid() error {
 func (p *DouyinFeedResponse) IsValid() error {
 	return nil
 }
+func (p *DouyinFeedFollowRequest) IsValid() error {
+	return nil
+}
+func (p *DouyinFeedFollowResponse) IsValid() error {
+	return nil
+}
+func (p *DouyinFeedFriendRequest) IsValid() error {
+	return nil
+}
+func (p *DouyinFeedFriendResponse) IsValid() error {
+	return nil
+}
 func (p *DouyinMessageChatRequest) IsValid() error {
 	if p.ToUserID <= int64(0) {
 		return fmt.Errorf("field ToUserID gt rule failed, current value: %v", p.ToUserID)

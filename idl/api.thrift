@@ -54,7 +54,7 @@ struct douyin_response {
 }
 
 struct douyin_comment_action_request {
-  1: required string token       // 用户鉴权token
+  1: required string token (api.header = "token", api.query = "token")        // 用户鉴权token
   2: required i64 video_id (vt.gt = "0", api.vd="$>0")      // 视频id
   3: required i8 action_type (vt.in = "1", vt.in = "2", api.vd = "$==1||$==2")   // 1-发布评论，2-删除评论
   4: optional string comment_text (vt.min_size = "1", vt.max_size = "255", api.vd = "$=nil||(len($)>0&&len($)<256)") // 用户填写的评论内容，在action_type=1的时候使用
@@ -68,7 +68,7 @@ struct douyin_comment_action_response {
 }
 
 struct douyin_comment_list_request {
-  1: required string token // 用户鉴权token
+  1: required string token (api.header = "token", api.query = "token") // 用户鉴权token
   2: required i64 video_id (vt.gt = "0", api.vd="$>0") // 视频id
 }
 
@@ -95,7 +95,7 @@ struct User {
 }
 
 struct douyin_favorite_action_request {
-  1: required string token  // 用户鉴权token
+  1: required string token (api.header = "token", api.query = "token")  // 用户鉴权token
   2: required i64 video_id (vt.gt = "0", api.vd="$>0")  // 视频id
   3: required i8 action_type (vt.in = "1", vt.in = "2", api.vd = "$==1||$==2") // 1-点赞，2-取消点赞
 }
@@ -107,7 +107,7 @@ struct douyin_favorite_action_response {
 
 struct douyin_favorite_list_request {
   1: required i64 user_id (vt.gt = "0", api.vd="$>0") // 用户id
-  2: required string token // 用户鉴权token
+  2: required string token (api.header = "token", api.query = "token") // 用户鉴权token
 }
 
 struct douyin_favorite_list_response {
@@ -129,7 +129,7 @@ struct Video {
 
 struct douyin_feed_request {
   1: optional i64 latest_time // 可选参数，限制返回视频的最新投稿时间戳，精确到秒，不填表示当前时间
-  2: optional string token // 可选参数，登录用户设置
+  2: optional string token (api.header = "token", api.query = "token") // 可选参数，登录用户设置
 }
 
 struct douyin_feed_response {
@@ -139,8 +139,32 @@ struct douyin_feed_response {
   4: optional i64 next_time     // 本次返回的视频中，发布最早的时间，作为下次请求时的latest_time
 }
 
+struct douyin_feed_follow_request {
+  1: optional i64 latest_time // 可选参数，限制返回视频的最新投稿时间戳，精确到秒，不填表示当前时间
+  2: required string token (api.header = "token", api.query = "token") // 可选参数，登录用户设置
+}
+
+struct douyin_feed_follow_response {
+  1: required i64 status_code   // 状态码，0-成功，其他值-失败
+  2: optional string status_msg // 返回状态描述
+  3: list<Video> video_list     // 视频列表
+  4: optional i64 next_time     // 本次返回的视频中，发布最早的时间，作为下次请求时的latest_time
+}
+
+struct douyin_feed_friend_request {
+  1: optional i64 latest_time // 可选参数，限制返回视频的最新投稿时间戳，精确到秒，不填表示当前时间
+  2: required string token (api.header = "token", api.query = "token") // 可选参数，登录用户设置
+}
+
+struct douyin_feed_friend_response {
+  1: required i64 status_code   // 状态码，0-成功，其他值-失败
+  2: optional string status_msg // 返回状态描述
+  3: list<Video> video_list     // 视频列表
+  4: optional i64 next_time     // 本次返回的视频中，发布最早的时间，作为下次请求时的latest_time
+}
+
 struct douyin_message_chat_request {
-  1: required string token // 用户鉴权token
+  1: required string token (api.header = "token", api.query = "token") // 用户鉴权token
   2: required i64 to_user_id (vt.gt = "0", api.vd="$>0")  // 对方用户id
   3: optional i64 pre_msg_time //上次最新消息的时间
 }
@@ -160,7 +184,7 @@ struct Message {
 }
 
 struct douyin_message_action_request {
-  1: required string token // 用户鉴权token
+  1: required string token (api.header = "token", api.query = "token") // 用户鉴权token
   2: required i64 to_user_id (vt.gt = "0", api.vd="$>0") // 对方用户id
   3: required i8 action_type (vt.in = "1", api.vd="$==1") // 1-发送消息
   4: required string content (vt.min_size = "1", vt.max_size = "255", api.vd = "len($)>0&&len($)<256") // 消息内容
@@ -172,7 +196,7 @@ struct douyin_message_action_response {
 }
 
 struct douyin_publish_action_request {
-  1: required string token // 用户鉴权token
+  1: required string token (api.header = "token", api.form = "token") // 用户鉴权token
 //  2: optional binary data // 视频数据
   2: required string title (vt.min_size = "1", vt.max_size = "63", api.vd = "len($)>0&&len($)<64") // 视频标题
 }
@@ -184,7 +208,7 @@ struct douyin_publish_action_response {
 
 struct douyin_publish_list_request {
   1: required i64 user_id (vt.gt = "0", api.vd="$>0")  // 用户id
-  2: required string token  // 用户鉴权token
+  2: required string token (api.header = "token", api.query = "token")  // 用户鉴权token
 }
 
 struct douyin_publish_list_response {
@@ -195,7 +219,7 @@ struct douyin_publish_list_response {
 
 
 struct douyin_relation_action_request {
-  1: required string token // 用户鉴权token
+  1: required string token (api.header = "token", api.query = "token") // 用户鉴权token
   2: required i64 to_user_id (vt.gt = "0", api.vd="$>0") // 对方用户id
   3: required i8 action_type (vt.in = "1", vt.in = "2", api.vd = "$==1||$==2") // 1-关注，2-取消关注
 }
@@ -207,7 +231,7 @@ struct douyin_relation_action_response {
 
 struct douyin_relation_follow_list_request {
   1: required i64 user_id (vt.gt = "0", api.vd="$>0") // 用户id
-  2: required string token // 用户鉴权token
+  2: required string token (api.header = "token", api.query = "token") // 用户鉴权token
 }
 
 struct douyin_relation_follow_list_response {
@@ -218,7 +242,7 @@ struct douyin_relation_follow_list_response {
 
 struct douyin_relation_follower_list_request {
   1: required i64 user_id (vt.gt = "0", api.vd="$>0")  // 用户id
-  2: required string token // 用户鉴权token
+  2: required string token (api.header = "token", api.query = "token") // 用户鉴权token
 }
 
 struct douyin_relation_follower_list_response {
@@ -230,7 +254,7 @@ struct douyin_relation_follower_list_response {
 
 struct douyin_relation_friend_list_request {
   1: required i64 user_id (vt.gt = "0", api.vd="$>0")  // 用户id
-  2: required string token  // 用户鉴权token
+  2: required string token (api.header = "token", api.query = "token")  // 用户鉴权token
 }
 
 struct douyin_relation_friend_list_response {
@@ -253,8 +277,10 @@ struct FriendUser {
 
 
 struct douyin_user_register_request {
-  1: required string username (vt.min_size = "2", vt.max_size = "32", api.vd = "len($)>1 && len($)<32") // 注册用户名，最短2个字符，最长32个字符
-  2: required string password (vt.min_size = "6", vt.max_size = "32", api.vd = "len($)>5 && len($)<32") // 密码，最短6个字符，最长32个字符
+  // 注册用户名，最短2个字符，最长32个字符
+  1: required string username (vt.min_size = "2", vt.max_size = "32", api.vd = "len($)>1 && len($)<32")
+  // 密码，最短6个字符，最长32个字符，使用 api.vd 写正则会有点问题，做为替代在 util 里实现了正则的验证
+  2: required string password (vt.min_size = "6", vt.max_size = "32", api.vd = "len($)>5 && len($)<32")
 }
 
 struct douyin_user_register_response {
@@ -278,7 +304,7 @@ struct douyin_user_login_response {
 
 struct douyin_user_request {
   1: required i64 user_id (vt.gt = "0", api.vd = "$>0") // 用户id
-  2: required string token // 用户鉴权token
+  2: required string token (api.header = "token", api.query = "token") // 用户鉴权token
 }
 
 struct douyin_user_response {
@@ -305,6 +331,8 @@ struct UserInfo {
 // 基础接口
 service FeedService {
     douyin_feed_response GetFeed(1: douyin_feed_request req) (api.get="/douyin/feed/")
+    douyin_feed_follow_response GetFollowFeed(1: douyin_feed_follow_request req) (api.get="/douyin/feed/follow/")
+    douyin_feed_friend_response GetFriendFeed(1: douyin_feed_friend_request req) (api.get="/douyin/feed/friend/")
 }
 
 service UserService {
@@ -340,8 +368,4 @@ service RelationService {
 service MessageService {
     douyin_message_action_response SendMessage(1: douyin_message_action_request req) (api.post="/douyin/message/action/")
     douyin_message_chat_response GetMessageChat(1: douyin_message_chat_request req) (api.get="/douyin/message/chat/")
-}
-
-service WebSocketService {
-    douyin_message_action_response HandleWebSocketConnection(1: douyin_message_action_request req) (api.post="/douyin/websocket/connection/")
 }
