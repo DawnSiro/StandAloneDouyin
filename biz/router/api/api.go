@@ -4,7 +4,6 @@ package Api
 
 import (
 	api "douyin/biz/handler/api"
-	ws "douyin/ws"
 	"github.com/cloudwego/hertz/pkg/app/server"
 )
 
@@ -24,7 +23,7 @@ func Register(r *server.Hertz) {
 			_comment := _douyin.Group("/comment", _commentMw()...)
 			{
 				_action := _comment.Group("/action", _actionMw()...)
-				_action.POST("/", append(_comment_ctionMw(), api.CommentAction)...)
+				_action.POST("/", append(_commentactionMw(), api.CommentAction)...)
 			}
 			{
 				_list := _comment.Group("/list", _listMw()...)
@@ -45,6 +44,14 @@ func Register(r *server.Hertz) {
 		{
 			_feed := _douyin.Group("/feed", _feedMw()...)
 			_feed.GET("/", append(_getfeedMw(), api.GetFeed)...)
+			{
+				_follow := _feed.Group("/follow", _followMw()...)
+				_follow.GET("/", append(_getfollowfeedMw(), api.GetFollowFeed)...)
+			}
+			{
+				_friend := _feed.Group("/friend", _friendMw()...)
+				_friend.GET("/", append(_getfriendfeedMw(), api.GetFriendFeed)...)
+			}
 		}
 		{
 			_message := _douyin.Group("/message", _messageMw()...)
@@ -56,16 +63,12 @@ func Register(r *server.Hertz) {
 				_chat := _message.Group("/chat", _chatMw()...)
 				_chat.GET("/", append(_getmessagechatMw(), api.GetMessageChat)...)
 			}
-			{
-				_ws := _message.Group("/ws", _wsMw()...)
-				_ws.GET("/", append(_websocketMw(), ws.ServeWs)...)
-			}
 		}
 		{
 			_publish := _douyin.Group("/publish", _publishMw()...)
 			{
 				_action2 := _publish.Group("/action", _action2Mw()...)
-				_action2.POST("/", append(_publish_ctionMw(), api.PublishAction)...)
+				_action2.POST("/", append(_publishactionMw(), api.PublishAction)...)
 			}
 			{
 				_list1 := _publish.Group("/list", _list1Mw()...)
@@ -76,12 +79,12 @@ func Register(r *server.Hertz) {
 			_relation := _douyin.Group("/relation", _relationMw()...)
 			{
 				_action3 := _relation.Group("/action", _action3Mw()...)
-				_action3.POST("/", append(_followMw(), api.Follow)...)
+				_action3.POST("/", append(_follow0Mw(), api.Follow)...)
 			}
 			{
-				_follow0 := _relation.Group("/follow", _follow0Mw()...)
+				_follow1 := _relation.Group("/follow", _follow1Mw()...)
 				{
-					_list2 := _follow0.Group("/list", _list2Mw()...)
+					_list2 := _follow1.Group("/list", _list2Mw()...)
 					_list2.GET("/", append(_getfollowlistMw(), api.GetFollowList)...)
 				}
 			}
@@ -93,9 +96,9 @@ func Register(r *server.Hertz) {
 				}
 			}
 			{
-				_friend := _relation.Group("/friend", _friendMw()...)
+				_friend0 := _relation.Group("/friend", _friend0Mw()...)
 				{
-					_list4 := _friend.Group("/list", _list4Mw()...)
+					_list4 := _friend0.Group("/list", _list4Mw()...)
 					_list4.GET("/", append(_getfriendlistMw(), api.GetFriendList)...)
 				}
 			}

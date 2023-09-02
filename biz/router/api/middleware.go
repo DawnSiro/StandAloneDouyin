@@ -275,3 +275,33 @@ func _action3Mw() []app.HandlerFunc {
 	// your code...
 	return nil
 }
+
+func _commentactionMw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
+func _getfollowfeedMw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
+func _getfriendfeedMw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
+func _publishactionMw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
+func _follow1Mw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
+func _friend0Mw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
