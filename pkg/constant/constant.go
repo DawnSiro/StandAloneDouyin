@@ -71,4 +71,7 @@ const (
 const (
 	FollowActionTopic        = "follow-action"
 	FollowActionSubscription = "follow-action-sub"
+
+	LikeActionTopic        = "like-action"
+	LikeActionSubscription = "like-action-sub"
 )
