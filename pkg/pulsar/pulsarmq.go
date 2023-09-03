@@ -30,3 +30,17 @@ func NewPulsarMQ(client pulsar.Client, topic, subscription string) *PulsarMQ {
 
 	return &PulsarMQ{producer.Topic(), consumer.Subscription(), producer, consumer}
 }
+
+func (mq *PulsarMQ) RunConsume(f func() error) {
+	go func() {
+		err := f()
+		if err != nil {
+			hlog.Errorf("follow action cosumer error: %v", err)
+		}
+	}()
+}
+
+func (mq *PulsarMQ) Close() {
+	mq.Producer.Close()
+	mq.Consumer.Close()
+}
