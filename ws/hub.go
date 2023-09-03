@@ -10,13 +10,15 @@ package ws
 import (
 	"douyin/dal/db"
 	"douyin/pkg/errno"
+	"douyin/pkg/pulsar"
 	"encoding/json"
 	"fmt"
-	"github.com/cloudwego/hertz/pkg/common/hlog"
-	"github.com/hertz-contrib/websocket"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/cloudwego/hertz/pkg/common/hlog"
+	"github.com/hertz-contrib/websocket"
 )
 
 type SendMsg struct {
@@ -137,10 +139,10 @@ func (h *Hub) Run() {
 					broadcast.Client.LastHeartbeatTime = time.Now() // 更新心跳时间
 					hlog.Info("Update client lastHeartbeatTime time")
 
-					err = db.CreateMessage(uid, touid, string(message)) // 将消息放到数据库
-
+					// 将消息发布到消息队列
+					err = pulsar.GetMessageMQInstance().CreateMessage(uid, touid, string(message))
 					if err != nil {
-						hlog.Error("biz.handler.api.ws.hub.CreateMessage err:", err.Error())
+						hlog.Error("biz.handler.api.ws.hub.CreateMessage publish message err: ", err.Error())
 					}
 				}
 			} else { // 好友不在线
@@ -158,10 +160,10 @@ func (h *Hub) Run() {
 					broadcast.Client.LastHeartbeatTime = time.Now() // 更新心跳时间
 					hlog.Info("Update client lastHeartbeatTime time")
 
-					err = db.CreateMessage(uid, touid, string(message)) // 将消息放到数据库
-
+					// 将消息发布到消息队列
+					err = pulsar.GetMessageMQInstance().CreateMessage(uid, touid, string(message))
 					if err != nil {
-						hlog.Error("biz.handler.api.ws.hub.CreateMessage err:", err.Error())
+						hlog.Error("biz.handler.api.ws.hub.CreateMessage publish message err: ", err.Error())
 					}
 				}
 			}

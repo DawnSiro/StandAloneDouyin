@@ -71,4 +71,6 @@ const (
 const (
 	FollowActionTopic        = "follow-action"
 	FollowActionSubscription = "follow-action-sub"
+	MessageTopic = "message"
+	MessageSubcription = "message-sub"
 )
