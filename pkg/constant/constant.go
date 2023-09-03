@@ -74,4 +74,7 @@ const (
 
 	LikeActionTopic        = "like-action"
 	LikeActionSubscription = "like-action-sub"
+
+	MessageTopic       = "message"
+	MessageSubcription = "message-sub"
 )
