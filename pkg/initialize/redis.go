@@ -88,8 +88,8 @@ func Redis() {
 				hlog.Error("WarmUpCacheForTopComments error: " + err.Error())
 			}
 
-			// Sleep for 15 minutes before the next warm-up
-			time.Sleep(15 * time.Minute)
+			// Wait for 7 days before the next warm-up
+			time.Sleep(7 * 24 * time.Hour)
 		}
 	}()
 
