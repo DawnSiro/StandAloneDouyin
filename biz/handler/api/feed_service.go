@@ -44,3 +44,35 @@ func GetFeed(ctx context.Context, c *app.RequestContext) {
 
 	c.JSON(consts.StatusOK, resp)
 }
+
+// GetFollowFeed .
+// @router /douyin/feed/follow/ [GET]
+func GetFollowFeed(ctx context.Context, c *app.RequestContext) {
+	var err error
+	var req api.DouyinFeedFollowRequest
+	err = c.BindAndValidate(&req)
+	if err != nil {
+		c.String(consts.StatusBadRequest, err.Error())
+		return
+	}
+
+	resp := new(api.DouyinFeedFollowResponse)
+
+	c.JSON(consts.StatusOK, resp)
+}
+
+// GetFriendFeed .
+// @router /douyin/feed/friend/ [GET]
+func GetFriendFeed(ctx context.Context, c *app.RequestContext) {
+	var err error
+	var req api.DouyinFeedFriendRequest
+	err = c.BindAndValidate(&req)
+	if err != nil {
+		c.String(consts.StatusBadRequest, err.Error())
+		return
+	}
+
+	resp := new(api.DouyinFeedFriendResponse)
+
+	c.JSON(consts.StatusOK, resp)
+}
