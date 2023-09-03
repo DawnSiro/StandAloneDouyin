@@ -12,7 +12,7 @@ import (
 
 func lGetClient() (client pulsar.Client, err error) {
 	client, err = pulsar.NewClient(pulsar.ClientOptions{
-		URL:               "pulsar://localhost:6650",
+		URL:               "pulsar://192.168.85.128:6650",
 		ConnectionTimeout: 30 * time.Second,
 		OperationTimeout:  30 * time.Second,
 	})
@@ -29,7 +29,7 @@ func lGetClient() (client pulsar.Client, err error) {
 
 func TestLikeActionMQ(t *testing.T) {
 	var err error
-	global.PulsarClient, err = GetClient()
+	global.PulsarClient, err = lGetClient()
 	if err != nil {
 		t.Fatal(err)
 	}

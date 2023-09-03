@@ -85,7 +85,7 @@ func (mq *LikeActionMQ) Consume() error {
 }
 
 func (mq *LikeActionMQ) LikeAction(userID, videoID uint64) error {
-	msg := FollowActionMessage{userID, videoID, constant.Favorite}
+	msg := LikeActionMessage{userID, videoID, constant.Favorite}
 	payload, err := json.Marshal(msg)
 	if err != nil {
 		return err
@@ -97,7 +97,7 @@ func (mq *LikeActionMQ) LikeAction(userID, videoID uint64) error {
 }
 
 func (mq *LikeActionMQ) CancelLikeAction(userID, videoID uint64) error {
-	msg := FollowActionMessage{userID, videoID, constant.CancelFavorite}
+	msg := LikeActionMessage{userID, videoID, constant.CancelFavorite}
 	payload, err := json.Marshal(msg)
 	if err != nil {
 		return err
