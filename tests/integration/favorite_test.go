@@ -3,6 +3,7 @@ package integration
 import (
 	"fmt"
 	"net/http"
+	"time"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -45,6 +46,8 @@ var _ = Describe("favorite test", func() {
 			Expect(err).To(BeNil())
 			Expect(respData.StatusCode).To(Equal(int64(0)))
 
+			time.Sleep(time.Second) // wait for mq
+
 			after_cnt, err := GetFavoriteNum(video_id)
 			Expect(err).To(BeNil())
 			Expect(after_cnt - before_cnt).To(Equal(1))
@@ -67,6 +70,8 @@ var _ = Describe("favorite test", func() {
 			Expect(err).To(BeNil())
 			Expect(respData.StatusCode).To(Equal(int64(0)))
 
+			time.Sleep(time.Second) // wait for mq
+
 			before_cnt, err := GetFavoriteNum(video_id)
 			Expect(err).To(BeNil())
 			Expect(before_cnt).NotTo(BeZero())
@@ -79,6 +84,8 @@ var _ = Describe("favorite test", func() {
 			Expect(err).To(BeNil())
 			Expect(respData.StatusCode).To(Equal(int64(0)))
 
+			time.Sleep(time.Second) // wait for mq
+			
 			after_cnt, err := GetFavoriteNum(video_id)
 			Expect(err).To(BeNil())
 			Expect(after_cnt - before_cnt).To(Equal(-1))
@@ -189,6 +196,8 @@ var _ = Describe("favorite test", func() {
 		It("should equal 3", func() {
 			err := doFavoriteAction(query["token"])
 			Expect(err).To(BeNil())
+
+			time.Sleep(time.Second) // wait for mq
 
 			resp, err := http.Get(util.CreateURL(path, query))
 			Expect(err).To(BeNil())

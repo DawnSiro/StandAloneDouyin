@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"net/http"
 
+	_ "github.com/go-sql-driver/mysql"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	_ "github.com/go-sql-driver/mysql"
 
 	util "douyin/test/testutil"
 )
@@ -214,7 +214,7 @@ var _ = Describe("user test", func() {
 
 		It("wrong userid", func() {
 			query := map[string]string{
-				"user_id": userid + "0",
+				"user_id": userid + "000",
 				"token":   token,
 			}
 			resp, err := http.Get(util.CreateURL(path, query))
