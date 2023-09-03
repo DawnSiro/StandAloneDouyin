@@ -3,6 +3,7 @@ package integration
 import (
 	"fmt"
 	"net/http"
+	"time"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -93,6 +94,7 @@ var _ = Describe("message test", func() {
 					"to_user_id":  fmt.Sprintf("%d", idA),
 					"action_type": "1",
 				})
+				time.Sleep(1 * time.Second) // wait for MQ
 			})
 
 			AfterEach(func() {

@@ -18,6 +18,7 @@ func Init() {
 	initialize.Viper()
 	initialize.MySQL()
 	initialize.Redis()
+	initialize.Pulsar()
 	initialize.Global()
 
 	mw.InitJWT()

@@ -35,3 +35,8 @@ userInfoRCRedis:
   password:
   db: 2
   poolSize: 100
+
+pulsar:
+  url: pulsar://127.00.1:6650
+  connectionTimeout: 30
+  operatorTimeout: 30

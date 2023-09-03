@@ -3,6 +3,7 @@ package integration
 import (
 	"fmt"
 	"net/http"
+	"time"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -52,6 +53,8 @@ var _ = Describe("relation test", func() {
 			Expect(err).To(BeNil())
 			Expect(respData.StatusCode).To(Equal(int64(0)))
 
+			time.Sleep(1 * time.Second) // wait for MQ
+
 			fansAfter, err := GetFansNum(upid)
 			Expect(err).To(BeNil())
 			Expect(fansAfter - fansBefore).To(Equal(1))
@@ -71,6 +74,7 @@ var _ = Describe("relation test", func() {
 
 		It("should cancel success", func() {
 			// follow firstly
+			time.Sleep(1 * time.Second) // wait for MQ
 			query["action_type"] = "1"
 			resp, err := http.Post(util.CreateURL(path, query), "", nil)
 			Expect(err).To(BeNil())
@@ -78,6 +82,8 @@ var _ = Describe("relation test", func() {
 			respData, err := util.GetDouyinResponse[util.DouyinSimpleResponse](resp)
 			Expect(err).To(BeNil())
 			Expect(respData.StatusCode).To(Equal(int64(0)))
+
+			time.Sleep(1 * time.Second) // wait for MQ
 
 			fansBefore, err := GetFansNum(upid)
 			Expect(err).To(BeNil())
@@ -91,6 +97,8 @@ var _ = Describe("relation test", func() {
 			respData, err = util.GetDouyinResponse[util.DouyinSimpleResponse](resp)
 			Expect(err).To(BeNil())
 			Expect(respData.StatusCode).To(Equal(int64(0)))
+
+			time.Sleep(1 * time.Second) // wait for MQ
 
 			fansAfter, err := GetFansNum(upid)
 			Expect(err).To(BeNil())
@@ -171,6 +179,7 @@ var _ = Describe("relation test", func() {
 			BeforeEach(func() {
 				err := actionFollowing(query["token"], "1")
 				Expect(err).To(BeNil())
+				time.Sleep(1 * time.Second) // wait for MQ
 			})
 
 			AfterEach(func() {
@@ -259,6 +268,7 @@ var _ = Describe("relation test", func() {
 			BeforeEach(func() {
 				err := actionFollower(upid, "1")
 				Expect(err).To(BeNil())
+				time.Sleep(1 * time.Second) // wait for MQ
 			})
 
 			AfterEach(func() {
@@ -356,6 +366,7 @@ var _ = Describe("relation test", func() {
 					"to_user_id":  queryA["user_id"],
 					"action_type": "1",
 				})
+				time.Sleep(1 * time.Second) // wait for MQ
 			})
 
 			AfterEach(func() {
