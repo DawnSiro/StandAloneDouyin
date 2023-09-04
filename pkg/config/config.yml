@@ -10,8 +10,8 @@ mysql:
   host: 127.0.0.1
   port: 3306
   username: root
-  password: root
-  dbName: tiktok
+  password: 123456
+  dbName: douyin
   maxOpenConn: 100
   maxIdleConn: 10
 
