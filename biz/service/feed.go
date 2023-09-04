@@ -8,8 +8,11 @@ import (
 	"douyin/pkg/errno"
 	"douyin/pkg/global"
 	"fmt"
+<<<<<<< HEAD
 	"math/rand"
 	"sync"
+=======
+>>>>>>> c257f9e4b538ce841e74f03618ca2686b54e1317
 	"time"
 
 	"github.com/cloudwego/hertz/pkg/common/json"
@@ -94,6 +97,7 @@ func GetFeed(latestTime *int64, userID uint64) (*api.DouyinFeedResponse, error) 
 	cacheMutex.Unlock()
 
 	// Cache miss, query the database
+<<<<<<< HEAD
 	// Create closures that capture the required arguments.
 	generateItemCF := func() ([]*db.VideoData, error) {
 		return db.GenerateItemCFRecommendations(constant.MaxVideoNum, latestTime, userID)
@@ -127,6 +131,9 @@ func GetFeed(latestTime *int64, userID uint64) (*api.DouyinFeedResponse, error) 
 		}
 	}
 	// Handle the case when all fetch methods fail.
+=======
+	videoData, err := db.MSelectFeedVideoDataListByUserID2(constant.MaxVideoNum, latestTime, userID)
+>>>>>>> c257f9e4b538ce841e74f03618ca2686b54e1317
 	if err != nil {
 		hlog.Error("service.feed.GetFeed err:", err.Error())
 		// Release cache status flag to allow other threads to update cache
