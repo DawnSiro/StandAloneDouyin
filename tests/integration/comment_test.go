@@ -13,7 +13,6 @@ import (
 var _ = Describe("comment test", func() {
 	const (
 		username = "fortest-comment"
-		password = "fortest-comment"
 		video_id = 2
 		content  = "This is a comment for test"
 	)
