@@ -1,0 +1,42 @@
+hertz:
+  host: 127.0.0.1
+  port: 30000
+
+jwt:
+  signingKey: CloudWeDance
+  identityKey: id
+
+mysql:
+  host: 127.0.0.1
+  port: 3306
+  username: root
+  password: root
+  dbName: douyin_benchmark
+  maxOpenConn: 100
+  maxIdleConn: 10
+
+videoCRCRedis:
+  host: localhost
+  port: 6379
+  password:
+  db: 0
+  poolSize: 100
+
+videoFRCRedis:
+  host: localhost
+  port: 6379
+  password:
+  db: 1
+  poolSize: 100
+
+userInfoRCRedis:
+  host: localhost
+  port: 6379
+  password:
+  db: 2
+  poolSize: 100
+
+pulsar:
+  url: pulsar://127.0.0.1:6650
+  connectionTimeout: 30
+  operatorTimeout: 30
