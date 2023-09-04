@@ -51,10 +51,10 @@ func importSQLFile(filename, dsn string) {
 func main() {
 	user := flag.String("u", "root", "username of mysql")
 	passwd := flag.String("p", "root", "password of mysql")
+	file := flag.String("f", "./integration/blank.sql", "sql file")
 	flag.Parse()
 
-	sqlFilename := "test_init_data.sql"
 	dsn := fmt.Sprintf("%s:%s@tcp(localhost)/", *user, *passwd)
 
-	importSQLFile(sqlFilename, dsn)
+	importSQLFile(*file, dsn)
 }
