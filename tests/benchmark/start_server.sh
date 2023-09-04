@@ -1,4 +1,4 @@
-lsof -i:30000 | awk '{print $2}' | grep -v PID | xargs kill
+lsof -i:30000 | awk '{print $2}' | grep -v PID | xargs kill -9
 cd .. && go mod tidy && go run test_init_data.go -f benchmark/benchmark.sql
 cd .. && go mod tidy && go build .
 echo '编译完成'
