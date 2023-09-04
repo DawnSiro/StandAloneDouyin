@@ -8,7 +8,9 @@ import (
 	"douyin/pkg/global"
 	"fmt"
 	"github.com/cloudwego/hertz/pkg/common/json"
+	"math/rand"
 	"strconv"
+	"sync"
 	"time"
 
 	"github.com/cloudwego/hertz/pkg/common/hlog"
@@ -70,23 +72,50 @@ func CancelFollow(userID, toUserID uint64) (*api.DouyinRelationActionResponse, e
 // userID 为发送请求的用户ID，从 Token 里取到
 // selectUserID 为需要查询的用户的ID，做为请求参数传递
 func GetFollowList(userID, selectUserID uint64) (*api.DouyinRelationFollowListResponse, error) {
-	// Check if data is available in Redis
+	// Check if cache key is valid using Bloom filter
 	cacheKey := fmt.Sprintf("followList:%d", userID)
-	cachedData, err := global.UserInfoRC.Get(cacheKey).Result()
-	if err == nil {
-		// Cache hit, return cached data
-		var cachedResponse api.DouyinRelationFollowListResponse
-		if err := json.Unmarshal([]byte(cachedData), &cachedResponse); err != nil {
-			hlog.Error("service.relation.GetFollowList err: Error decoding cached data, ", err.Error())
-		} else {
-			return &cachedResponse, nil
+	if bloomFilter.TestString(cacheKey) {
+		cachedData, err := global.UserInfoRC.Get(cacheKey).Result()
+		if err == nil {
+			// Cache hit, return cached data
+			var cachedResponse api.DouyinRelationFollowListResponse
+			if err := json.Unmarshal([]byte(cachedData), &cachedResponse); err != nil {
+				hlog.Error("service.relation.GetFollowList err: Error decoding cached data, ", err.Error())
+			} else {
+				return &cachedResponse, nil
+			}
 		}
 	}
+
+	// Create a random duration for cache expiration
+	minDuration := 6 * time.Hour
+	maxDuration := 12 * time.Hour
+	cacheDuration := minDuration + time.Duration(rand.Intn(int(maxDuration-minDuration)))
+
+	// Create a WaitGroup for the cache update operation
+	waitGroup := &sync.WaitGroup{}
+	waitGroup.Add(1)
+
+	// Check if another thread is updating the cache
+	cacheMutex.Lock()
+	existingWaitGroup, exists := cacheStatus[cacheKey]
+	if exists {
+		cacheMutex.Unlock()
+		existingWaitGroup.Wait()
+		return GetFollowList(userID, selectUserID)
+	}
+	// Set cache status flag to indicate cache update is in progress
+	cacheStatus[cacheKey] = waitGroup
+	cacheMutex.Unlock()
 
 	// Cache miss, query the database
 	relationDataList, err := db.SelectFollowDataListByUserID(userID)
 	if err != nil {
 		hlog.Error("service.relation.GetFollowList err:", err.Error())
+		// Release cache status flag to allow other threads to update cache
+		cacheMutex.Lock()
+		delete(cacheStatus, cacheKey)
+		cacheMutex.Unlock()
 		return nil, err
 	}
 
@@ -96,35 +125,66 @@ func GetFollowList(userID, selectUserID uint64) (*api.DouyinRelationFollowListRe
 		UserList:   pack.RelationDataList(relationDataList),
 	}
 
-	// Store the data in Redis cache
+	// Store the data in Redis cache with the random expiration time
 	responseJSON, _ := json.Marshal(response)
-	err = global.UserInfoRC.Set(cacheKey, responseJSON, 6*time.Hour).Err()
+	err = global.UserInfoRC.Set(cacheKey, responseJSON, cacheDuration).Err()
 	if err != nil {
 		hlog.Error("service.relation.GetFollowList err: Error storing data in cache, ", err.Error())
 	}
 
-	return response, nil
+	// Release cache status flag and signal that cache update is done
+	cacheMutex.Lock()
+	delete(cacheStatus, cacheKey)
+	waitGroup.Done()
+	cacheMutex.Unlock()
 
+	return response, nil
 }
 
 func GetFollowerList(userID, selectUserID uint64) (*api.DouyinRelationFollowerListResponse, error) {
-	// Check if data is available in Redis
 	cacheKey := fmt.Sprintf("followerList:%d", userID)
-	cachedData, err := global.UserInfoRC.Get(cacheKey).Result()
-	if err == nil {
-		// Cache hit, return cached data
-		var cachedResponse api.DouyinRelationFollowerListResponse
-		if err := json.Unmarshal([]byte(cachedData), &cachedResponse); err != nil {
-			hlog.Error("service.relation.GetFollowerList err: Error decoding cached data, ", err.Error())
-		} else {
-			return &cachedResponse, nil
+	if bloomFilter.TestString(cacheKey) {
+		cachedData, err := global.UserInfoRC.Get(cacheKey).Result()
+		if err == nil {
+			// Cache hit, return cached data
+			var cachedResponse api.DouyinRelationFollowerListResponse
+			if err := json.Unmarshal([]byte(cachedData), &cachedResponse); err != nil {
+				hlog.Error("service.relation.GetFollowerList err: Error decoding cached data, ", err.Error())
+			} else {
+				return &cachedResponse, nil
+			}
 		}
 	}
+
+	// Create a random duration for cache expiration
+	minDuration := 6 * time.Hour
+	maxDuration := 12 * time.Hour
+	cacheDuration := minDuration + time.Duration(rand.Intn(int(maxDuration-minDuration)))
+
+	// Create a WaitGroup for the cache update operation
+	waitGroup := &sync.WaitGroup{}
+	waitGroup.Add(1)
+
+	// Check if another thread is updating the cache
+	cacheMutex.Lock()
+	existingWaitGroup, exists := cacheStatus[cacheKey]
+	if exists {
+		cacheMutex.Unlock()
+		existingWaitGroup.Wait()
+		return GetFollowerList(userID, selectUserID)
+	}
+	// Set cache status flag to indicate cache update is in progress
+	cacheStatus[cacheKey] = waitGroup
+	cacheMutex.Unlock()
 
 	// Cache miss, query the database
 	relationDataList, err := db.SelectFollowerDataListByUserID(userID)
 	if err != nil {
 		hlog.Error("service.relation.GetFollowerList err: ", err.Error())
+		// Release cache status flag to allow other threads to update cache
+		cacheMutex.Lock()
+		delete(cacheStatus, cacheKey)
+		cacheMutex.Unlock()
 		return nil, err
 	}
 
@@ -134,39 +194,70 @@ func GetFollowerList(userID, selectUserID uint64) (*api.DouyinRelationFollowerLi
 		UserList:   pack.RelationDataList(relationDataList),
 	}
 
-	// Store the data in Redis cache
+	// Store the data in Redis cache with the random expiration time
 	responseJSON, _ := json.Marshal(response)
-	err = global.UserInfoRC.Set(cacheKey, responseJSON, 6*time.Hour).Err()
+	err = global.UserInfoRC.Set(cacheKey, responseJSON, cacheDuration).Err()
 	if err != nil {
 		hlog.Error("service.relation.GetFollowerList err: Error storing data in cache, ", err.Error())
 	}
 
-	return response, nil
+	// Release cache status flag and signal that cache update is done
+	cacheMutex.Lock()
+	delete(cacheStatus, cacheKey)
+	waitGroup.Done()
+	cacheMutex.Unlock()
 
+	return response, nil
 }
 
 func GetFriendList(userID uint64) (*api.DouyinRelationFriendListResponse, error) {
-	// Check if data is available in Redis
 	cacheKey := fmt.Sprintf("friendList:%d", userID)
-	cachedData, err := global.UserInfoRC.Get(cacheKey).Result()
-	if err == nil {
-		// Cache hit, return cached data
-		var cachedResponse api.DouyinRelationFriendListResponse
-		if err := json.Unmarshal([]byte(cachedData), &cachedResponse); err != nil {
-			hlog.Error("service.relation.GetFriendList err: Error decoding cached data, ", err.Error())
-		} else {
-			return &cachedResponse, nil
+	if bloomFilter.TestString(cacheKey) {
+		cachedData, err := global.UserInfoRC.Get(cacheKey).Result()
+		if err == nil {
+			// Cache hit, return cached data
+			var cachedResponse api.DouyinRelationFriendListResponse
+			if err := json.Unmarshal([]byte(cachedData), &cachedResponse); err != nil {
+				hlog.Error("service.relation.GetFriendList err: Error decoding cached data, ", err.Error())
+			} else {
+				return &cachedResponse, nil
+			}
 		}
 	}
+
+	// Create a random duration for cache expiration
+	minDuration := 6 * time.Hour
+	maxDuration := 12 * time.Hour
+	cacheDuration := minDuration + time.Duration(rand.Intn(int(maxDuration-minDuration)))
+
+	// Create a WaitGroup for the cache update operation
+	waitGroup := &sync.WaitGroup{}
+	waitGroup.Add(1)
+
+	// Check if another thread is updating the cache
+	cacheMutex.Lock()
+	existingWaitGroup, exists := cacheStatus[cacheKey]
+	if exists {
+		cacheMutex.Unlock()
+		existingWaitGroup.Wait()
+		return GetFriendList(userID)
+	}
+	// Set cache status flag to indicate cache update is in progress
+	cacheStatus[cacheKey] = waitGroup
+	cacheMutex.Unlock()
 
 	// Cache miss, query the database
 	userList, err := db.GetFriendList(userID)
 	if err != nil {
 		hlog.Error("service.relation.GetFriendList err: ", err.Error())
+		// Release cache status flag to allow other threads to update cache
+		cacheMutex.Lock()
+		delete(cacheStatus, cacheKey)
+		cacheMutex.Unlock()
 		return nil, err
 	}
 
-	// TODO 存在循环查询DB
+	// Convert to response format
 	friendUserList := make([]*api.FriendUser, 0, len(userList))
 	for _, u := range userList {
 		msg, err := db.GetLatestMsg(userID, u.ID)
@@ -177,18 +268,23 @@ func GetFriendList(userID uint64) (*api.DouyinRelationFriendListResponse, error)
 		friendUserList = append(friendUserList, pack.FriendUser(u, db.IsFollow(userID, u.ID), msg.Content, msg.MsgType))
 	}
 
-	// Convert to response format
 	response := &api.DouyinRelationFriendListResponse{
 		StatusCode: errno.Success.ErrCode,
 		UserList:   friendUserList,
 	}
 
-	// Store the data in Redis cache
+	// Store the data in Redis cache with the random expiration time
 	responseJSON, _ := json.Marshal(response)
-	err = global.UserInfoRC.Set(cacheKey, responseJSON, 6*time.Hour).Err()
+	err = global.UserInfoRC.Set(cacheKey, responseJSON, cacheDuration).Err()
 	if err != nil {
 		hlog.Error("service.relation.GetFriendList err: Error storing data in cache, ", err.Error())
 	}
+
+	// Release cache status flag and signal that cache update is done
+	cacheMutex.Lock()
+	delete(cacheStatus, cacheKey)
+	waitGroup.Done()
+	cacheMutex.Unlock()
 
 	return response, nil
 }

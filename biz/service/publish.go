@@ -9,6 +9,8 @@ import (
 	"fmt"
 	"github.com/cloudwego/hertz/pkg/common/json"
 	"io"
+	"math/rand"
+	"sync"
 	"time"
 
 	"douyin/biz/model/api"
@@ -83,30 +85,56 @@ func GetPublishVideos(userID, selectUserID uint64) (*api.DouyinPublishListRespon
 	//	videoList = append(videoList, video)
 	//}
 
-	// Check if user info is available in Redis cache
+	// Check if cache key is valid using Bloom filter
 	cacheKey := fmt.Sprintf("publishedVideoList:%d", selectUserID)
-	cachedData, err := global.UserInfoRC.Get(cacheKey).Result()
-
-	if err == nil {
-		// Cache hit, judge if they are friends
-		isFriend, err := AreUsersFriends(userID, selectUserID)
-		if err != nil {
-			hlog.Error("service.publish.GetPublishVideos err: Error checking if users are friends, ", err.Error())
-		} else if isFriend {
-			// Return cached published video list
-			var cachedResponse api.DouyinPublishListResponse
-			if err := json.Unmarshal([]byte(cachedData), &cachedResponse); err != nil {
-				hlog.Error("service.publish.GetPublishVideos err: Error decoding cached data, ", err.Error())
-			} else {
-				return &cachedResponse, nil
+	if bloomFilter.TestString(cacheKey) {
+		cachedData, err := global.UserInfoRC.Get(cacheKey).Result()
+		if err == nil {
+			// Cache hit, judge if they are friends
+			isFriend, err := AreUsersFriends(userID, selectUserID)
+			if err != nil {
+				hlog.Error("service.publish.GetPublishVideos err: Error checking if users are friends, ", err.Error())
+			} else if isFriend {
+				// Return cached published video list
+				var cachedResponse api.DouyinPublishListResponse
+				if err := json.Unmarshal([]byte(cachedData), &cachedResponse); err != nil {
+					hlog.Error("service.publish.GetPublishVideos err: Error decoding cached data, ", err.Error())
+				} else {
+					return &cachedResponse, nil
+				}
 			}
 		}
 	}
+
+	// Create a random duration for cache expiration
+	minDuration := 24 * time.Hour
+	maxDuration := 48 * time.Hour
+	cacheDuration := minDuration + time.Duration(rand.Intn(int(maxDuration-minDuration)))
+
+	// Create a WaitGroup for the cache update operation
+	waitGroup := &sync.WaitGroup{}
+	waitGroup.Add(1)
+
+	// Check if another thread is updating the cache
+	cacheMutex.Lock()
+	existingWaitGroup, exists := cacheStatus[cacheKey]
+	if exists {
+		cacheMutex.Unlock()
+		existingWaitGroup.Wait()
+		return GetPublishVideos(userID, selectUserID)
+	}
+	// Set cache status flag to indicate cache update is in progress
+	cacheStatus[cacheKey] = waitGroup
+	cacheMutex.Unlock()
 
 	// Cache miss, query the database
 	videoData, err := db.SelectPublishVideoDataListByUserID(userID, selectUserID)
 	if err != nil {
 		hlog.Error("service.publish.GetPublishVideos err:", err.Error())
+		// Release cache status flag to allow other threads to update cache
+		cacheMutex.Lock()
+		delete(cacheStatus, cacheKey)
+		cacheMutex.Unlock()
 		return nil, err
 	}
 
@@ -116,12 +144,18 @@ func GetPublishVideos(userID, selectUserID uint64) (*api.DouyinPublishListRespon
 		VideoList:  pack.VideoDataList(videoData),
 	}
 
-	// Store the published video list in Redis cache
+	// Store the published video list in Redis cache with the random expiration time
 	responseJSON, _ := json.Marshal(response)
-	err = global.UserInfoRC.Set(cacheKey, responseJSON, 24*time.Hour).Err()
+	err = global.UserInfoRC.Set(cacheKey, responseJSON, cacheDuration).Err()
 	if err != nil {
 		hlog.Error("service.publish.GetPublishVideos err: Error storing data in cache, ", err.Error())
 	}
+
+	// Release cache status flag and signal that cache update is done
+	cacheMutex.Lock()
+	delete(cacheStatus, cacheKey)
+	waitGroup.Done()
+	cacheMutex.Unlock()
 
 	return response, nil
 }
