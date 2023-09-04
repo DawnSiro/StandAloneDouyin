@@ -5,6 +5,8 @@ import (
 	"douyin/dal/db"
 	"douyin/dal/pack"
 	"douyin/pkg/errno"
+	"douyin/pkg/pulsar"
+
 	"github.com/cloudwego/hertz/pkg/common/hlog"
 )
 
@@ -16,9 +18,9 @@ func SendMessage(fromUserID, toUserID uint64, content string) (*api.DouyinMessag
 		hlog.Error("service.message.SendMessage err:", errNo.Error())
 		return nil, errNo
 	}
-	err := db.CreateMessage(fromUserID, toUserID, content)
+	err := pulsar.GetMessageMQInstance().CreateMessage(fromUserID, toUserID, content)
 	if err != nil {
-		hlog.Error("service.message.SendMessage err:", err.Error())
+		hlog.Error("service.message.SendMessage err: failed to publish a message, ", err.Error())
 		return nil, err
 	}
 	return &api.DouyinMessageActionResponse{
