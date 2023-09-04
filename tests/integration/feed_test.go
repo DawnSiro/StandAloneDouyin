@@ -65,7 +65,6 @@ var _ = Describe("/douyin/feed api request", func() {
 	Context("has token", func() {
 		const (
 			username = "fortest-feed"
-			password = "fortest-feed"
 		)
 
 		var (
