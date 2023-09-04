@@ -23,7 +23,7 @@ var _ = Describe("user test", func() {
 		It("should register success", func() {
 			query := map[string]string{
 				"username": testuser,
-				"password": "123456",
+				"password": password,
 			}
 			resp, err := http.Post(util.CreateURL(path, query), "", nil)
 			Expect(err).To(BeNil())
@@ -38,7 +38,7 @@ var _ = Describe("user test", func() {
 		It("username exited", func() {
 			query := map[string]string{
 				"username": testuser,
-				"password": "123456",
+				"password": password,
 			}
 			resp, err := http.Post(util.CreateURL(path, query), "", nil)
 			Expect(err).To(BeNil())
@@ -58,7 +58,7 @@ var _ = Describe("user test", func() {
 			Expect(len(longuser) > 32).To(BeTrue())
 			query := map[string]string{
 				"username": longuser,
-				"password": "000000",
+				"password": password,
 			}
 			resp, err := http.Post(util.CreateURL(path, query), "", nil)
 			Expect(err).To(BeNil())
@@ -84,7 +84,7 @@ var _ = Describe("user test", func() {
 
 			respData, err := util.GetDouyinResponse[util.DouyinUserRegisterResponse](resp)
 			Expect(err).To(BeNil())
-			Expect(respData.StatusCode).To(Equal(int64(10400)))
+			Expect(respData.StatusCode).To(Equal(int64(10122)))
 		})
 
 		// TODO: password too short and not strong enough
@@ -94,7 +94,7 @@ var _ = Describe("user test", func() {
 		const (
 			path     = uPath + "/login"
 			username = "fortest-login"
-			password = "fortest-login"
+			password = password
 		)
 		var (
 			userid int64
@@ -131,7 +131,7 @@ var _ = Describe("user test", func() {
 
 			query := map[string]string{
 				"username": user,
-				"password": "hhhhhh",
+				"password": password,
 			}
 			resp, err := http.Post(util.CreateURL(path, query), "", nil)
 			Expect(err).To(BeNil())
@@ -172,7 +172,7 @@ var _ = Describe("user test", func() {
 
 		BeforeEach(func() {
 			var err error
-			id, token, err = util.GetUseridAndToken(username, username)
+			id, token, err = util.GetUseridAndToken(username, password)
 			Expect(err).To(BeNil())
 			userid = fmt.Sprintf("%d", id)
 		})

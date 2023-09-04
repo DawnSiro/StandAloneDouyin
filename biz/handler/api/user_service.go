@@ -4,11 +4,13 @@ package api
 
 import (
 	"context"
-	"douyin/pkg/global"
+	"strings"
 
 	"douyin/biz/model/api"
 	"douyin/biz/service"
 	"douyin/pkg/errno"
+	"douyin/pkg/global"
+	"douyin/pkg/util"
 
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/common/hlog"
@@ -25,6 +27,24 @@ func Register(ctx context.Context, c *app.RequestContext) {
 		c.JSON(consts.StatusOK, &api.DouyinResponse{
 			StatusCode: errno.UserRequestParameterError.ErrCode,
 			StatusMsg:  err.Error(),
+		})
+		return
+	}
+
+	// 使用正则表达式判断密码复杂度
+	if !util.CheckPasswordLever(req.Password) {
+		c.JSON(consts.StatusOK, &api.DouyinResponse{
+			StatusCode: errno.PasswordStrengthNotEnoughError.ErrCode,
+			StatusMsg:  errno.PasswordStrengthNotEnoughError.ErrMsg,
+		})
+		return
+	}
+
+	// 密码中不能包含用户名
+	if strings.Contains(req.Password, req.Username) {
+		c.JSON(consts.StatusOK, &api.DouyinResponse{
+			StatusCode: errno.PasswordStrengthNotEnoughError.ErrCode,
+			StatusMsg:  errno.PasswordStrengthNotEnoughError.ErrMsg,
 		})
 		return
 	}

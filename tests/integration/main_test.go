@@ -7,6 +7,10 @@ import(
 	. "github.com/onsi/gomega"
 )
 
+const (
+	password = "IntegrationTest!2023"
+)
+
 func TestDouyin(t *testing.T) {
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "Douyin integration test")

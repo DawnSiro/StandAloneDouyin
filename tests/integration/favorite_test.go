@@ -14,7 +14,6 @@ import (
 var _ = Describe("favorite test", func() {
 	const (
 		username = "fortest-favorite"
-		password = "fortest-favorite"
 	)
 
 	var (

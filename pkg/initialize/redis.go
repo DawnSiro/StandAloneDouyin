@@ -2,11 +2,17 @@ package initialize
 
 import (
 	"context"
+	"douyin/biz/model/api"
 	"douyin/dal/db"
+	"douyin/dal/pack"
 	"fmt"
 	"github.com/cloudwego/hertz/pkg/common/hlog"
+	"github.com/cloudwego/hertz/pkg/common/json"
+	"math/rand"
+	"strconv"
 	"strings"
 	"sync"
+	"time"
 
 	"douyin/biz/service"
 	"douyin/pkg/global"
@@ -59,13 +65,33 @@ func Redis() {
 	_, cancelSubscription = context.WithCancel(ctx)
 	go SubscribeToTopicChanges()
 
-	// Warm-up cache
-	err := WarmUpCacheForTopFollowers()
-	err = WarmUpCacheForTopRelationData()
-	if err != nil {
-		hlog.Error("pkg.initialize.redis err: " + err.Error())
-		return
-	}
+	// Start a goroutine to periodically warm up the cache
+	go func() {
+		for {
+			err := WarmUpCacheForTopFollowers()
+			if err != nil {
+				hlog.Error("WarmUpCacheForTopFollowers error: " + err.Error())
+			}
+
+			err = WarmUpCacheForTopRelationData()
+			if err != nil {
+				hlog.Error("WarmUpCacheForTopRelationData error: " + err.Error())
+			}
+
+			err = WarmUpCacheForTopFavoriteVideos()
+			if err != nil {
+				hlog.Error("WarmUpCacheForTopFavoriteVideos error: " + err.Error())
+			}
+
+			err = WarmUpCacheForTopComments()
+			if err != nil {
+				hlog.Error("WarmUpCacheForTopComments error: " + err.Error())
+			}
+
+			// Sleep for 15 minutes before the next warm-up
+			time.Sleep(15 * time.Minute)
+		}
+	}()
 
 }
 
@@ -173,6 +199,88 @@ func WarmUpCacheForTopRelationData() error {
 		_, err = service.GetFriendList(follower.ID)
 		if err != nil {
 			hlog.Error("pkg.initialize.redis.WarmUpCacheForTopRelationData.GetFriendList: ", err.Error())
+		}
+	}
+
+	return nil
+}
+
+func WarmUpCacheForTopFavoriteVideos() error {
+	// Retrieve the top-500 videos with the most likes
+	topVideos, err := db.SelectTopFavoriteVideos(500)
+	if err != nil {
+		return err
+	}
+
+	for _, video := range topVideos {
+		// Warm up the cache for this video's like count
+		var builder strings.Builder
+		builder.WriteString(strconv.FormatUint(video.ID, 10))
+		builder.WriteString("_video_like")
+		videoLikeKey := builder.String()
+
+		// Check if video like count is available in Redis cache
+		_, err := global.VideoFRC.Get(videoLikeKey).Result()
+		if err != nil {
+			// Cache miss, query the database
+			likeInt64, err := db.SelectVideoFavoriteCountByVideoID(video.ID)
+			if err != nil {
+				hlog.Error("service.favorite.warmUpCacheForVideoLikes err:", err.Error())
+				continue
+			}
+
+			// Store video like count in Redis cache
+			global.VideoFRC.Set(videoLikeKey, likeInt64, 0)
+		}
+	}
+
+	return nil
+}
+
+func WarmUpCacheForTopComments() error {
+	// Retrieve the top-500 videos for which you want to warm up the comment cache
+	topVideos, err := db.SelectTopFavoriteVideos(500)
+	if err != nil {
+		return err
+	}
+
+	for _, video := range topVideos {
+		// Warm up the cache for comments on each video
+		// Retrieve comments for the video from the database
+		comments, err := db.SelectCommentDataByVideoID(video.ID)
+		if err != nil {
+			return err
+		}
+
+		// Convert comments to the appropriate response format
+		commentData := make([]*db.CommentData, len(comments))
+		for i, comment := range comments {
+			commentData[i] = &db.CommentData{
+				CID:         comment.ID,
+				Content:     comment.Content,
+				CreatedTime: comment.CreatedTime,
+				UID:         0,
+				Username:    "",
+				IsFollow:    false,
+				Avatar:      "",
+			}
+		}
+
+		response := &api.DouyinCommentListResponse{
+			StatusCode:  0,
+			CommentList: pack.CommentDataList(commentData),
+		}
+
+		// Store comments in the Redis cache
+		cacheKey := fmt.Sprintf("commentList:%d:%d", 0, video.ID)
+		responseJSON, _ := json.Marshal(response)
+
+		// Set cache expiration with some randomization to prevent cache stampede
+		cacheDuration := 10*time.Minute + time.Duration(rand.Intn(600))*time.Second
+
+		err = global.UserInfoRC.Set(cacheKey, responseJSON, cacheDuration).Err()
+		if err != nil {
+			return err
 		}
 	}
 
