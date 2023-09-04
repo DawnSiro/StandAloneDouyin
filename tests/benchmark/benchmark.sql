@@ -18,6 +18,8 @@
 --
 -- Table structure for table `comment`
 --
+CREATE DATABASE IF NOT EXISTS `douyin_benchmark`;
+use `douyin_benchmark`;
 
 DROP TABLE IF EXISTS `comment`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
