@@ -287,12 +287,8 @@ func SelectPublishVideoDataListByUserID(userID, selectUserID uint64) ([]*VideoDa
 	}
 	return res, nil
 }
-<<<<<<< HEAD
 func MSelectFeedVideoDataListByUserID_hotvalue(maxVideoNum int, latestTime *int64, userID uint64) ([]*VideoData, error) {
-=======
 
-func MSelectFeedVideoDataListByUserID2(maxVideoNum int, latestTime *int64, userID uint64) ([]*VideoData, error) {
->>>>>>> c257f9e4b538ce841e74f03618ca2686b54e1317
 	res := make([]*VideoData, 0)
 	if latestTime == nil || *latestTime == 0 {
 		// This part remains the same as in your original function.
@@ -363,7 +359,7 @@ func filterByHotness(videos []*VideoData, maxNum int) []*VideoData {
 	// Return the top numToReturn videos based on hotness.
 	return videos[:numToReturn]
 }
-<<<<<<< HEAD
+
 
 // Define a type for the Item Similarity Matrix.
 type ItemSimilarityMatrix map[uint64]map[uint64]float64
@@ -613,5 +609,3 @@ func GenerateItemCFRecommendations(maxVideoNum int, latestTime *int64, userID ui
 
 	return recommendedVideoData, nil
 }
-=======
->>>>>>> c257f9e4b538ce841e74f03618ca2686b54e1317
