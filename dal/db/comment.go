@@ -22,18 +22,18 @@ func (n *Comment) TableName() string {
 	return constant.CommentTableName
 }
 
-func CreateComment(videoID uint64, content string, userID uint64) (*Comment, error) {
-	comment := &Comment{
-		VideoID:     videoID,
-		UserID:      userID,
-		Content:     content,
-		CreatedTime: time.Now(),
-	}
+func CreateComment(comment *Comment) (*Comment, error) {
+	// comment := &Comment{
+	// 	VideoID:     videoID,
+	// 	UserID:      userID,
+	// 	Content:     content,
+	// 	CreatedTime: time.Now(),
+	// }
 	// DB 层开事务来保证原子性
 	err := global.DB.Transaction(func(tx *gorm.DB) error {
 		// 先查询 VideoID 是否存在，然后增加评论数，再创建评论
 		video := &Video{
-			ID: videoID,
+			ID: comment.VideoID,
 		}
 		err := tx.First(&video).Error
 		if err != nil {
