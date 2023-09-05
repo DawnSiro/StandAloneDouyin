@@ -3,6 +3,7 @@ package integration
 import (
 	"fmt"
 	"net/http"
+	"time"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -48,6 +49,8 @@ var _ = Describe("comment test", func() {
 			Expect(err).To(BeNil())
 			Expect(respData.StatusCode).To(Equal(int64(0)))
 			commentId = respData.Comment.ID
+
+			time.Sleep(time.Second)  // wait for mq
 
 			after_cnt, err := GetCommentNum(video_id)
 			Expect(err).To(BeNil())
