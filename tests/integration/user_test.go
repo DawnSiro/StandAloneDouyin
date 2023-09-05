@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"net/http"
 
+	_ "github.com/go-sql-driver/mysql"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	_ "github.com/go-sql-driver/mysql"
 
 	util "douyin/test/testutil"
 )

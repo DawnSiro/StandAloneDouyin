@@ -2,12 +2,8 @@ package service
 
 import (
 	"bytes"
-	"douyin/dal/pack"
-	"douyin/pkg/errno"
-	"douyin/pkg/global"
 	"errors"
 	"fmt"
-	"github.com/cloudwego/hertz/pkg/common/json"
 	"io"
 	"math/rand"
 	"sync"
@@ -15,9 +11,13 @@ import (
 
 	"douyin/biz/model/api"
 	"douyin/dal/db"
+	"douyin/dal/pack"
+	"douyin/pkg/errno"
+	"douyin/pkg/global"
 	"douyin/pkg/util"
 
 	"github.com/cloudwego/hertz/pkg/common/hlog"
+	"github.com/cloudwego/hertz/pkg/common/json"
 	"github.com/gofrs/uuid"
 )
 

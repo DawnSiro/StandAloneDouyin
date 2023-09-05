@@ -6,14 +6,16 @@ import (
 	"douyin/dal/pack"
 	"douyin/pkg/errno"
 	"douyin/pkg/global"
+	"douyin/pkg/pulsar"
+
 	"fmt"
-	"github.com/cloudwego/hertz/pkg/common/json"
 	"math/rand"
 	"strconv"
 	"sync"
 	"time"
 
 	"github.com/cloudwego/hertz/pkg/common/hlog"
+	"github.com/cloudwego/hertz/pkg/common/json"
 )
 
 func Follow(userID, toUserID uint64) (*api.DouyinRelationActionResponse, error) {
@@ -30,11 +32,13 @@ func Follow(userID, toUserID uint64) (*api.DouyinRelationActionResponse, error) 
 	}
 
 	//关注操作
-	err := db.Follow(userID, toUserID)
+	// publish a message to pulsar
+	err := pulsar.GetFollowActionMQInstance().FollowAction(toUserID, userID)
 	if err != nil {
 		hlog.Error("service.relation.Follow err:", err.Error())
-		return nil, err
+		return nil, err // TODO: errno
 	}
+	hlog.Debug("service.relation.Follow: publish a message")
 
 	// Notify cache invalidation
 	// Publish a message to the Redis channel indicating a friend list change
@@ -52,12 +56,15 @@ func CancelFollow(userID, toUserID uint64) (*api.DouyinRelationActionResponse, e
 		hlog.Error("service.relation.CancelFollow err:", errNo.Error())
 		return nil, errNo
 	}
+
 	//取消关注
-	err := db.CancelFollow(userID, toUserID)
+	// publish a message to pulsar
+	err := pulsar.GetFollowActionMQInstance().CancelFollowAction(toUserID, userID)
 	if err != nil {
 		hlog.Error("service.relation.CancelFollow err:", err.Error())
-		return nil, err
+		return nil, err // TODO: errno
 	}
+	hlog.Debug("service.relation.CancelFollow: publish a message")
 
 	// Notify cache invalidation
 	// Publish a message to the Redis channel indicating a friend list change

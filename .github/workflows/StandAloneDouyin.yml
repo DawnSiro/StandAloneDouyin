@@ -34,6 +34,9 @@ jobs:
       uses: supercharge/redis-github-action@1.6.0
       with:
         redis-port: 6379
+          
+    - name: Set up Apache Pulsar
+      uses: reugn/github-action-pulsar@v1
 
     - name: Start integration test
       run: |

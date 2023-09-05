@@ -1,19 +1,20 @@
 package service
 
 import (
+	"fmt"
+	"math/rand"
+	"sync"
+	"time"
+
 	"douyin/biz/model/api"
 	"douyin/dal/db"
 	"douyin/dal/pack"
 	"douyin/pkg/constant"
 	"douyin/pkg/errno"
 	"douyin/pkg/global"
-	"fmt"
-	"github.com/cloudwego/hertz/pkg/common/json"
-	"math/rand"
-	"sync"
-	"time"
 
 	"github.com/cloudwego/hertz/pkg/common/hlog"
+	"github.com/cloudwego/hertz/pkg/common/json"
 )
 
 func GetFeed(latestTime *int64, userID uint64) (*api.DouyinFeedResponse, error) {

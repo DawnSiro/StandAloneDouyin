@@ -66,3 +66,18 @@ const (
 	ETCDAddress         = ":2379"
 	TCP                 = "tcp"
 )
+
+// 消息队列相关
+const (
+	FollowActionTopic        = "follow-action"
+	FollowActionSubscription = "follow-action-sub"
+
+	LikeActionTopic        = "like-action"
+	LikeActionSubscription = "like-action-sub"
+
+	MessageTopic       = "message"
+	MessageSubcription = "message-sub"
+
+	CommentActionTopic        = "comment-action"
+	CommentActionSubscription = "comment-action-sub"
+)

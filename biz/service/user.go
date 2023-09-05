@@ -1,19 +1,20 @@
 package service
 
 import (
+	"fmt"
+	"math/rand"
+	"sync"
+	"time"
+
 	"douyin/biz/model/api"
 	"douyin/dal/db"
 	"douyin/dal/pack"
 	"douyin/pkg/errno"
 	"douyin/pkg/global"
 	"douyin/pkg/util"
-	"fmt"
-	"github.com/cloudwego/hertz/pkg/common/json"
-	"math/rand"
-	"sync"
-	"time"
 
 	"github.com/cloudwego/hertz/pkg/common/hlog"
+	"github.com/cloudwego/hertz/pkg/common/json"
 )
 
 func Register(username, password string) (*api.DouyinUserRegisterResponse, error) {

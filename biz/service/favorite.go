@@ -2,6 +2,7 @@ package service
 
 import (
 	"douyin/dal/pack"
+	"douyin/pkg/pulsar"
 	"strconv"
 	"strings"
 
@@ -59,11 +60,13 @@ func FavoriteVideo(userID, videoID uint64) (*api.DouyinFavoriteActionResponse, e
 		}
 	}
 
-	err = db.FavoriteVideo(userID, videoID)
+	err = pulsar.GetLikeActionMQInstance().LikeAction(userID, videoID)
 	if err != nil {
 		hlog.Error("service.favorite.FavoriteVideo err:", err.Error())
 		return nil, err
 	}
+	hlog.Debug("service.favorite.FavoriteVideo: publish a message")
+
 	// 如果 DB 层事务回滚了，err 就不为 nil，Redis 里的数据就不会更新
 	global.VideoFRC.Set(videoLikeKey, likeUint64+1, 0)
 	// 更新单位时间内的点赞数量
@@ -100,11 +103,12 @@ func CancelFavoriteVideo(userID, videoID uint64) (*api.DouyinFavoriteActionRespo
 		}
 	}
 
-	err = db.CancelFavoriteVideo(userID, videoID)
+	err = pulsar.GetLikeActionMQInstance().CancelLikeAction(userID, videoID)
 	if err != nil {
 		hlog.Error("service.favorite.CancelFavoriteVideo err:", err.Error())
 		return nil, err
 	}
+	hlog.Debug("service.favorite.CancelFavoriteVideo: publish a message")
 	// 如果 DB 层事务回滚了，err 就不为 nil，Redis 里的数据就不会更新
 	global.VideoFRC.Set(videoLikeKey, likeUint64-1, 0)
 
