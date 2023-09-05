@@ -6,6 +6,8 @@ import (
 	"douyin/dal/pack"
 	"douyin/pkg/errno"
 	"douyin/pkg/global"
+	"douyin/pkg/pulsar"
+	"douyin/pkg/util"
 	"douyin/pkg/util/sensitive"
 	"fmt"
 	"github.com/bits-and-blooms/bloom/v3"
@@ -43,9 +45,23 @@ func PostComment(userID, videoID uint64, commentText string) (*api.DouyinComment
 		return nil, errno.ContainsProhibitedSensitiveWordsError
 	}
 
-	dbc, err := db.CreateComment(videoID, commentText, userID)
+	// 基于雪花算法生成comment_id
+	id, err := util.GetSonyflakeID()
 	if err != nil {
-		hlog.Error("service.comment.PostComment err:", err.Error())
+		hlog.Error("service.comment.PostComment err: failed to create comment id, ", err.Error())
+	}
+
+	// 发布消息队列
+	msg := pulsar.PostCommentMessage{
+		ID:          id,
+		VideoID:     videoID,
+		UserID:      userID,
+		Content:     commentText,
+		CreatedTime: time.Now(),
+	}
+	err = pulsar.GetPostCommentMQInstance().PostComment(msg)
+	if err != nil {
+		hlog.Error("service.comment.PostComment err: failed to publish mq ", err.Error())
 		return nil, err
 	}
 
@@ -66,7 +82,7 @@ func PostComment(userID, videoID uint64, commentText string) (*api.DouyinComment
 
 	return &api.DouyinCommentActionResponse{
 		StatusCode: 0,
-		Comment:    pack.Comment(dbc, dbu, db.IsFollow(userID, authorID)),
+		Comment:    pack.Comment((*db.Comment)(&msg), dbu, db.IsFollow(userID, authorID)),
 	}, nil
 }
 

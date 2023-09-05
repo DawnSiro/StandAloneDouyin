@@ -77,4 +77,7 @@ const (
 
 	MessageTopic       = "message"
 	MessageSubcription = "message-sub"
+
+	CommentActionTopic        = "comment-action"
+	CommentActionSubscription = "comment-action-sub"
 )

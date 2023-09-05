@@ -19,6 +19,7 @@ require (
 	github.com/hertz-contrib/jwt v1.0.2
 	github.com/hertz-contrib/pprof v0.1.0
 	github.com/hertz-contrib/websocket v0.0.1
+	github.com/sony/sonyflake v1.2.0
 	github.com/spf13/viper v1.16.0
 	github.com/syyongx/go-wordsfilter v0.0.0-20190622081656-74232c786041
 	golang.org/x/crypto v0.9.0
