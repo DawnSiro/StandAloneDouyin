@@ -1,12 +1,13 @@
 package db
 
 import (
+	"time"
+
 	"douyin/dal/model"
 	"douyin/dal/rdb"
 	"douyin/pkg/constant"
 	"douyin/pkg/errno"
 	"douyin/pkg/global"
-	"time"
 
 	"github.com/cloudwego/hertz/pkg/common/hlog"
 	"gorm.io/gorm"
