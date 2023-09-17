@@ -15,28 +15,35 @@ mysql:
   maxOpenConn: 100
   maxIdleConn: 10
 
-videoCRCRedis:
-  host: localhost
+videoRCRedis:
+  host: 192.168.197.129
   port: 6379
   password:
   db: 0
   poolSize: 100
 
-videoFRCRedis:
-  host: localhost
+commentRCRedis:
+  host: 192.168.197.129
   port: 6379
   password:
   db: 1
   poolSize: 100
 
-userInfoRCRedis:
-  host: localhost
+userRCRedis:
+  host: 192.168.197.129
   port: 6379
   password:
   db: 2
   poolSize: 100
 
+messageRCRedis:
+  host: 192.168.197.129
+  port: 6379
+  password:
+  db: 3
+  poolSize: 100
+
 pulsar:
-  url: pulsar://127.0.0.1:6650
+  url: pulsar://192.168.197.129:6650
   connectionTimeout: 30
   operatorTimeout: 30

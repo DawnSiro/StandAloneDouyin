@@ -8,7 +8,7 @@ import (
 )
 
 var (
-	instance *sonyflake.Sonyflake	
+	instance *sonyflake.Sonyflake
 )
 
 func init() {
@@ -17,11 +17,10 @@ func init() {
 		StartTime: time.Now(),
 	})
 	if err != nil {
-		hlog.Fatal("Failed to initialize sonyflake: ", err)
+		hlog.Fatal("Failed to initialize sony flake: ", err)
 	}
 }
 
-func GetSonyflakeID() (uint64, error) {
-	id, err := instance.NextID()
-	return id, err
+func GetSonyFlakeID() (uint64, error) {
+	return instance.NextID()
 }

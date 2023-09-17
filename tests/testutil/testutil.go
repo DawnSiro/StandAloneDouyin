@@ -58,7 +58,7 @@ func DeleteUser(username string) (err error) {
 	return err
 }
 
-func GetUseridAndToken(username, password string) (userid int64, token string, err error) {
+func GetUserIDAndToken(username, password string) (userid int64, token string, err error) {
 	query := map[string]string{
 		"username": username,
 		"password": password,

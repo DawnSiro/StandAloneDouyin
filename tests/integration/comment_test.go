@@ -31,7 +31,7 @@ var _ = Describe("comment test", func() {
 		)
 
 		BeforeEach(func() {
-			_, token, err := util.GetUseridAndToken(username, password)
+			_, token, err := util.GetUserIDAndToken(username, password)
 			Expect(err).To(BeNil())
 			query["token"] = token
 		})
@@ -50,7 +50,7 @@ var _ = Describe("comment test", func() {
 			Expect(respData.StatusCode).To(Equal(int64(0)))
 			commentId = respData.Comment.ID
 
-			time.Sleep(time.Second)  // wait for mq
+			time.Sleep(time.Second) // wait for mq
 
 			after_cnt, err := GetCommentNum(video_id)
 			Expect(err).To(BeNil())
@@ -143,7 +143,7 @@ var _ = Describe("comment test", func() {
 		)
 
 		BeforeEach(func() {
-			_, token, err := util.GetUseridAndToken(username, password)
+			_, token, err := util.GetUserIDAndToken(username, password)
 			Expect(err).To(BeNil())
 			query["token"] = token
 		})

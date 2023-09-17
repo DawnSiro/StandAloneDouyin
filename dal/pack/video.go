@@ -2,13 +2,13 @@ package pack
 
 import (
 	"douyin/biz/model/api"
-	"douyin/dal/db"
+	"douyin/dal/model"
 	"douyin/pkg/errno"
 
 	"github.com/cloudwego/hertz/pkg/common/hlog"
 )
 
-func Video(v *db.Video, u *db.User, isFollow, isFavorite bool) *api.Video {
+func Video(v *model.Video, u *model.User, isFollow, isFavorite bool) *api.Video {
 	if v == nil || u == nil {
 		hlog.Error("pack.video.Video err:", errno.ServiceError)
 		return nil
@@ -38,7 +38,7 @@ func Video(v *db.Video, u *db.User, isFollow, isFavorite bool) *api.Video {
 	}
 }
 
-func VideoData(data *db.VideoData) *api.Video {
+func VideoData(data *model.VideoData) *api.Video {
 	if data == nil {
 		return nil
 	}
@@ -69,7 +69,7 @@ func VideoData(data *db.VideoData) *api.Video {
 	}
 }
 
-func VideoDataList(dataList []*db.VideoData) []*api.Video {
+func VideoDataList(dataList []*model.VideoData) []*api.Video {
 	res := make([]*api.Video, 0, len(dataList))
 	for i := 0; i < len(dataList); i++ {
 		res = append(res, VideoData(dataList[i]))

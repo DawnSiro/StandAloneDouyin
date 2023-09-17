@@ -1,19 +1,22 @@
-package initialize
+package db
 
 import (
+	"flag"
 	"fmt"
 	"log"
 	"os"
+	"sync"
 	"time"
 
 	"douyin/pkg/global"
+	"douyin/pkg/viper"
 
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 )
 
-func MySQL() {
+func InitMySQL() {
 	username := global.Config.MySQLConfig.Username // 账号
 	password := global.Config.MySQLConfig.Password // 密码
 	host := global.Config.MySQLConfig.Host         // 数据库地址，可以是Ip或者域名
@@ -46,4 +49,15 @@ func MySQL() {
 	} else {
 		panic("connect server failed")
 	}
+}
+
+var once sync.Once
+
+func InitTest() {
+	once.Do(func() {
+		flag.StringVar(&global.ConfigPath, "c", "../../pkg/config/config.yml", "config file path")
+		flag.Parse()
+		viper.InitConfig()
+		InitMySQL()
+	})
 }

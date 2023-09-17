@@ -79,6 +79,9 @@ func (p *Comment) IsValid() error {
 	}
 	return nil
 }
+func (p *CommentUser) IsValid() error {
+	return nil
+}
 func (p *User) IsValid() error {
 	return nil
 }
@@ -225,6 +228,9 @@ func (p *DouyinRelationFollowListRequest) IsValid() error {
 func (p *DouyinRelationFollowListResponse) IsValid() error {
 	return nil
 }
+func (p *FollowUser) IsValid() error {
+	return nil
+}
 func (p *DouyinRelationFollowerListRequest) IsValid() error {
 	if p.UserID <= int64(0) {
 		return fmt.Errorf("field UserID gt rule failed, current value: %v", p.UserID)
@@ -232,6 +238,9 @@ func (p *DouyinRelationFollowerListRequest) IsValid() error {
 	return nil
 }
 func (p *DouyinRelationFollowerListResponse) IsValid() error {
+	return nil
+}
+func (p *FollowerUser) IsValid() error {
 	return nil
 }
 func (p *DouyinRelationFriendListRequest) IsValid() error {

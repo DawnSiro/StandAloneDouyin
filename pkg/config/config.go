@@ -17,8 +17,8 @@ type MySQLConfig struct {
 	MaxIdleConn int    `mapstructure:"maxIdleConn"`
 }
 
-// VideoCRCRedisConfig 定义 VideoCRC 的redis 配置文件结构体
-type VideoCRCRedisConfig struct {
+// VideoRCRedisConfig 定义 VideoRedisClient 的 redis 配置文件结构体
+type VideoRCRedisConfig struct {
 	Host     string `mapstructure:"host"`
 	Port     int    `mapstructure:"port"`
 	Password string `mapstructure:"password"`
@@ -26,8 +26,8 @@ type VideoCRCRedisConfig struct {
 	PoolSize int    `mapstructure:"poolSize"`
 }
 
-// VideoFRCRedisConfig 定义 VideoFRC 的redis 配置文件结构体
-type VideoFRCRedisConfig struct {
+// CommentRCRedisConfig 定义 VideoCRedisClient 的 redis 配置文件结构体
+type CommentRCRedisConfig struct {
 	Host     string `mapstructure:"host"`
 	Port     int    `mapstructure:"port"`
 	Password string `mapstructure:"password"`
@@ -35,8 +35,17 @@ type VideoFRCRedisConfig struct {
 	PoolSize int    `mapstructure:"poolSize"`
 }
 
-// UserInfoRCRedisConfig 定义 UserInfoRC 的redis 配置文件结构体
-type UserInfoRCRedisConfig struct {
+// UserRCRedisConfig 定义 UserInfoRedisClient 的 redis 配置文件结构体
+type UserRCRedisConfig struct {
+	Host     string `mapstructure:"host"`
+	Port     int    `mapstructure:"port"`
+	Password string `mapstructure:"password"`
+	DB       int    `mapstructure:"db"`
+	PoolSize int    `mapstructure:"poolSize"`
+}
+
+// MessageRCRedisConfig 定义 消息模块 RedisClient 的 redis 配置文件结构体
+type MessageRCRedisConfig struct {
 	Host     string `mapstructure:"host"`
 	Port     int    `mapstructure:"port"`
 	Password string `mapstructure:"password"`
@@ -50,7 +59,7 @@ type JWTConfig struct {
 	IdentityKey string `mapstructure:"identityKey"`
 }
 
-// pulsar
+// PulsarConfig 定义 pulsar 配置文件结构体
 type PulsarConfig struct {
 	URL               string `mapstructure:"url"`
 	ConnectionTimeout int64  `mapstructure:"connectTimeout"`
@@ -59,11 +68,12 @@ type PulsarConfig struct {
 
 // System 定义项目配置文件结构体
 type System struct {
-	HertzConfig           *HertzConfig           `mapstructure:"hertz"`
-	MySQLConfig           *MySQLConfig           `mapstructure:"mysql"`
-	VideoCRCRedisConfig   *VideoCRCRedisConfig   `mapstructure:"videoCRCRedis"`
-	VideoFRCRedisConfig   *VideoFRCRedisConfig   `mapstructure:"videoFRCRedis"`
-	UserInfoRCRedisConfig *UserInfoRCRedisConfig `mapstructure:"userInfoRCRedis"`
-	JWTConfig             *JWTConfig             `mapstructure:"jwt"`
-	PulsarConfig          *PulsarConfig          `mapstructure:"pulsar"`
+	HertzConfig          *HertzConfig          `mapstructure:"hertz"`
+	MySQLConfig          *MySQLConfig          `mapstructure:"mysql"`
+	VideoRCRedisConfig   *VideoRCRedisConfig   `mapstructure:"videoRCRedis"`
+	CommentRCRedisConfig *CommentRCRedisConfig `mapstructure:"commentRCRedis"`
+	UserRCRedisConfig    *UserRCRedisConfig    `mapstructure:"userRCRedis"`
+	MessageRCRedisConfig *MessageRCRedisConfig `mapstructure:"messageRCRedis"`
+	JWTConfig            *JWTConfig            `mapstructure:"jwt"`
+	PulsarConfig         *PulsarConfig         `mapstructure:"pulsar"`
 }

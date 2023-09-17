@@ -1,33 +1,21 @@
 package db
 
 import (
-	"douyin/pkg/global"
 	"time"
 
+	"douyin/dal/model"
 	"douyin/pkg/constant"
+	"douyin/pkg/global"
 
 	"gorm.io/gorm"
 )
 
-type Video struct {
-	ID            uint64    `json:"id"`
-	PublishTime   time.Time `gorm:"not null" json:"publish_time"`
-	AuthorID      uint64    `gorm:"not null" json:"author_id"`
-	PlayURL       string    `gorm:"type:varchar(255);not null" json:"play_url"`
-	CoverURL      string    `gorm:"type:varchar(255);not null" json:"cover_url"`
-	FavoriteCount int64     `gorm:"default:0;not null" json:"favorite_count"`
-	CommentCount  int64     `gorm:"default:0;not null" json:"comment_count"`
-	Title         string    `gorm:"type:varchar(63);not null" json:"title"`
-}
-
-func (n *Video) TableName() string {
-	return constant.VideoTableName
-}
-
-func CreateVideo(video *Video) error {
-	return global.DB.Transaction(func(tx *gorm.DB) error {
+// CreateVideo 新增视频，返回的 videoID 是为了将 videoID 放入布隆过滤器
+func CreateVideo(video *model.Video) (uint64, error) {
+	var videoID uint64
+	err := global.DB.Transaction(func(tx *gorm.DB) error {
 		//从这里开始，应该使用 tx 而不是 db（tx 是 Transaction 的简写）
-		u := &User{ID: video.AuthorID}
+		u := &model.User{ID: video.AuthorID}
 		err := tx.Select("work_count").First(u).Error
 		if err != nil {
 			return err
@@ -40,14 +28,19 @@ func CreateVideo(video *Video) error {
 		if err != nil {
 			return err
 		}
+		videoID = video.ID
 		// 返回 nil 提交事务
 		return nil
 	})
+	if err != nil {
+		return 0, err
+	}
+	return videoID, nil
 }
 
 // MGetVideos multiple get list of videos info
-func MGetVideos(maxVideoNum int, latestTime *int64) ([]*Video, error) {
-	res := make([]*Video, 0)
+func MGetVideos(maxVideoNum int, latestTime *int64) ([]*model.Video, error) {
+	res := make([]*model.Video, 0)
 
 	if latestTime == nil || *latestTime == 0 {
 		// 这里和文档里说得不一样，实际客户端传的是毫秒
@@ -63,8 +56,8 @@ func MGetVideos(maxVideoNum int, latestTime *int64) ([]*Video, error) {
 	return res, nil
 }
 
-func GetVideosByAuthorID(userID uint64) ([]*Video, error) {
-	res := make([]*Video, 0)
+func GetVideosByAuthorID(userID uint64) ([]*model.Video, error) {
+	res := make([]*model.Video, 0)
 	err := global.DB.Find(&res, "author_id = ? ", userID).Error
 	if err != nil {
 		return nil, err
@@ -73,7 +66,7 @@ func GetVideosByAuthorID(userID uint64) ([]*Video, error) {
 }
 
 func SelectAuthorIDByVideoID(videoID uint64) (uint64, error) {
-	video := &Video{
+	video := &model.Video{
 		ID: videoID,
 	}
 
@@ -85,7 +78,7 @@ func SelectAuthorIDByVideoID(videoID uint64) (uint64, error) {
 }
 
 func UpdateVideoFavoriteCount(videoID uint64, favoriteCount uint64) (int64, error) {
-	video := &Video{
+	video := &model.Video{
 		ID: videoID,
 	}
 
@@ -97,7 +90,7 @@ func UpdateVideoFavoriteCount(videoID uint64, favoriteCount uint64) (int64, erro
 
 // IncreaseVideoFavoriteCount increase 1
 func IncreaseVideoFavoriteCount(videoID uint64) (int64, error) {
-	video := &Video{
+	video := &model.Video{
 		ID: videoID,
 	}
 	err := global.DB.First(&video).Error
@@ -112,7 +105,7 @@ func IncreaseVideoFavoriteCount(videoID uint64) (int64, error) {
 
 // DecreaseVideoFavoriteCount decrease 1
 func DecreaseVideoFavoriteCount(videoID uint64) (int64, error) {
-	video := &Video{
+	video := &model.Video{
 		ID: videoID,
 	}
 	err := global.DB.First(&video).Error
@@ -126,7 +119,7 @@ func DecreaseVideoFavoriteCount(videoID uint64) (int64, error) {
 }
 
 func UpdateCommentCount(videoID uint64, commentCount uint64) (int64, error) {
-	video := &Video{
+	video := &model.Video{
 		ID: videoID,
 	}
 
@@ -138,7 +131,7 @@ func UpdateCommentCount(videoID uint64, commentCount uint64) (int64, error) {
 
 // IncreaseCommentCount increase 1
 func IncreaseCommentCount(videoID uint64) (int64, error) {
-	video := &Video{
+	video := &model.Video{
 		ID: videoID,
 	}
 
@@ -155,7 +148,7 @@ func IncreaseCommentCount(videoID uint64) (int64, error) {
 
 // DecreaseCommentCount decrease  1
 func DecreaseCommentCount(videoID uint64) (int64, error) {
-	video := &Video{
+	video := &model.Video{
 		ID: videoID,
 	}
 	err := global.DB.First(&video).Error
@@ -169,7 +162,7 @@ func DecreaseCommentCount(videoID uint64) (int64, error) {
 }
 
 func SelectVideoFavoriteCountByVideoID(videoID uint64) (int64, error) {
-	video := &Video{
+	video := &model.Video{
 		ID: videoID,
 	}
 
@@ -181,7 +174,7 @@ func SelectVideoFavoriteCountByVideoID(videoID uint64) (int64, error) {
 }
 
 func SelectCommentCountByVideoID(videoID uint64) (int64, error) {
-	video := &Video{
+	video := &model.Video{
 		ID: videoID,
 	}
 
@@ -192,31 +185,9 @@ func SelectCommentCountByVideoID(videoID uint64) (int64, error) {
 	return video.CommentCount, nil
 }
 
-type VideoData struct {
-	// 没有ID的话，貌似第一个字段会被识别为主键ID
-	VID               uint64 `gorm:"column:vid"`
-	PlayURL           string
-	CoverURL          string
-	FavoriteCount     int64
-	CommentCount      int64
-	IsFavorite        bool
-	Title             string
-	UID               uint64
-	Username          string
-	FollowCount       int64
-	FollowerCount     int64
-	IsFollow          bool
-	Avatar            string
-	BackgroundImage   string
-	Signature         string
-	TotalFavorited    int64
-	WorkCount         int64
-	UserFavoriteCount int64
-}
-
 // SelectFavoriteVideoDataListByUserID 查询点赞视频列表
-func SelectFavoriteVideoDataListByUserID(userID, selectUserID uint64) ([]*VideoData, error) {
-	res := make([]*VideoData, 0)
+func SelectFavoriteVideoDataListByUserID(userID, selectUserID uint64) ([]*model.VideoData, error) {
+	res := make([]*model.VideoData, 0)
 	sqlQuery := global.DB.Select("ufv.video_id").
 		Table("user_favorite_video AS ufv").
 		Where("ufv.user_id = ? AND ufv.is_deleted = ?", selectUserID, constant.DataNotDeleted)
@@ -236,8 +207,8 @@ func SelectFavoriteVideoDataListByUserID(userID, selectUserID uint64) ([]*VideoD
 }
 
 // MSelectFeedVideoDataListByUserID 查询Feed视频列表
-func MSelectFeedVideoDataListByUserID(maxVideoNum int, latestTime *int64, userID uint64) ([]*VideoData, error) {
-	res := make([]*VideoData, 0)
+func MSelectFeedVideoDataListByUserID(maxVideoNum int, latestTime *int64, userID uint64) ([]*model.VideoData, error) {
+	res := make([]*model.VideoData, 0)
 	if latestTime == nil || *latestTime == 0 {
 		// 这里和文档里说得不一样，实际客户端传的是毫秒
 		currentTime := time.Now().UnixMilli()
@@ -260,7 +231,7 @@ func MSelectFeedVideoDataListByUserID(maxVideoNum int, latestTime *int64, userID
 
 func SelectPublishTimeByVideoID(videoID uint64) (int64, error) {
 	var publishTime time.Time
-	err := global.DB.Select("publish_time").Model(&Video{ID: videoID}).First(&publishTime).Error
+	err := global.DB.Select("publish_time").Model(&model.Video{ID: videoID}).First(&publishTime).Error
 	if err != nil {
 		return 0, err
 	}
@@ -268,8 +239,8 @@ func SelectPublishTimeByVideoID(videoID uint64) (int64, error) {
 }
 
 // SelectPublishVideoDataListByUserID 发布视频列表
-func SelectPublishVideoDataListByUserID(userID, selectUserID uint64) ([]*VideoData, error) {
-	res := make([]*VideoData, 0)
+func SelectPublishVideoDataListByUserID(userID, selectUserID uint64) ([]*model.VideoData, error) {
+	res := make([]*model.VideoData, 0)
 	err := global.DB.Select("v.id AS vid, v.play_url, v.cover_url, v.favorite_count, v.comment_count, v.title,"+
 		"u.id AS uid, u.username, u.following_count, u.follower_count, u.avatar,"+
 		"u.background_image, u.signature, u.total_favorited, u.work_count, u.favorite_count as user_favorite_count,"+

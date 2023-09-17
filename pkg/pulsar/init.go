@@ -1,22 +1,22 @@
-package initialize
+package pulsar
 
 import (
 	"time"
 
+	"douyin/pkg/global"
+
 	"github.com/apache/pulsar-client-go/pulsar"
 	"github.com/cloudwego/hertz/pkg/common/hlog"
-
-	"douyin/pkg/global"
 )
 
-func Pulsar() {
+func InitPulsar() {
 	client, err := client()
 	if err != nil {
-		hlog.Fatal(err)  // 失败后直接终止程序
+		hlog.Fatal(err) // 失败后直接终止程序
 	}
 
 	global.PulsarClient = client
-	hlog.Info("pulsar initialized successfullly")
+	hlog.Info("pulsar initialized successfully")
 }
 
 func client() (client pulsar.Client, err error) {

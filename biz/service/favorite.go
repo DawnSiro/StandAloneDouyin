@@ -28,10 +28,10 @@ func FavoriteVideo(userID, videoID uint64) (*api.DouyinFavoriteActionResponse, e
 	builder1.WriteString("_user_like_count")
 	videoLikeCountKey := builder1.String()
 
-	userVideoLikeCount, err := global.VideoFRC.Get(videoLikeCountKey).Result()
+	userVideoLikeCount, err := global.VideoRC.Get(videoLikeCountKey).Result()
 	var videoLikeCountInt int
 	if err == redis.Nil {
-		global.VideoFRC.Set(videoLikeCountKey, "0", constant.VideoLikeLimitTime)
+		global.VideoRC.Set(videoLikeCountKey, "0", constant.VideoLikeLimitTime)
 	} else {
 		videoLikeCountInt, _ = strconv.Atoi(userVideoLikeCount)
 		if videoLikeCountInt >= constant.VideoLikeLimit {
@@ -42,14 +42,14 @@ func FavoriteVideo(userID, videoID uint64) (*api.DouyinFavoriteActionResponse, e
 		}
 	}
 
-	likeCount, err := global.VideoFRC.Get(videoLikeKey).Result()
+	likeCount, err := global.VideoRC.Get(videoLikeKey).Result()
 	if err == redis.Nil {
 		likeInt64, err := db.SelectVideoFavoriteCountByVideoID(videoID)
 		if err != nil {
 			hlog.Error("service.favorite.FavoriteVideo err:", err.Error())
 			return nil, err
 		}
-		global.VideoFRC.Set(videoLikeKey, likeInt64, 0)
+		global.VideoRC.Set(videoLikeKey, likeInt64, 0)
 	}
 	var likeUint64 uint64
 	if likeCount != "" {
@@ -68,10 +68,10 @@ func FavoriteVideo(userID, videoID uint64) (*api.DouyinFavoriteActionResponse, e
 	hlog.Debug("service.favorite.FavoriteVideo: publish a message")
 
 	// 如果 DB 层事务回滚了，err 就不为 nil，Redis 里的数据就不会更新
-	global.VideoFRC.Set(videoLikeKey, likeUint64+1, 0)
+	global.VideoRC.Set(videoLikeKey, likeUint64+1, 0)
 	// 更新单位时间内的点赞数量
-	userVideoLikeCountTime, err := global.VideoFRC.TTL(videoLikeCountKey).Result()
-	global.VideoFRC.Set(videoLikeCountKey, videoLikeCountInt+1, userVideoLikeCountTime)
+	userVideoLikeCountTime, err := global.VideoRC.TTL(videoLikeCountKey).Result()
+	global.VideoRC.Set(videoLikeCountKey, videoLikeCountInt+1, userVideoLikeCountTime)
 
 	return &api.DouyinFavoriteActionResponse{
 		StatusCode: errno.Success.ErrCode,
@@ -84,14 +84,14 @@ func CancelFavoriteVideo(userID, videoID uint64) (*api.DouyinFavoriteActionRespo
 	builder.WriteString("_video_like")
 	videoLikeKey := builder.String()
 
-	likeCount, err := global.VideoFRC.Get(videoLikeKey).Result()
+	likeCount, err := global.VideoRC.Get(videoLikeKey).Result()
 	if err == redis.Nil {
 		likeInt64, err := db.SelectVideoFavoriteCountByVideoID(videoID)
 		if err != nil {
 			hlog.Error("service.favorite.CancelFavoriteVideo err:", err.Error())
 			return nil, err
 		}
-		global.VideoFRC.Set(videoLikeKey, likeInt64, 0)
+		global.VideoRC.Set(videoLikeKey, likeInt64, 0)
 	}
 
 	var likeUint64 uint64
@@ -110,7 +110,7 @@ func CancelFavoriteVideo(userID, videoID uint64) (*api.DouyinFavoriteActionRespo
 	}
 	hlog.Debug("service.favorite.CancelFavoriteVideo: publish a message")
 	// 如果 DB 层事务回滚了，err 就不为 nil，Redis 里的数据就不会更新
-	global.VideoFRC.Set(videoLikeKey, likeUint64-1, 0)
+	global.VideoRC.Set(videoLikeKey, likeUint64-1, 0)
 
 	return &api.DouyinFavoriteActionResponse{
 		StatusCode: errno.Success.ErrCode,

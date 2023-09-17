@@ -2,10 +2,12 @@ package service
 
 import (
 	"bytes"
+	"douyin/dal/model"
 	"errors"
 	"fmt"
 	"io"
 	"math/rand"
+	"strconv"
 	"sync"
 	"time"
 
@@ -22,9 +24,10 @@ import (
 )
 
 func PublishAction(title string, videoData []byte, userID uint64) (*api.DouyinPublishActionResponse, error) {
+	logTag := "service.publish.PublishAction err:"
 	if userID == 0 {
 		err := errors.New("userID error")
-		hlog.Error("service.publish.PublishAction err:", err.Error())
+		hlog.Error(logTag, err.Error())
 		return nil, err
 	}
 
@@ -32,7 +35,7 @@ func PublishAction(title string, videoData []byte, userID uint64) (*api.DouyinPu
 	var reader io.Reader = bytes.NewReader(videoData)
 	u1, err := uuid.NewV4()
 	if err != nil {
-		hlog.Error("service.publish.PublishAction err:", err.Error())
+		hlog.Error(logTag, err.Error())
 		return nil, err
 	}
 	fileName := u1.String() + "." + "mp4"
@@ -40,11 +43,11 @@ func PublishAction(title string, videoData []byte, userID uint64) (*api.DouyinPu
 	// 上传视频并生成封面
 	playURL, coverURL, err := util.UploadVideo(&reader, fileName)
 	if err != nil {
-		hlog.Error("service.publish.PublishAction err:", err.Error())
+		hlog.Error(logTag, err.Error())
 		return nil, err
 	}
 
-	err = db.CreateVideo(&db.Video{
+	videoID, err := db.CreateVideo(&model.Video{
 		PublishTime:   time.Now(),
 		AuthorID:      userID,
 		PlayURL:       playURL,
@@ -54,9 +57,12 @@ func PublishAction(title string, videoData []byte, userID uint64) (*api.DouyinPu
 		Title:         title,
 	})
 	if err != nil {
-		hlog.Error("service.publish.PublishAction err:", err.Error())
+		hlog.Error(logTag, err.Error())
 		return nil, err
 	}
+
+	// 加入布隆过滤器
+	global.VideoIDBloomFilter.AddString(strconv.FormatUint(videoID, 10))
 
 	return &api.DouyinPublishActionResponse{
 		StatusCode: errno.Success.ErrCode,
@@ -88,7 +94,7 @@ func GetPublishVideos(userID, selectUserID uint64) (*api.DouyinPublishListRespon
 	// Check if cache key is valid using Bloom filter
 	cacheKey := fmt.Sprintf("publishedVideoList:%d", selectUserID)
 	if bloomFilter.TestString(cacheKey) {
-		cachedData, err := global.UserInfoRC.Get(cacheKey).Result()
+		cachedData, err := global.UserRC.Get(cacheKey).Result()
 		if err == nil {
 			// Cache hit, judge if they are friends
 			isFriend, err := AreUsersFriends(userID, selectUserID)
@@ -146,7 +152,7 @@ func GetPublishVideos(userID, selectUserID uint64) (*api.DouyinPublishListRespon
 
 	// Store the published video list in Redis cache with the random expiration time
 	responseJSON, _ := json.Marshal(response)
-	err = global.UserInfoRC.Set(cacheKey, responseJSON, cacheDuration).Err()
+	err = global.UserRC.Set(cacheKey, responseJSON, cacheDuration).Err()
 	if err != nil {
 		hlog.Error("service.publish.GetPublishVideos err: Error storing data in cache, ", err.Error())
 	}

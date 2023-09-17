@@ -1,28 +1,18 @@
 package db
 
 import (
-	"douyin/pkg/global"
 	"errors"
-	"time"
 
+	"douyin/dal/model"
+	"douyin/dal/rdb"
 	"douyin/pkg/constant"
+	"douyin/pkg/global"
+
+	"github.com/cloudwego/hertz/pkg/common/hlog"
 	"gorm.io/gorm"
 )
 
-type Comment struct {
-	ID          uint64    `json:"id"`
-	IsDeleted   uint8     `gorm:"default:0;not null" json:"is_deleted"`
-	VideoID     uint64    `gorm:"not null" json:"video_id"`
-	UserID      uint64    `gorm:"not null" json:"user_id"`
-	Content     string    `gorm:"type:varchar(255);not null" json:"content"`
-	CreatedTime time.Time `gorm:"not null" json:"created_time"`
-}
-
-func (n *Comment) TableName() string {
-	return constant.CommentTableName
-}
-
-func CreateComment(comment *Comment) (*Comment, error) {
+func CreateComment(comment *model.Comment) (*model.Comment, error) {
 	// comment := &Comment{
 	// 	VideoID:     videoID,
 	// 	UserID:      userID,
@@ -32,7 +22,7 @@ func CreateComment(comment *Comment) (*Comment, error) {
 	// DB 层开事务来保证原子性
 	err := global.DB.Transaction(func(tx *gorm.DB) error {
 		// 先查询 VideoID 是否存在，然后增加评论数，再创建评论
-		video := &Video{
+		video := &model.Video{
 			ID: comment.VideoID,
 		}
 		err := tx.First(&video).Error
@@ -45,9 +35,21 @@ func CreateComment(comment *Comment) (*Comment, error) {
 			return err
 		}
 		// 创建评论
-		return tx.Create(comment).Error
+		err = tx.Create(comment).Error
+		if err != nil {
+			return err
+		}
+		// 更新 Redis 缓存，如果返回错误会一起回滚，保证原子性和数据一致性
+		return rdb.AddComment(video.ID, rdb.CommentInfo{
+			ID:          comment.ID,
+			VideoID:     comment.VideoID,
+			UserID:      comment.UserID,
+			Content:     comment.Content,
+			CreatedTime: float64(comment.CreatedTime.UnixMilli()),
+		})
 	})
 	if err != nil {
+		hlog.Error("dal.db.comment.CreateComment err:", err.Error())
 		return nil, err
 	}
 
@@ -55,8 +57,8 @@ func CreateComment(comment *Comment) (*Comment, error) {
 }
 
 // DeleteCommentByID 通过评论ID 删除评论，默认使用软删除，提高性能
-func DeleteCommentByID(videoID, commentID uint64) (*Comment, error) {
-	comment := &Comment{
+func DeleteCommentByID(videoID, commentID uint64) (*model.Comment, error) {
+	comment := &model.Comment{
 		ID: commentID,
 	}
 	// 先查询是否存在评论
@@ -68,7 +70,7 @@ func DeleteCommentByID(videoID, commentID uint64) (*Comment, error) {
 	// DB 层开事务来保证原子性
 	err := global.DB.Transaction(func(tx *gorm.DB) error {
 		// 减少视频评论数
-		video := &Video{
+		video := &model.Video{
 			ID: videoID,
 		}
 		err := tx.First(&video).Error
@@ -80,7 +82,12 @@ func DeleteCommentByID(videoID, commentID uint64) (*Comment, error) {
 			return err
 		}
 		// 删除评论
-		return tx.Model(comment).Update("is_deleted", constant.DataDeleted).Error
+		err = tx.Model(comment).Update("is_deleted", constant.DataDeleted).Error
+		if err != nil {
+			return err
+		}
+		// 更新 Redis 缓存，如果返回错误会一起回滚，保证原子性和数据一致性
+		return rdb.DeleteComment(videoID, commentID)
 	})
 	if err != nil {
 		return nil, err
@@ -89,8 +96,8 @@ func DeleteCommentByID(videoID, commentID uint64) (*Comment, error) {
 	return comment, nil
 }
 
-func SelectCommentListByVideoID(videoID uint64) ([]*Comment, error) {
-	res := make([]*Comment, 0)
+func SelectCommentListByVideoID(videoID uint64) ([]*model.Comment, error) {
+	res := make([]*model.Comment, 0)
 	err := global.DB.Where("video_id = ? AND is_deleted = ?", videoID, constant.DataNotDeleted).Find(&res).Error
 	if err != nil {
 		return nil, err
@@ -100,27 +107,16 @@ func SelectCommentListByVideoID(videoID uint64) ([]*Comment, error) {
 
 func IsCommentCreatedByMyself(userID uint64, commentID uint64) bool {
 	result := global.DB.Where("id = ? AND user_id = ? AND is_deleted = ?", commentID, userID, constant.DataNotDeleted).
-		Find(&Comment{})
+		Find(&model.Comment{})
 	if result.RowsAffected == 0 {
 		return false
 	}
 	return true
 }
 
-type CommentData struct {
-	CID            uint64 `gorm:"column:cid"`
-	Content        string
-	CreatedTime    time.Time
-	UID            uint64
-	Username       string
-	FollowingCount uint64
-	FollowerCount  uint64
-	Avatar         string
-	IsFollow       bool
-}
-
-func SelectCommentDataByVideoIDANDUserID(videoID, userID uint64) ([]*CommentData, error) {
-	cs := make([]*CommentData, 0)
+// SelectCommentDataByVideoIDAndUserID 查询评论数据，使用了JOIN，一次性查出所有的数据
+func SelectCommentDataByVideoIDAndUserID(videoID, userID uint64) ([]*model.CommentData, error) {
+	cs := make([]*model.CommentData, 0)
 	err := global.DB.Select("c.id AS cid, c.content, c.created_time, "+
 		"u.id AS uid, u.username, u.following_count, u.follower_count, u.avatar, "+
 		"IF(r.is_deleted = 0, TRUE, FALSE) AS is_follow").Table(constant.UserTableName+" AS u").
@@ -133,8 +129,8 @@ func SelectCommentDataByVideoIDANDUserID(videoID, userID uint64) ([]*CommentData
 	return cs, nil
 }
 
-func SelectCommentDataByVideoID(videoID uint64) ([]Comment, error) {
-	var comments []Comment
+func SelectCommentDataByVideoID(videoID uint64) ([]model.Comment, error) {
+	var comments []model.Comment
 
 	if err := global.DB.Where("video_id = ?", videoID).Find(&comments).Error; err != nil {
 		return nil, err

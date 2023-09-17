@@ -27,7 +27,7 @@ var _ = Describe("favorite test", func() {
 		)
 
 		BeforeEach(func() {
-			_, token, err := util.GetUseridAndToken(username, password)
+			_, token, err := util.GetUserIDAndToken(username, password)
 			Expect(err).To(BeNil())
 			query["token"] = token
 			query["video_id"] = fmt.Sprintf("%d", video_id)
@@ -50,7 +50,7 @@ var _ = Describe("favorite test", func() {
 			after_cnt, err := GetFavoriteNum(video_id)
 			Expect(err).To(BeNil())
 			Expect(after_cnt - before_cnt).To(Equal(1))
-			
+
 			query["action_type"] = fmt.Sprintf("%d", 2)
 			resp, err = http.Post(util.CreateURL(path, query), "", nil)
 			Expect(err).To(BeNil())
@@ -84,7 +84,7 @@ var _ = Describe("favorite test", func() {
 			Expect(respData.StatusCode).To(Equal(int64(0)))
 
 			time.Sleep(time.Second) // wait for mq
-			
+
 			after_cnt, err := GetFavoriteNum(video_id)
 			Expect(err).To(BeNil())
 			Expect(after_cnt - before_cnt).To(Equal(-1))
@@ -177,7 +177,7 @@ var _ = Describe("favorite test", func() {
 		)
 
 		BeforeEach(func() {
-			userid, token, err := util.GetUseridAndToken(username, password)
+			userid, token, err := util.GetUserIDAndToken(username, password)
 			Expect(err).To(BeNil())
 			query["user_id"] = fmt.Sprintf("%d", userid)
 			query["token"] = token

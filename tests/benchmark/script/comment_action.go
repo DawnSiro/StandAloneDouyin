@@ -7,23 +7,15 @@ import (
 )
 
 const (
-	FanPrefix = "benchmark-commenter"
-	NumFans   = 1000
-
-	password = "BenchmarkTest!2023"
+	CommentPrefix = "benchmark-commenter"
+	NumComment    = 1000
 )
 
 func main() {
 	for i := 0; i < NumFans; i++ {
-		n := fmt.Sprintf("%s-%d", FanPrefix, i)
-		_, _, err := util.GetUseridAndToken(n, password)
+		n := fmt.Sprintf("%s-%d", CommentPrefix, i)
+		_, _, err := util.GetUserIDAndToken(n, password)
 		assert(err)
 	}
 	fmt.Println("Create fans ok")
-}
-
-func assert(err error) {
-	if err != nil {
-		panic(err)
-	}
 }

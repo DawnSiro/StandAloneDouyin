@@ -46,7 +46,7 @@ var _ = Describe("feed test", func() {
 		)
 
 		BeforeEach(func() {
-			_, token, err := util.GetUseridAndToken(username, password)
+			_, token, err := util.GetUserIDAndToken(username, password)
 			Expect(err).To(BeNil())
 			query["token"] = token
 		})

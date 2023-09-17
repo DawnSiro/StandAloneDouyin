@@ -14,10 +14,10 @@ const (
 	userB = "benchmark-friend-userB"
 )
 
-func AFollowB(token string, touid int64) {
+func AFollowB(token string, toUserID int64) {
 	q := map[string]string{
 		"token":       token,
-		"to_user_id":  fmt.Sprintf("%d", touid),
+		"to_user_id":  fmt.Sprintf("%d", toUserID),
 		"action_type": "1",
 	}
 	resp, err := http.Post(util.CreateURL("/douyin/relation/action/", q), "", nil)
@@ -29,9 +29,9 @@ func AFollowB(token string, touid int64) {
 }
 
 func main() {
-	idA, tokenA, err := util.GetUseridAndToken(userA, password)
+	idA, tokenA, err := util.GetUserIDAndToken(userA, password)
 	assert(err)
-	idB, tokenB, err := util.GetUseridAndToken(userB, password)
+	idB, tokenB, err := util.GetUserIDAndToken(userB, password)
 	assert(err)
 
 	AFollowB(tokenA, idB)

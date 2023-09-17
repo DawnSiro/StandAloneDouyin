@@ -1,22 +1,25 @@
 package service
 
 import (
+	"context"
+	"douyin/dal/model"
+	"douyin/pkg/constant"
+	"strconv"
+	"sync"
+	"time"
+
 	"douyin/biz/model/api"
 	"douyin/dal/db"
 	"douyin/dal/pack"
+	"douyin/dal/rdb"
 	"douyin/pkg/errno"
 	"douyin/pkg/global"
 	"douyin/pkg/pulsar"
 	"douyin/pkg/util"
 	"douyin/pkg/util/sensitive"
-	"fmt"
+
 	"github.com/bits-and-blooms/bloom/v3"
 	"github.com/cloudwego/hertz/pkg/common/hlog"
-	"github.com/cloudwego/hertz/pkg/common/json"
-	"math/rand"
-	"strconv"
-	"sync"
-	"time"
 )
 
 // Global variables for cache status flag and Bloom filter
@@ -32,21 +35,13 @@ func init() {
 }
 
 func PostComment(userID, videoID uint64, commentText string) (*api.DouyinCommentActionResponse, error) {
-	// 删除redis评论列表缓存
-	// 使用 strings.Builder 来优化字符串的拼接
-	//var builder strings.Builder
-	//builder.WriteString(strconv.FormatUint(videoID, 10))
-	//builder.WriteString("_video_comments")
-	//delCommentListKey := builder.String()
-	//hlog.Info("service.comment.PostComment delCommentListKey:", delCommentListKey)
-
 	//检测是否带有敏感词
 	if sensitive.IsWordsFilter(commentText) {
 		return nil, errno.ContainsProhibitedSensitiveWordsError
 	}
 
 	// 基于雪花算法生成comment_id
-	id, err := util.GetSonyflakeID()
+	id, err := util.GetSonyFlakeID()
 	if err != nil {
 		hlog.Error("service.comment.PostComment err: failed to create comment id, ", err.Error())
 	}
@@ -65,105 +60,121 @@ func PostComment(userID, videoID uint64, commentText string) (*api.DouyinComment
 		return nil, err
 	}
 
-	dbu, err := db.SelectUserByID(userID)
+	// 查询缓存数据
+	dbu, err := rdb.GetUserInfo(userID)
 	if err != nil {
 		hlog.Error("service.comment.PostComment err:", err.Error())
-		return nil, err
-	}
-	authorID, err := db.SelectAuthorIDByVideoID(videoID)
-	if err != nil {
-		hlog.Error("service.comment.PostComment err:", err.Error())
-		return nil, err
+		// 缓存没有再查数据库
+		dbu, err = db.SelectUserByID(userID)
+		if err != nil {
+			hlog.Error("service.comment.PostComment err:", err.Error())
+			return nil, err
+		}
+		// 然后设置缓存
+		err = rdb.SetUserInfo(dbu)
+		if err != nil {
+			// 要是设置出错，也不返回，继续执行逻辑
+			hlog.Error("service.comment.PostComment err:", err.Error())
+		}
 	}
 
-	// Notify cache invalidation
-	// Publish a message to the Redis channel indicating a comment list change
-	global.UserInfoRC.Publish("commentList_changes", "comment_added"+"&"+strconv.FormatUint(userID, 10)+"&"+strconv.FormatUint(videoID, 10))
-
+	// 这里的 isFollow 直接返回 false ，因为评论人自己当然不能关注自己
 	return &api.DouyinCommentActionResponse{
 		StatusCode: 0,
-		Comment:    pack.Comment((*db.Comment)(&msg), dbu, db.IsFollow(userID, authorID)),
+		Comment:    pack.Comment((*model.Comment)(&msg), dbu, false),
 	}, nil
 }
 
 func DeleteComment(userID, videoID, commentID uint64) (*api.DouyinCommentActionResponse, error) {
 	// 查询此评论是否是本人发送的
-	isComment := db.IsCommentCreatedByMyself(userID, commentID)
-	// 非本人评论
+	isComment, err := rdb.IsCommentCreatedByMyself(userID, videoID)
+	// 这里因为使用了 string 存储，所以逻辑没有 ZSet 那么复杂
+	if err != nil {
+		isComment = db.IsCommentCreatedByMyself(userID, commentID)
+	}
+
+	// 非本人评论直接返回
 	if !isComment {
 		hlog.Error("service.comment.DeleteComment err:", errno.DeletePermissionError)
 		return nil, errno.DeletePermissionError
 	}
 
+	// db 中会一起删除缓存数据
 	dbc, err := db.DeleteCommentByID(videoID, commentID)
 	if err != nil {
 		hlog.Error("service.comment.DeleteComment err:", err.Error())
 		return nil, err
 	}
-	dbu, err := db.SelectUserByID(userID)
+
+	// 查询用户评论数据
+	dbu, err := rdb.GetUserInfo(userID)
 	if err != nil {
 		hlog.Error("service.comment.DeleteComment err:", err.Error())
-		return nil, err
-	}
-	authorID, err := db.SelectAuthorIDByVideoID(videoID)
-	if err != nil {
-		hlog.Error("service.comment.DeleteComment err:", err.Error())
-		return nil, err
-	}
-
-	// Notify cache invalidation
-	// Publish a message to the Redis channel indicating a comment list change
-	global.UserInfoRC.Publish("commentList_changes", "comment_deleted"+"&"+strconv.FormatUint(userID, 10)+"&"+strconv.FormatUint(videoID, 10))
-
-	return &api.DouyinCommentActionResponse{
-		StatusCode: 0,
-		Comment:    pack.Comment(dbc, dbu, db.IsFollow(userID, authorID)),
-	}, nil
-}
-
-func GetCommentList(userID, videoID uint64) (*api.DouyinCommentListResponse, error) {
-	// Check if comment data is available in Redis cache
-	cacheKey := fmt.Sprintf("commentList:%d:%d", userID, videoID)
-
-	// 解决缓存穿透 -- 添加布隆过滤器判断值是否在于RC或DB
-	if bloomFilter.TestString(cacheKey) {
-		cachedData, err := global.UserInfoRC.Get(cacheKey).Result()
-		if err == nil {
-			// Cache hit, return cached comment data
-			var cachedResponse api.DouyinCommentListResponse
-			if err := json.Unmarshal([]byte(cachedData), &cachedResponse); err != nil {
-				hlog.Error("service.comment.GetCommentList err: Error decoding cached data, ", err.Error())
-			} else {
-				return &cachedResponse, nil
-			}
+		dbu, err = db.SelectUserByID(userID)
+		if err != nil {
+			hlog.Error("service.comment.DeleteComment err:", err.Error())
+			return nil, err
 		}
 	}
 
-	// 解决缓存击穿 -- 添加互斥锁，同一时间仅有一个线程更新缓存
-	// Create a WaitGroup for the cache update operation
-	waitGroup := &sync.WaitGroup{}
-	waitGroup.Add(1)
+	// 这里的 isFollow 直接返回 false ，因为评论人自己当然不能关注自己
+	return &api.DouyinCommentActionResponse{
+		StatusCode: 0,
+		Comment:    pack.Comment(dbc, dbu, false),
+	}, nil
+}
 
-	// Check if another thread is updating the cache
-	cacheMutex.Lock()
-	existingWaitGroup, exists := cacheStatus[cacheKey]
-	if exists {
-		cacheMutex.Unlock()
-		existingWaitGroup.Wait()
-		return GetCommentList(userID, videoID)
+func GetCommentList(ctx context.Context, userID, videoID uint64) (*api.DouyinCommentListResponse, error) {
+	// userID可能为0，因为可能存在不登录也能查看视频评论的需求，但是videoID一定得为真实存在的ID
+	// 使用布隆过滤器判断视频ID是否存在
+	if !global.VideoIDBloomFilter.TestString(strconv.FormatUint(videoID, 10)) {
+		hlog.Error("service.comment.GetCommentList err: 布隆过滤器拦截")
+		return nil, errno.UserRequestParameterError
 	}
-	// Set cache status flag to indicate cache update is in progress
-	cacheStatus[cacheKey] = waitGroup
-	cacheMutex.Unlock()
+
+	// 加分布式锁
+	lock := rdb.NewUserKeyLock(userID, constant.CommentRedisZSetPrefix)
+	// 如果 redis 不可用，应该使用程序代码之外的方式进行限流
+	_ = lock.Lock(ctx, global.CommentRC)
+
+	// 获取评论基本数据
+
+	// 缓存不存在，查询数据库
+	//db.SelectCommentDataByVideoID()
+
+	// 设置缓存
+
+	// 根据用户关注缓存判断用户是否关注了评论的用户
+
+	// 缓存不存在也查询数据库并缓存
+
+	//
+
+	// 获取评论ID
+	//commentIDList, err := rdb.GetCommentIDByVideoID(videoID)
+	//if err == nil {
+	//	dbCList, err := rdb.GetCommentList(commentIDList)
+	//	if err == nil {
+	//		// 先从缓存中查询用户数据，并把未命中的 UserID 放入切片中
+	//		unHitUserID := make([]uint64, 0)
+	//		for i := 0; i < len(commentIDList); i++ {
+	//			info, err := rdb.GetUserInfo(dbCList[i].UserID)
+	//			if err != nil {
+	//				unHitUserID = append(unHitUserID, dbCList[i].UserID)
+	//			}
+	//		}
+	//	}
+	//
+	//}
 
 	// Cache miss, query the database
-	commentData, err := db.SelectCommentDataByVideoIDANDUserID(videoID, userID)
+	commentData, err := db.SelectCommentDataByVideoIDAndUserID(videoID, userID)
 	if err != nil {
 		hlog.Error("service.comment.GetCommentList err:", err.Error())
 		// Release cache status flag to allow other threads to update cache
-		cacheMutex.Lock()
-		delete(cacheStatus, cacheKey)
-		cacheMutex.Unlock()
+		//cacheMutex.Lock()
+		//delete(cacheStatus, cacheKey)
+		//cacheMutex.Unlock()
 		return nil, err
 	}
 
@@ -173,26 +184,26 @@ func GetCommentList(userID, videoID uint64) (*api.DouyinCommentListResponse, err
 		CommentList: pack.CommentDataList(commentData),
 	}
 
-	// Store comment data in Redis cache
-	responseJSON, _ := json.Marshal(response)
+	//// Store comment data in Redis cache
+	//responseJSON, _ := json.Marshal(response)
+	//
+	//// 解决缓存雪崩 -- 添加随机数，避免缓存同时过期
+	//// Add a random duration to the cache valid time
+	//cacheDuration := 10*time.Minute + time.Duration(rand.Intn(600))*time.Second
 
-	// 解决缓存雪崩 -- 添加随机数，避免缓存同时过期
-	// Add a random duration to the cache valid time
-	cacheDuration := 10*time.Minute + time.Duration(rand.Intn(600))*time.Second
-
-	err = global.UserInfoRC.Set(cacheKey, responseJSON, cacheDuration).Err()
-	if err != nil {
-		hlog.Error("service.comment.GetCommentList err: Error storing data in cache, ", err.Error())
-	}
-
-	// Add cacheKey to Bloom filter
-	bloomFilter.AddString(cacheKey)
-
-	// Release cache status flag and signal that cache update is done
-	cacheMutex.Lock()
-	delete(cacheStatus, cacheKey)
-	waitGroup.Done()
-	cacheMutex.Unlock()
+	//err = global.UserRC.Set(cacheKey, responseJSON, cacheDuration).Err()
+	//if err != nil {
+	//	hlog.Error("service.comment.GetCommentList err: Error storing data in cache, ", err.Error())
+	//}
+	//
+	//// Add cacheKey to Bloom filter
+	//bloomFilter.AddString(cacheKey)
+	//
+	//// Release cache status flag and signal that cache update is done
+	//cacheMutex.Lock()
+	//delete(cacheStatus, cacheKey)
+	//waitGroup.Done()
+	//cacheMutex.Unlock()
 
 	return response, nil
 }

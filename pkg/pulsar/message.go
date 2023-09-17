@@ -19,26 +19,24 @@ var (
 )
 
 type MessageMessage struct {
-	Uid     uint64
-	ToUid   uint64
+	UID     uint64
+	ToUID   uint64
 	Context string
 }
 
 type MessageMQ struct {
-	*PulsarMQ
+	*MQ
 }
 
 func GetMessageMQInstance() *MessageMQ {
-	if mmq == nil {
-		mOnce.Do(func() {
-			mmq = newMessageMQ()
-		})
-	}
+	mOnce.Do(func() {
+		mmq = newMessageMQ()
+	})
 	return mmq
 }
 
 func newMessageMQ() *MessageMQ {
-	res := &MessageMQ{NewPulsarMQ(global.PulsarClient, constant.MessageTopic, constant.MessageSubcription)}
+	res := &MessageMQ{NewPulsarMQ(global.PulsarClient, constant.MessageTopic, constant.MessageSubscription)}
 	res.RunConsume(res.Consume)
 	return res
 }
@@ -50,13 +48,13 @@ func (mq *MessageMQ) Consume() error {
 		if err != nil {
 			return err
 		}
-		hlog.Debugf("message consumer: recieve message (id=%v)", msg.ID())
+		hlog.Debugf("message consumer: receive message (id=%v)", msg.ID())
 
 		err = mq.Consumer.Ack(msg)
 		if err != nil {
 			return err
 		}
-		hlog.Debugf("message consumer: acknowlege message (id=%v)", msg.ID())
+		hlog.Debugf("message consumer: acknowledge message (id=%v)", msg.ID())
 
 		var res MessageMessage
 		err = json.Unmarshal(msg.Payload(), &res)
@@ -66,7 +64,7 @@ func (mq *MessageMQ) Consume() error {
 			continue
 		}
 
-		err = db.CreateMessage(res.Uid, res.ToUid, res.Context)
+		err = db.CreateMessage(res.UID, res.ToUID, res.Context)
 		if err != nil {
 			hlog.Errorf("message consumer: db error: %v, message (id=%v)", err, msg.ID()) // 数据库错误打印日志，但不停止逻辑
 		} else {
@@ -75,8 +73,8 @@ func (mq *MessageMQ) Consume() error {
 	}
 }
 
-func (mq *MessageMQ) CreateMessage(uid, touid uint64, comment string) error {
-	msg := MessageMessage{uid, touid, comment}
+func (mq *MessageMQ) CreateMessage(userID, toUserID uint64, comment string) error {
+	msg := MessageMessage{userID, toUserID, comment}
 	payload, err := json.Marshal(msg)
 	if err != nil {
 		return err

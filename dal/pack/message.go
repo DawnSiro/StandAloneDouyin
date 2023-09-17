@@ -2,13 +2,13 @@ package pack
 
 import (
 	"douyin/biz/model/api"
-	"douyin/dal/db"
+	"douyin/dal/model"
 	"douyin/pkg/errno"
 
 	"github.com/cloudwego/hertz/pkg/common/hlog"
 )
 
-func Messages(messages []*db.Message) []*api.Message {
+func Messages(messages []*model.Message) []*api.Message {
 	if messages == nil {
 		hlog.Error("pack.message.Messages err:", errno.ServiceError)
 		return nil
@@ -20,12 +20,12 @@ func Messages(messages []*db.Message) []*api.Message {
 	return res
 }
 
-func Message(message *db.Message) *api.Message {
+func Message(message *model.Message) *api.Message {
 	if message == nil {
 		hlog.Error("pack.message.Messages err:", errno.ServiceError)
 		return nil
 	}
-	createTime := message.CreateTime.UnixMilli()
+	createTime := message.CreatedTime.UnixMilli()
 	return &api.Message{
 		ID:         int64(message.ID),
 		ToUserID:   int64(message.ToUserID),
