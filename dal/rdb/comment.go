@@ -1,14 +1,16 @@
 package rdb
 
 import (
-	"douyin/pkg/constant"
-	"douyin/pkg/global"
 	"encoding/json"
-	"github.com/cloudwego/hertz/pkg/common/hlog"
-	"github.com/go-redis/redis"
 	"math/rand"
 	"strconv"
 	"time"
+
+	"douyin/pkg/constant"
+	"douyin/pkg/global"
+
+	"github.com/cloudwego/hertz/pkg/common/hlog"
+	"github.com/go-redis/redis"
 )
 
 type CommentInfo struct {

@@ -1,14 +1,16 @@
 package rdb
 
 import (
-	"douyin/dal/model"
-	"douyin/pkg/constant"
-	"douyin/pkg/global"
 	"encoding/json"
-	"github.com/cloudwego/hertz/pkg/common/hlog"
 	"math/rand"
 	"strconv"
 	"time"
+
+	"douyin/dal/model"
+	"douyin/pkg/constant"
+	"douyin/pkg/global"
+
+	"github.com/cloudwego/hertz/pkg/common/hlog"
 )
 
 // UserInfo 用户信息中基本信息，不做更改或更改频率较低

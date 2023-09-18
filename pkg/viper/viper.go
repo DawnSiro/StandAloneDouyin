@@ -2,6 +2,7 @@ package viper
 
 import (
 	"douyin/pkg/global"
+
 	"github.com/cloudwego/hertz/pkg/common/hlog"
 	"github.com/fsnotify/fsnotify"
 	"github.com/spf13/viper"

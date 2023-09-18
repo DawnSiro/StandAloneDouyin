@@ -1,11 +1,12 @@
 package pack
 
 import (
+	"time"
+
 	"douyin/biz/model/api"
 	"douyin/dal/model"
 	"douyin/dal/rdb"
 	"douyin/pkg/errno"
-	"time"
 
 	"github.com/cloudwego/hertz/pkg/common/hlog"
 )

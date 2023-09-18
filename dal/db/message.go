@@ -1,13 +1,14 @@
 package db
 
 import (
-	"douyin/dal/model"
-	"douyin/dal/rdb"
-	"douyin/pkg/global"
-	"gorm.io/gorm"
 	"time"
 
+	"douyin/dal/model"
+	"douyin/dal/rdb"
 	"douyin/pkg/constant"
+	"douyin/pkg/global"
+
+	"gorm.io/gorm"
 )
 
 func CreateMessage(fromUserID, toUserID uint64, content string) error {

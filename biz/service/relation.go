@@ -1,6 +1,8 @@
 package service
 
 import (
+	"strconv"
+
 	"douyin/biz/model/api"
 	"douyin/dal/db"
 	"douyin/dal/pack"
@@ -8,7 +10,6 @@ import (
 	"douyin/pkg/errno"
 	"douyin/pkg/global"
 	"douyin/pkg/pulsar"
-	"strconv"
 
 	"github.com/cloudwego/hertz/pkg/common/hlog"
 )

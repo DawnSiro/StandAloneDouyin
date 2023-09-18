@@ -3,9 +3,6 @@ package service
 import (
 	"bytes"
 	"context"
-	"douyin/dal/model"
-	"douyin/dal/rdb"
-	"douyin/pkg/constant"
 	"errors"
 	"io"
 	"strconv"
@@ -13,7 +10,10 @@ import (
 
 	"douyin/biz/model/api"
 	"douyin/dal/db"
+	"douyin/dal/model"
 	"douyin/dal/pack"
+	"douyin/dal/rdb"
+	"douyin/pkg/constant"
 	"douyin/pkg/errno"
 	"douyin/pkg/global"
 	"douyin/pkg/util"

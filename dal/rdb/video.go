@@ -1,15 +1,17 @@
 package rdb
 
 import (
-	"douyin/dal/model"
-	"douyin/pkg/constant"
-	"douyin/pkg/global"
 	"encoding/json"
-	"github.com/cloudwego/hertz/pkg/common/hlog"
-	"github.com/go-redis/redis"
 	"math/rand"
 	"strconv"
 	"time"
+
+	"douyin/dal/model"
+	"douyin/pkg/constant"
+	"douyin/pkg/global"
+
+	"github.com/cloudwego/hertz/pkg/common/hlog"
+	"github.com/go-redis/redis"
 )
 
 // VideoInfo 视频固定的信息
