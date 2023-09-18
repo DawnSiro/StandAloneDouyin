@@ -2,6 +2,8 @@ package service
 
 import (
 	"context"
+	"strconv"
+
 	"douyin/biz/model/api"
 	"douyin/dal/db"
 	"douyin/dal/model"
@@ -11,7 +13,6 @@ import (
 	"douyin/pkg/errno"
 	"douyin/pkg/global"
 	"douyin/pkg/pulsar"
-	"strconv"
 
 	"github.com/cloudwego/hertz/pkg/common/hlog"
 	"github.com/go-redis/redis"

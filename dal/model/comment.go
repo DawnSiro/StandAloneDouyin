@@ -1,8 +1,9 @@
 package model
 
 import (
-	"douyin/pkg/constant"
 	"time"
+
+	"douyin/pkg/constant"
 )
 
 // 统一存放数据模型结构体，避免 mysql 和 redis 之间出现循环引用问题

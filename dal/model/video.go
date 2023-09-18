@@ -1,8 +1,9 @@
 package model
 
 import (
-	"douyin/pkg/constant"
 	"time"
+
+	"douyin/pkg/constant"
 )
 
 type Video struct {

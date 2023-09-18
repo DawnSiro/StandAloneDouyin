@@ -1,6 +1,8 @@
 package service
 
 import (
+	"encoding/json"
+
 	"douyin/biz/model/api"
 	"douyin/dal/db"
 	"douyin/dal/model"
@@ -8,7 +10,6 @@ import (
 	"douyin/dal/rdb"
 	"douyin/pkg/errno"
 	"douyin/pkg/pulsar"
-	"encoding/json"
 
 	"github.com/cloudwego/hertz/pkg/common/hlog"
 )

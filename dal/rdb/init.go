@@ -1,16 +1,17 @@
 package rdb
 
 import (
-	"douyin/pkg/viper"
 	"flag"
 	"fmt"
-	"github.com/cloudwego/hertz/pkg/common/hlog"
 	"strconv"
 	"sync"
 
 	"douyin/pkg/constant"
 	"douyin/pkg/global"
+	"douyin/pkg/viper"
+
 	"github.com/bits-and-blooms/bloom/v3"
+	"github.com/cloudwego/hertz/pkg/common/hlog"
 	"github.com/go-redis/redis"
 )
 

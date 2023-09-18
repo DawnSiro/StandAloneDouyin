@@ -1,14 +1,16 @@
 package rdb
 
 import (
-	"douyin/dal/model"
-	"douyin/pkg/global"
 	"encoding/json"
-	"github.com/cloudwego/hertz/pkg/common/hlog"
-	"github.com/go-redis/redis"
 	"strconv"
 	"strings"
 	"time"
+
+	"douyin/dal/model"
+	"douyin/pkg/global"
+
+	"github.com/cloudwego/hertz/pkg/common/hlog"
+	"github.com/go-redis/redis"
 )
 
 // GetMessageChatList 获取某两个用户之间的消息记录

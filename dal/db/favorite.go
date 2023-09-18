@@ -1,11 +1,11 @@
 package db
 
 import (
-	"douyin/dal/rdb"
 	"errors"
 	"time"
 
 	"douyin/dal/model"
+	"douyin/dal/rdb"
 	"douyin/pkg/constant"
 	"douyin/pkg/errno"
 	"douyin/pkg/global"

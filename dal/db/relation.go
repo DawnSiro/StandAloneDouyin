@@ -239,12 +239,14 @@ func SelectFollowUserListByUserID(userID uint64) ([]*model.FollowUserData, error
 
 // SelectFanUserListByUserID 查询粉丝列表的用户信息
 // 这里不能用 IN 是因为 IN 的性能没有 JOIN 好
+// 粉丝信息默认只能查前 500 个
 func SelectFanUserListByUserID(userID uint64) ([]*model.FanUserData, error) {
 	res := make([]*model.FanUserData, 0)
 	err := global.DB.Select("u.id AS uid, u.username, u.avatar, r.created_time").
 		Table("`user` AS u").
 		Joins("JOIN relation AS r ON r.user_id = u.id").
-		Where("r.to_user_id = ? AND is_deleted = ?", userID, constant.DataNotDeleted).Scan(&res).Error
+		Where("r.to_user_id = ? AND is_deleted = ?", userID, constant.DataNotDeleted).
+		Limit(constant.FanListLimit).Scan(&res).Error
 	if err != nil {
 		return nil, err
 	}
