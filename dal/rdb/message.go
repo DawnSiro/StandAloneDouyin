@@ -57,6 +57,10 @@ func AddMessage(userID uint64, toUserID uint64, message *model.Message) error {
 		hlog.Error(logTag, err.Error())
 		return err
 	}
+	exists, _ := global.MessageRC.Exists(messageListKey).Result()
+	if exists == 0 {
+		return nil
+	}
 	// 加入 ZSet 集合
 	err = global.MessageRC.ZAdd(messageListKey, redis.Z{
 		Score:  float64(message.CreatedTime.UnixMilli()),

@@ -2,13 +2,13 @@ package service
 
 import (
 	"bytes"
+	"context"
 	"douyin/dal/model"
+	"douyin/dal/rdb"
+	"douyin/pkg/constant"
 	"errors"
-	"fmt"
 	"io"
-	"math/rand"
 	"strconv"
-	"sync"
 	"time"
 
 	"douyin/biz/model/api"
@@ -19,7 +19,6 @@ import (
 	"douyin/pkg/util"
 
 	"github.com/cloudwego/hertz/pkg/common/hlog"
-	"github.com/cloudwego/hertz/pkg/common/json"
 	"github.com/gofrs/uuid"
 )
 
@@ -70,113 +69,156 @@ func PublishAction(title string, videoData []byte, userID uint64) (*api.DouyinPu
 }
 
 func GetPublishVideos(userID, selectUserID uint64) (*api.DouyinPublishListResponse, error) {
-	// 方案一，每次都按单表查询，存在循环查询数据的问题，经过测试，开启协程进行异步也没有多少性能提升
-	//videoList := make([]*api.Video, 0)
-	//
-	//videos, err := db.GetVideosByAuthorID(userID)
+	logTag := "service.favorite.GetPublishVideos err:"
+
+	//videoData, err := db.SelectPublishVideoDataListByUserID(userID, selectUserID)
 	//if err != nil {
 	//	hlog.Error("service.publish.GetPublishVideos err:", err.Error())
 	//	return nil, err
 	//}
-	//
-	//for i := 0; i < len(videos); i++ {
-	//	u, err := db.SelectUserByID(videos[i].AuthorID)
-	//	if err != nil {
-	//		hlog.Error("service.publish.GetPublishVideos err:", err.Error())
-	//		return nil, err
-	//	}
-	//
-	//	video := pack.Video(videos[i], u,
-	//		db.IsFollow(userID, u.ID), db.IsFavoriteVideo(userID, videos[i].ID))
-	//	videoList = append(videoList, video)
-	//}
 
-	// Check if cache key is valid using Bloom filter
-	cacheKey := fmt.Sprintf("publishedVideoList:%d", selectUserID)
-	if bloomFilter.TestString(cacheKey) {
-		cachedData, err := global.UserRC.Get(cacheKey).Result()
-		if err == nil {
-			// Cache hit, judge if they are friends
-			isFriend, err := AreUsersFriends(userID, selectUserID)
-			if err != nil {
-				hlog.Error("service.publish.GetPublishVideos err: Error checking if users are friends, ", err.Error())
-			} else if isFriend {
-				// Return cached published video list
-				var cachedResponse api.DouyinPublishListResponse
-				if err := json.Unmarshal([]byte(cachedData), &cachedResponse); err != nil {
-					hlog.Error("service.publish.GetPublishVideos err: Error decoding cached data, ", err.Error())
-				} else {
-					return &cachedResponse, nil
+	// 加分布式锁
+	lock := rdb.NewUserKeyLock(userID, constant.FavoriteVideoIDRedisZSetPrefix)
+	// 如果 redis 不可用，应该使用程序代码之外的方式进行限流
+	_ = lock.Lock(context.Background(), global.VideoRC)
+
+	// 查询用户点赞视频ID列表
+	ufVideoIDList, err := rdb.GetPublishVideoID(selectUserID)
+	if err != nil {
+		// 缓存未命中则查询数据库
+		set, err := db.SelectPublishVideoIDZSet(selectUserID)
+		if err != nil {
+			hlog.Error(logTag, err.Error())
+			return nil, err
+		}
+		rdbZSet := make([]*rdb.PublishVideoIDZSet, len(set))
+		ufVideoIDList = make([]uint64, len(set))
+		for i, id := range set {
+			ufVideoIDList[i] = id.VideoID
+			rdbZSet[i] = &rdb.PublishVideoIDZSet{
+				VideoID:     id.VideoID,
+				CreatedTime: float64(id.CreatedTime.UnixMilli()),
+			}
+		}
+		// 设置缓存
+		err = rdb.SetPublishVideoID(userID, rdbZSet)
+		if err != nil {
+			hlog.Error(logTag, err.Error())
+		}
+	}
+
+	// 查询VideoInfo
+	videoInfoList := make([]*model.Video, len(ufVideoIDList))
+	lostVideoIDList := make([]uint64, 0)
+	for i, u := range ufVideoIDList {
+		info, err := rdb.GetVideoInfo(u)
+		if err != nil {
+			hlog.Error(logTag, err.Error())
+			// 如果缓存不存在，则记录下
+			lostVideoIDList = append(lostVideoIDList, u)
+		}
+		// info 为 nil 也先占着位置
+		videoInfoList[i] = info
+	}
+
+	// 进行批处理查询
+	lostVideoList, err := db.SelectVideoListByVideoID(lostVideoIDList)
+	if err != nil {
+		hlog.Error(logTag, err.Error())
+		return nil, err
+	}
+
+	i := 0
+	for _, v := range lostVideoList {
+		for ; i < len(videoInfoList); i++ {
+			// 找到空余的则填入
+			if videoInfoList[i] == nil {
+				videoInfoList[i] = v
+				// 顺手设置缓存
+				err := rdb.SetVideoInfo(v)
+				if err != nil {
+					hlog.Error(logTag, err.Error())
 				}
 			}
 		}
 	}
 
-	// Create a random duration for cache expiration
-	minDuration := 24 * time.Hour
-	maxDuration := 48 * time.Hour
-	cacheDuration := minDuration + time.Duration(rand.Intn(int(maxDuration-minDuration)))
-
-	// Create a WaitGroup for the cache update operation
-	waitGroup := &sync.WaitGroup{}
-	waitGroup.Add(1)
-
-	// Check if another thread is updating the cache
-	cacheMutex.Lock()
-	existingWaitGroup, exists := cacheStatus[cacheKey]
-	if exists {
-		cacheMutex.Unlock()
-		existingWaitGroup.Wait()
-		return GetPublishVideos(userID, selectUserID)
+	// 查询UserInfo，需要注意可能有重复的视频作者
+	userInfoList := make([]*model.User, len(videoInfoList))
+	lostUserInfoIDList := make([]uint64, 0)
+	for i, video := range videoInfoList {
+		info, err := rdb.GetUserInfo(video.AuthorID)
+		if err != nil {
+			hlog.Error(logTag, err.Error())
+			// 如果缓存不存在，则记录下
+			lostUserInfoIDList = append(lostUserInfoIDList, video.AuthorID)
+		}
+		// info 为 nil 也先占着位置
+		userInfoList[i] = info
 	}
-	// Set cache status flag to indicate cache update is in progress
-	cacheStatus[cacheKey] = waitGroup
-	cacheMutex.Unlock()
 
-	// Cache miss, query the database
-	videoData, err := db.SelectPublishVideoDataListByUserID(userID, selectUserID)
+	// 还是一次性查询完剩下的
+	// 这里需要注意一个多个评论可能对应同一个用户，找坑的时候需要额外判断下
+	lostUInfoList, err := db.SelectUserByIDList(lostUserInfoIDList)
 	if err != nil {
-		hlog.Error("service.publish.GetPublishVideos err:", err.Error())
-		// Release cache status flag to allow other threads to update cache
-		cacheMutex.Lock()
-		delete(cacheStatus, cacheKey)
-		cacheMutex.Unlock()
+		hlog.Error(logTag, err)
 		return nil, err
 	}
 
-	// Pack video data
-	response := &api.DouyinPublishListResponse{
-		StatusCode: errno.Success.ErrCode,
-		VideoList:  pack.VideoDataList(videoData),
-	}
-
-	// Store the published video list in Redis cache with the random expiration time
-	responseJSON, _ := json.Marshal(response)
-	err = global.UserRC.Set(cacheKey, responseJSON, cacheDuration).Err()
-	if err != nil {
-		hlog.Error("service.publish.GetPublishVideos err: Error storing data in cache, ", err.Error())
-	}
-
-	// Release cache status flag and signal that cache update is done
-	cacheMutex.Lock()
-	delete(cacheStatus, cacheKey)
-	waitGroup.Done()
-	cacheMutex.Unlock()
-
-	return response, nil
-}
-
-func AreUsersFriends(userID, selectUserID uint64) (bool, error) {
-	friendListResponse, err := GetFriendList(userID)
-	if err != nil {
-		return false, err
-	}
-
-	for _, friend := range friendListResponse.UserList {
-		if friend.ID == int64(selectUserID) {
-			return true, nil
+	i = 0
+	for _, data := range lostUInfoList {
+		for ; i < len(userInfoList); i++ {
+			// 找到坑了则填入
+			if userInfoList[i] == nil && videoInfoList[i].AuthorID == data.ID {
+				userInfoList[i] = data
+			}
+		}
+		// 顺手设置缓存
+		err = rdb.SetUserInfo(data)
+		if err != nil {
+			hlog.Error(logTag, err)
 		}
 	}
-	// Not friends
-	return false, nil
+
+	// 查询用户的点赞列表
+	ufIDList, err := rdb.GetFavoriteVideoID(userID)
+	ufIDSet := make(map[uint64]struct{}, len(ufIDList))
+	for _, u := range ufIDList {
+		ufIDSet[u] = struct{}{}
+	}
+
+	// 查询用户的关注列表
+	followUserIDSet, err := rdb.GetFollowUserIDSet(userID)
+	if err != nil {
+		set, err := db.SelectFollowUserIDSet(userID)
+		if err != nil {
+			hlog.Error(logTag, err)
+			return nil, err
+		}
+		err = rdb.SetFollowUserIDSet(userID, set)
+		if err != nil {
+			hlog.Error(logTag, err)
+		}
+	}
+
+	// 解锁
+	err = lock.Unlock(global.VideoRC)
+
+	vList := make([]*api.Video, len(videoInfoList))
+	for i := 0; i < len(videoInfoList); i++ {
+		isFollow := false
+		if _, ok := followUserIDSet[videoInfoList[i].AuthorID]; ok {
+			isFollow = true
+		}
+		isFavorite := false
+		if _, ok := ufIDSet[videoInfoList[i].AuthorID]; ok {
+			isFavorite = true
+		}
+		vList[i] = pack.Video(videoInfoList[i], userInfoList[i], isFollow, isFavorite)
+	}
+
+	return &api.DouyinPublishListResponse{
+		StatusCode: errno.Success.ErrCode,
+		VideoList:  vList,
+	}, nil
 }

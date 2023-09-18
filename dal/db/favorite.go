@@ -1,6 +1,7 @@
 package db
 
 import (
+	"douyin/dal/rdb"
 	"errors"
 	"time"
 
@@ -69,7 +70,14 @@ func FavoriteVideo(userID uint64, videoID uint64) error {
 			return tx.Model(userFavoriteVideo).Update("is_deleted", constant.DataNotDeleted).Error
 		}
 		// 没有则新建
-		return tx.Create(userFavoriteVideo).Error
+		err = tx.Create(userFavoriteVideo).Error
+		if err != nil {
+			return err
+		}
+		return rdb.FavoriteVideo(userID, author.ID, &rdb.FavoriteVideoIDZSet{
+			VideoID:     videoID,
+			CreatedTime: float64(userFavoriteVideo.CreatedTime.UnixMilli()),
+		})
 	})
 }
 
@@ -127,7 +135,11 @@ func CancelFavoriteVideo(userID uint64, videoID uint64) error {
 		}
 
 		// 进行软删除
-		return global.DB.Model(userFavoriteVideo).Update("is_deleted", constant.DataDeleted).Error
+		err = global.DB.Model(userFavoriteVideo).Update("is_deleted", constant.DataDeleted).Error
+		if err != nil {
+			return err
+		}
+		return rdb.CancelFavoriteVideo(userID, author.ID, videoID)
 	})
 }
 
@@ -159,4 +171,15 @@ func SelectTopFavoriteVideos(limit int) ([]model.Video, error) {
 	}
 
 	return videos, nil
+}
+
+func SelectFavoriteVideoIDData(userID uint64) ([]*model.FavoriteVideoIDData, error) {
+	fVIDData := make([]*model.FavoriteVideoIDData, 0)
+	err := global.DB.Select("video_id, created_time").
+		Table(constant.UserFavoriteVideosTableName).
+		Where("user_id = ?", userID).Find(&fVIDData).Error
+	if err != nil {
+		return nil, err
+	}
+	return nil, err
 }

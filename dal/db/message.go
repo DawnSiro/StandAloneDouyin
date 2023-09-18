@@ -25,10 +25,10 @@ func GetMessagesByUserIDAndPreMsgTime(userID, oppositeID uint64, preMsgTime int6
 	res := make([]*model.Message, 0)
 	message := &model.Message{}
 	// 使用 Union 来避免使用 or 导致不走索引的问题
-	err := global.DB.Raw("? UNION ? ORDER BY create_time ASC",
-		global.DB.Where("to_user_id = ? AND from_user_id = ? AND `create_time` > ?",
+	err := global.DB.Raw("? UNION ? ORDER BY created_time ASC",
+		global.DB.Where("to_user_id = ? AND from_user_id = ? AND `created_time` > ?",
 			userID, oppositeID, time.UnixMilli(preMsgTime)).Model(message),
-		global.DB.Where("to_user_id = ? AND from_user_id = ? AND `create_time` > ?",
+		global.DB.Where("to_user_id = ? AND from_user_id = ? AND `created_time` > ?",
 			oppositeID, userID, time.UnixMilli(preMsgTime)).Model(message),
 	).Scan(&res).Error
 	if err != nil {
@@ -41,7 +41,7 @@ func GetMessagesByUserIDAndPreMsgTime(userID, oppositeID uint64, preMsgTime int6
 func GetLatestMsg(userID uint64, oppositeID uint64) (*model.FriendMessageResp, error) {
 	message := &model.Message{}
 	// 使用 Union 来避免使用 or 导致不走索引的问题
-	err := global.DB.Raw("? UNION ? ORDER BY create_time DESC LIMIT 1",
+	err := global.DB.Raw("? UNION ? ORDER BY created_time DESC LIMIT 1",
 		global.DB.Where("to_user_id = ? AND from_user_id = ?", userID, oppositeID).Model(message),
 		global.DB.Where("to_user_id = ? AND from_user_id = ?", oppositeID, userID).Model(message),
 	).Scan(&message).Error

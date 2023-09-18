@@ -31,6 +31,15 @@ func SelectUserByIDs(ids map[uint64]struct{}) ([]*model.User, error) {
 	return res, nil
 }
 
+func SelectUserByIDList(uIDList []uint64) ([]*model.User, error) {
+	res := make([]*model.User, 0)
+	err := global.DB.Where("id IN (?)", uIDList).Find(&res).Error
+	if err != nil {
+		return nil, err
+	}
+	return res, nil
+}
+
 func SelectUserByName(username string) (*model.User, error) {
 	res := &model.User{}
 	if err := global.DB.Where("username = ?", username).Limit(1).Find(&res).Error; err != nil {

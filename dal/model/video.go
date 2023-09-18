@@ -41,3 +41,13 @@ type VideoData struct {
 	WorkCount         int64
 	UserFavoriteCount int64
 }
+
+type FavoriteVideoIDZSet struct {
+	VideoID     uint64
+	CreatedTime time.Time
+}
+
+type PublishVideoIDZSet struct {
+	VideoID     uint64
+	CreatedTime time.Time
+}

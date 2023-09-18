@@ -129,12 +129,34 @@ func SelectCommentDataByVideoIDAndUserID(videoID, userID uint64) ([]*model.Comme
 	return cs, nil
 }
 
-func SelectCommentDataByVideoID(videoID uint64) ([]model.Comment, error) {
-	var comments []model.Comment
+func SelectCommentDataByVideoID(videoID uint64) ([]*model.CommentRedisData, error) {
+	crData := make([]*model.CommentRedisData, 0)
 
-	if err := global.DB.Where("video_id = ?", videoID).Find(&comments).Error; err != nil {
+	err := global.DB.Select("c.id AS cid, c.content, c.created_time, "+
+		"u.id AS uid, u.username, u.avatar").Table(constant.UserTableName+" AS u").
+		Joins("JOIN "+constant.CommentTableName+" AS c ON u.id = c.user_id").
+		Where("`video_id` = ?", videoID).Scan(&crData).Error
+	if err != nil {
 		return nil, err
 	}
+	return crData, nil
+}
 
-	return comments, nil
+func SelectCommentIDByVideoID(videoID uint64) ([]uint64, error) {
+	cIDList := make([]uint64, 0)
+	err := global.DB.Select("id").Table(constant.CommentTableName).
+		Where("video_id = ? AND is_deleted = ?", videoID, constant.DataNotDeleted).Find(&cIDList).Error
+	if err != nil {
+		return nil, err
+	}
+	return cIDList, nil
+}
+
+func SelectCommentInfoByCommentIDList(cIDList []uint64) ([]*model.Comment, error) {
+	cList := make([]*model.Comment, len(cIDList))
+	err := global.DB.Table(constant.CommentTableName).Where("id IN ?", cIDList).Find(&cList).Error
+	if err != nil {
+		return nil, err
+	}
+	return cList, nil
 }

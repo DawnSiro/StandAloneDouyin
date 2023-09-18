@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"douyin/dal/model"
+	"douyin/dal/rdb"
 	"douyin/pkg/constant"
 	"douyin/pkg/global"
 
@@ -29,6 +30,14 @@ func CreateVideo(video *model.Video) (uint64, error) {
 			return err
 		}
 		videoID = video.ID
+
+		err = rdb.PublishVideo(video.AuthorID, &rdb.PublishVideoIDZSet{
+			VideoID:     videoID,
+			CreatedTime: float64(video.PublishTime.UnixMilli()),
+		})
+		if err != nil {
+			return err
+		}
 		// 返回 nil 提交事务
 		return nil
 	})
@@ -56,7 +65,7 @@ func MGetVideos(maxVideoNum int, latestTime *int64) ([]*model.Video, error) {
 	return res, nil
 }
 
-func GetVideosByAuthorID(userID uint64) ([]*model.Video, error) {
+func GetVideoListByAuthorID(userID uint64) ([]*model.Video, error) {
 	res := make([]*model.Video, 0)
 	err := global.DB.Find(&res, "author_id = ? ", userID).Error
 	if err != nil {
@@ -229,6 +238,26 @@ func MSelectFeedVideoDataListByUserID(maxVideoNum int, latestTime *int64, userID
 	return res, nil
 }
 
+// SelectFeedVideoDataListByUserID 查询Feed视频列表，不带是否关注和点赞版本，只需要JOIN两张表
+func SelectFeedVideoDataListByUserID(maxVideoNum int, latestTime *int64) ([]*model.VideoData, error) {
+	res := make([]*model.VideoData, 0)
+	if latestTime == nil || *latestTime == 0 {
+		// 这里和文档里说得不一样，实际客户端传的是毫秒
+		currentTime := time.Now().UnixMilli()
+		latestTime = &currentTime
+	}
+	err := global.DB.Select("v.id AS vid, v.play_url, v.cover_url, v.favorite_count, v.comment_count, v.title,"+
+		"u.id AS uid, u.username, u.following_count, u.follower_count, u.avatar,"+
+		"u.background_image, u.signature, u.total_favorited, u.work_count, u.favorite_count as user_favorite_count").
+		Table("user AS u").
+		Joins("RIGHT JOIN video AS v ON u.id = v.author_id").
+		Where("v.publish_time < ?", time.UnixMilli(*latestTime)).Limit(maxVideoNum).Scan(&res).Error
+	if err != nil {
+		return nil, err
+	}
+	return res, nil
+}
+
 func SelectPublishTimeByVideoID(videoID uint64) (int64, error) {
 	var publishTime time.Time
 	err := global.DB.Select("publish_time").Model(&model.Video{ID: videoID}).First(&publishTime).Error
@@ -254,4 +283,34 @@ func SelectPublishVideoDataListByUserID(userID, selectUserID uint64) ([]*model.V
 		return nil, err
 	}
 	return res, nil
+}
+
+func SelectFavoriteVideoIDZSet(userID uint64) ([]*model.FavoriteVideoIDZSet, error) {
+	res := make([]*model.FavoriteVideoIDZSet, 0)
+	err := global.DB.Select("video_id, created_time").Table(constant.UserFavoriteVideosTableName).
+		Where("user_id = ? AND is_deleted = ?", userID, constant.DataNotDeleted).Find(&res).Error
+	if err != nil {
+		return nil, err
+	}
+	return res, nil
+}
+
+func SelectPublishVideoIDZSet(authorID uint64) ([]*model.PublishVideoIDZSet, error) {
+	res := make([]*model.PublishVideoIDZSet, 0)
+	err := global.DB.Select("id AS video_id, created_time").Table(constant.UserFavoriteVideosTableName).
+		Where("author_id = ?", authorID).Find(&res).Error
+	if err != nil {
+		return nil, err
+	}
+	return res, nil
+}
+
+// SelectVideoListByVideoID 根据视频ID集合查询视频信息
+func SelectVideoListByVideoID(videoIDList []uint64) ([]*model.Video, error) {
+	res := make([]*model.Video, 0)
+	err := global.DB.Where("id IN (?)", videoIDList).Order("id desc").Find(res).Error
+	if err != nil {
+		return nil, err
+	}
+	return nil, err
 }

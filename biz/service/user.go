@@ -17,13 +17,14 @@ import (
 )
 
 func Register(username, password string) (*api.DouyinUserRegisterResponse, error) {
+	logTag := "service.user.Register err:"
 	user, err := db.SelectUserByName(username)
 	if err != nil {
-		hlog.Error("service.user.Register err:", err.Error())
+		hlog.Error(logTag, err.Error())
 		return nil, err
 	}
 	if user.ID != 0 {
-		hlog.Error("service.user.Register err:", errno.UsernameAlreadyExistsError.Error())
+		hlog.Error(logTag, errno.UsernameAlreadyExistsError.Error())
 		return nil, errno.UsernameAlreadyExistsError
 	}
 
@@ -34,23 +35,27 @@ func Register(username, password string) (*api.DouyinUserRegisterResponse, error
 		Password: encryptedPassword,
 	})
 	if err != nil {
-		hlog.Error("service.user.Register err:", err.Error())
+		hlog.Error(logTag, err.Error())
 		return nil, err
 	}
 	token, err := util.SignToken(userID)
 	if err != nil {
-		hlog.Error("service.user.Register err:", err.Error())
+		hlog.Error(logTag, err.Error())
 		return nil, err
 	}
 
 	// 将 UserID 添加到布隆过滤器中
 	global.UserIDBloomFilter.AddString(strconv.FormatUint(userID, 10))
 
-	// TODO 预热点赞视频列表逻辑
-	// 0 关注用户加一个数来维持 redis key 的存在
+	// 0 点赞用户加一个数来维持点赞视频列表 redis key 的存在
+	err = rdb.SetFavoriteVideoID(userID, []*rdb.FavoriteVideoIDZSet{{VideoID: 0}})
+	if err != nil {
+		hlog.Error(logTag, err.Error())
+	}
+	// 0 关注用户加一个数来维持关注用户列表 redis key 的存在
 	err = rdb.SetFollowUserIDSet(userID, []uint64{0})
 	if err != nil {
-		hlog.Error("service.user.Register err:", err.Error())
+		hlog.Error(logTag, err.Error())
 	}
 
 	return &api.DouyinUserRegisterResponse{
@@ -100,7 +105,29 @@ func Login(username, password string) (*api.DouyinUserLoginResponse, error) {
 	// TODO 预热缓存
 	go func() {
 		// TODO 将点赞视频ID列表
-		// TODO 将关注列表用户ID 的 Set 集合添加到缓存中
+		data, err := db.SelectFavoriteVideoIDData(user.ID)
+		if err != nil {
+			hlog.Error("service.user.Register err:", err.Error())
+			return
+		}
+		zSetSlice := make([]*rdb.FavoriteVideoIDZSet, len(data))
+		for i, data := range data {
+			zSet := &rdb.FavoriteVideoIDZSet{
+				VideoID:     data.VideoID,
+				CreatedTime: float64(data.CreatedTime.UnixMilli()),
+			}
+			zSetSlice[i] = zSet
+		}
+		// 0 点赞用户加一个数来维持点赞视频列表 redis key 的存在
+		if len(zSetSlice) == 0 {
+			zSetSlice = []*rdb.FavoriteVideoIDZSet{{VideoID: 0}}
+		}
+		err = rdb.SetFavoriteVideoID(user.ID, zSetSlice)
+		if err != nil {
+			hlog.Error("service.user.Register err:", err.Error())
+		}
+
+		// 将关注列表用户ID 的 Set 集合添加到缓存中
 		followUserIDSet, err := db.SelectFollowUserIDSet(user.ID)
 		if err != nil {
 			hlog.Error("service.user.Login err:", err.Error())

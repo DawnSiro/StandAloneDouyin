@@ -45,6 +45,7 @@ const (
 	UserFavoriteVideosTableName = "`user_favorite_video`"
 	VideoTableName              = "`video`"
 	UserTableName               = "`user`"
+	FanListLimit                = 500 // 粉丝列表默认只展示前500个
 )
 
 // 业务相关

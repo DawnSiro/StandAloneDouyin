@@ -16,3 +16,8 @@ type UserFavoriteVideo struct {
 func (n *UserFavoriteVideo) TableName() string {
 	return constant.UserFavoriteVideosTableName
 }
+
+type FavoriteVideoIDData struct {
+	VideoID     uint64    `gorm:"not null" json:"video_id"`
+	CreatedTime time.Time `gorm:"not null" json:"created_time"`
+}

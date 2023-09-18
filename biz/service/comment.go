@@ -5,7 +5,6 @@ import (
 	"douyin/dal/model"
 	"douyin/pkg/constant"
 	"strconv"
-	"sync"
 	"time"
 
 	"douyin/biz/model/api"
@@ -18,21 +17,8 @@ import (
 	"douyin/pkg/util"
 	"douyin/pkg/util/sensitive"
 
-	"github.com/bits-and-blooms/bloom/v3"
 	"github.com/cloudwego/hertz/pkg/common/hlog"
 )
-
-// Global variables for cache status flag and Bloom filter
-var (
-	cacheMutex  sync.Mutex
-	cacheStatus map[string]*sync.WaitGroup
-	bloomFilter *bloom.BloomFilter
-)
-
-func init() {
-	cacheStatus = make(map[string]*sync.WaitGroup)
-	bloomFilter = bloom.NewWithEstimates(1000000, 0.01)
-}
 
 func PostComment(userID, videoID uint64, commentText string) (*api.DouyinCommentActionResponse, error) {
 	//检测是否带有敏感词
@@ -125,10 +111,11 @@ func DeleteComment(userID, videoID, commentID uint64) (*api.DouyinCommentActionR
 }
 
 func GetCommentList(ctx context.Context, userID, videoID uint64) (*api.DouyinCommentListResponse, error) {
+	logTag := "service.comment.GetCommentList err:"
 	// userID可能为0，因为可能存在不登录也能查看视频评论的需求，但是videoID一定得为真实存在的ID
 	// 使用布隆过滤器判断视频ID是否存在
 	if !global.VideoIDBloomFilter.TestString(strconv.FormatUint(videoID, 10)) {
-		hlog.Error("service.comment.GetCommentList err: 布隆过滤器拦截")
+		hlog.Error(logTag, "布隆过滤器拦截")
 		return nil, errno.UserRequestParameterError
 	}
 
@@ -138,72 +125,126 @@ func GetCommentList(ctx context.Context, userID, videoID uint64) (*api.DouyinCom
 	_ = lock.Lock(ctx, global.CommentRC)
 
 	// 获取评论基本数据
-
-	// 缓存不存在，查询数据库
-	//db.SelectCommentDataByVideoID()
-
-	// 设置缓存
-
-	// 根据用户关注缓存判断用户是否关注了评论的用户
-
-	// 缓存不存在也查询数据库并缓存
-
-	//
-
-	// 获取评论ID
-	//commentIDList, err := rdb.GetCommentIDByVideoID(videoID)
-	//if err == nil {
-	//	dbCList, err := rdb.GetCommentList(commentIDList)
-	//	if err == nil {
-	//		// 先从缓存中查询用户数据，并把未命中的 UserID 放入切片中
-	//		unHitUserID := make([]uint64, 0)
-	//		for i := 0; i < len(commentIDList); i++ {
-	//			info, err := rdb.GetUserInfo(dbCList[i].UserID)
-	//			if err != nil {
-	//				unHitUserID = append(unHitUserID, dbCList[i].UserID)
-	//			}
-	//		}
-	//	}
-	//
-	//}
-
-	// Cache miss, query the database
-	commentData, err := db.SelectCommentDataByVideoIDAndUserID(videoID, userID)
+	cIDList, err := rdb.GetCommentIDByVideoID(videoID)
 	if err != nil {
-		hlog.Error("service.comment.GetCommentList err:", err.Error())
-		// Release cache status flag to allow other threads to update cache
-		//cacheMutex.Lock()
-		//delete(cacheStatus, cacheKey)
-		//cacheMutex.Unlock()
+		hlog.Error(logTag, err)
+		cIDList, err = db.SelectCommentIDByVideoID(videoID)
+		if err != nil {
+			hlog.Error(logTag, err)
+			return nil, err
+		}
+	}
+
+	cInfoList := make([]*rdb.CommentInfo, len(cIDList))
+	lostCIDList := make([]uint64, 0, len(cIDList))
+	for i := 0; i < len(cIDList); i++ {
+		info, err := rdb.GetCommentInfo(cIDList[i])
+		if err != nil {
+			hlog.Error(logTag, err)
+			// 没查询到就先记录起来
+			lostCIDList = append(lostCIDList, cIDList[i])
+		}
+		// 如果 info 为 nil 就当添加一个占位用的，后续查完一个个填坑
+		cInfoList[i] = info
+	}
+
+	// 一次性查询完剩下的
+	lostCInfoList, err := db.SelectCommentInfoByCommentIDList(lostCIDList)
+	if err != nil {
+		hlog.Error(logTag, err)
+		return nil, err
+	}
+	i := 0
+	for _, data := range lostCInfoList {
+		ci := &rdb.CommentInfo{
+			ID:          data.ID,
+			VideoID:     data.VideoID,
+			UserID:      data.UserID,
+			Content:     data.Content,
+			CreatedTime: float64(data.CreatedTime.UnixMilli()),
+		}
+		for ; i < len(cInfoList); i++ {
+			// 找到坑了则填入
+			if cInfoList[i] == nil {
+				cInfoList[i] = ci
+				break
+			}
+		}
+		// 顺手设置缓存
+		err = rdb.SetCommentInfo(ci)
+		if err != nil {
+			hlog.Error(logTag, err)
+		}
+	}
+
+	// 根据用户ID查询用户信息
+	lostUIDList := make([]uint64, 0, len(cInfoList))
+	uInfoList := make([]*model.User, len(cInfoList))
+	for i := 0; i < len(cInfoList); i++ {
+		ui, err := rdb.GetUserInfo(cInfoList[i].UserID)
+		if err != nil {
+			hlog.Error(logTag, err)
+			lostUIDList = append(lostUIDList, cInfoList[i].UserID)
+		}
+		// 如果 info 为 nil 就当添加一个占位用的，后续查完一个个填坑
+		uInfoList[i] = ui
+	}
+
+	// 还是一次性查询完剩下的
+	// 这里需要注意一个多个评论可能对应同一个用户
+	lostUInfoList, err := db.SelectUserByIDList(lostUIDList)
+	if err != nil {
+		hlog.Error(logTag, err)
 		return nil, err
 	}
 
-	// Convert to response format
-	response := &api.DouyinCommentListResponse{
-		StatusCode:  0,
-		CommentList: pack.CommentDataList(commentData),
+	i = 0
+	for _, data := range lostUInfoList {
+		for ; i < len(uInfoList); i++ {
+			// 找到坑了则填入
+			if uInfoList[i] == nil && cInfoList[i].UserID == data.ID {
+				uInfoList[i] = data
+			}
+		}
+		// 顺手设置缓存
+		err = rdb.SetUserInfo(data)
+		if err != nil {
+			hlog.Error(logTag, err)
+		}
 	}
 
-	//// Store comment data in Redis cache
-	//responseJSON, _ := json.Marshal(response)
-	//
-	//// 解决缓存雪崩 -- 添加随机数，避免缓存同时过期
-	//// Add a random duration to the cache valid time
-	//cacheDuration := 10*time.Minute + time.Duration(rand.Intn(600))*time.Second
+	// 获取用户关注列表ID，判断是否关注并返回
+	followUserIDSet, err := rdb.GetFollowUserIDSet(userID)
+	if err != nil {
+		// 缓存未命中就查询数据库
+		hlog.Error(logTag, err)
+		idList, err := db.SelectFollowUserIDSet(userID)
+		if err != nil {
+			hlog.Error(logTag, err)
+		}
+		for i := 0; i < len(idList); i++ {
+			followUserIDSet[idList[i]] = struct{}{}
+		}
+		err = rdb.SetFollowUserIDSet(userID, idList)
+		if err != nil {
+			hlog.Error(logTag, err)
+		}
+	}
 
-	//err = global.UserRC.Set(cacheKey, responseJSON, cacheDuration).Err()
-	//if err != nil {
-	//	hlog.Error("service.comment.GetCommentList err: Error storing data in cache, ", err.Error())
-	//}
-	//
-	//// Add cacheKey to Bloom filter
-	//bloomFilter.AddString(cacheKey)
-	//
-	//// Release cache status flag and signal that cache update is done
-	//cacheMutex.Lock()
-	//delete(cacheStatus, cacheKey)
-	//waitGroup.Done()
-	//cacheMutex.Unlock()
+	// 解锁
+	err = lock.Unlock(global.CommentRC)
 
-	return response, nil
+	cList := make([]*api.Comment, len(cInfoList))
+	for i := 0; i < len(cInfoList); i++ {
+		isFollow := false
+		if _, ok := followUserIDSet[cInfoList[i].UserID]; ok {
+			isFollow = true
+		}
+		cList[i] = pack.ApiComment(cInfoList[i], uInfoList[i], isFollow)
+	}
+
+	return &api.DouyinCommentListResponse{
+		StatusCode:  0,
+		CommentList: cList,
+	}, nil
 }

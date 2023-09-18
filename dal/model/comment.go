@@ -31,3 +31,12 @@ type CommentData struct {
 	Avatar         string
 	IsFollow       bool
 }
+
+type CommentRedisData struct {
+	CID         uint64 `gorm:"column:cid"`
+	Content     string
+	CreatedTime time.Time
+	UID         uint64
+	Username    string
+	Avatar      string
+}

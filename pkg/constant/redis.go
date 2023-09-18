@@ -18,22 +18,20 @@ const (
 	FanIDRedisSetPrefix           = "fan_id:"
 	FanRedisZSetPrefix            = "fan:"
 	VideoInfoRedisPrefix          = "video_info:"
-	VideoAuthorIDRedisPrefix      = "video_author:"
-	FavoriteVideoIDRedisSetPrefix = "favorite_video_id:"
-	FavoriteVideoRedisZSetPrefix  = "favorite_video:"
+	VideoInfoCountHashRedisPrefix = "video_info_count:"
+	VideoCommentCountRedisFiled   = "video_comment_count:"
+	VideoFavoriteCountRedisFiled  = "video_favorite_count:"
 
-	PublishRedisZSetPrefix       = "publish:"
-	VideoInfoCntRedisPrefix      = "video_info_count:"
-	CommentCountRedisPrefix      = "comment_count:"
-	LikeCountRedisPrefix         = "like_count:"
-	CommentRedisZSetPrefix       = "comment:"
-	CommentInfoRedisPrefix       = "comment_info:"
-	MessageRedisPrefix           = "message:"
-	MessageLatestTimeRedisPrefix = "message_latest_time:"
-	LoginFailCounterRedisPrefix  = "login_fail_counter:"
-	LoginFailLockRedisPrefix     = "user_login_fail_lock:"
-	UserIDNilKey                 = "user_id_nil"
-	VideoIDNilKey                = "video_id_nil"
+	FavoriteVideoIDRedisZSetPrefix = "favorite_video_id:"
+	FavoriteVideoRedisZSetPrefix   = "favorite_video:"
+
+	PublishVideoIDRedisZSetPrefix = "publish_id:"
+
+	CommentRedisZSetPrefix = "comment:"
+	CommentInfoRedisPrefix = "comment_info:"
+
+	FavoriteNumLimitPrefix      = "favorite_num_limit:"
+	LoginFailCounterRedisPrefix = "login_fail_counter:"
 )
 
 // Redis 缓存过期时间相关
@@ -47,9 +45,6 @@ const (
 
 // Redis Lua 脚本相关
 const (
-	// SetUserInfoLuaScript 设置用户信息 Lua 脚本
-	SetUserInfoLuaScript = ``
-
 	// CommentLuaScript 评论 Lua 脚本
 	CommentLuaScript = `
 		local infoKey = KEYS[1]
@@ -158,6 +153,83 @@ const (
 		
 		return 0
 	`
+
+	FavoriteVideoLuaScript = `
+		local videoIDKey = KEYS[1]
+		local userInfoCountKey = KEYS[2]
+		local authorInfoCountKey = KEYS[3]
+		local createdTime = tonumber(ARGV[1])
+		local videoID = tonumber(ARGV[2])
+		local favoriteCountRedisFiled = ARGV[3]
+		local totalFavoritedRedisFiled = ARGV[4]
+		
+		local exists = redis.call("EXISTS", videoIDKey)
+		if exists == 1 then
+			redis.call("ZAdd", videoIDKey, createdTime, videoID)
+		end
+		
+		exists = redis.call("EXISTS", userInfoCountKey)
+		if exists > 0 then
+			redis.call("HIncrBy", userInfoCountKey, favoriteCountRedisFiled, 1)
+		end
+		
+		exists = redis.call("EXISTS", authorInfoCountKey)
+		if exists > 0 then
+			redis.call("HIncrBy", authorInfoCountKey, totalFavoritedRedisFiled, 1)
+		end
+		
+		return 0
+		`
+
+	CancelFavoriteVideoLuaScript = `
+		local videoIDKey = KEYS[1]
+		local userInfoCountKey = KEYS[2]
+		local authorInfoCountKey = KEYS[3]
+		local createdTime = tonumber(ARGV[1])
+		local videoID = tonumber(ARGV[2])
+		local favoriteCountRedisFiled = ARGV[3]
+		local totalFavoritedRedisFiled = ARGV[4]
+		
+		local exists = redis.call("EXISTS", videoIDKey)
+		if exists == 1 then
+			redis.call("ZRem", videoIDKey, videoID)
+		end
+		
+		exists = redis.call("EXISTS", userInfoCountKey)
+		if exists > 0 then
+			redis.call("HIncrBy", userInfoCountKey, favoriteCountRedisFiled, -1)
+		end
+		
+		exists = redis.call("EXISTS", authorInfoCountKey)
+		if exists > 0 then
+			redis.call("HIncrBy", authorInfoCountKey, totalFavoritedRedisFiled, -1)
+		end
+		
+		return 0
+	`
+
+	// PublishVideoLuaScript 发布视频 Lua 脚本
+	// 1. 新增作品视频ID
+	// 2. 增加作者的作品数
+	PublishVideoLuaScript = `
+		local videoIDKey = KEYS[1]
+		local userInfoCountKey = KEYS[2]
+		local createdTime = tonumber(ARGV[1])
+		local videoID = tonumber(ARGV[2])
+		local workCountRedisFiled = ARGV[3]
+		
+
+		if redis.call("EXISTS", videoIDKey) > 0 then
+			redis.call("ZAdd", videoIDKey, createdTime, videoID)
+		end
+
+		if redis.call("EXISTS", userInfoCountKey) > 0 then
+			redis.call("HIncrBy", userInfoCountKey, workCountRedisFiled, 1)
+		end
+		
+		return 0
+	`
+
 	// UnLockLuaScript 释放锁的 Lua 脚本，判断 Key 中的 Value
 	UnLockLuaScript = `
 		if redis.call("GET", KEYS[1]) == ARGV[1] then

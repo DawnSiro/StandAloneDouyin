@@ -1,8 +1,6 @@
 package service
 
 import (
-	"encoding/json"
-
 	"douyin/biz/model/api"
 	"douyin/dal/db"
 	"douyin/dal/model"
@@ -10,6 +8,7 @@ import (
 	"douyin/dal/rdb"
 	"douyin/pkg/errno"
 	"douyin/pkg/pulsar"
+	"encoding/json"
 
 	"github.com/cloudwego/hertz/pkg/common/hlog"
 )
@@ -55,6 +54,8 @@ func GetMessageChat(userID, oppositeID uint64, preMsgTime int64) (*api.DouyinMes
 			// 这里直接取地址就可以了，不用再复制一次
 			messages[i] = &message
 		}
+
+		hlog.Info("messages:", messages)
 
 		// 返回结果
 		return &api.DouyinMessageChatResponse{

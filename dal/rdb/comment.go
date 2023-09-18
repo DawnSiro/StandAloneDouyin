@@ -1,12 +1,14 @@
 package rdb
 
 import (
-	"douyin/dal/model"
 	"douyin/pkg/constant"
 	"douyin/pkg/global"
 	"encoding/json"
 	"github.com/cloudwego/hertz/pkg/common/hlog"
+	"github.com/go-redis/redis"
+	"math/rand"
 	"strconv"
+	"time"
 )
 
 type CommentInfo struct {
@@ -22,6 +24,14 @@ type CommentIDZSet struct {
 	CreateTime int64
 }
 
+type CommentRedisZSetData struct {
+	CID      uint64 `gorm:"column:cid"`
+	Content  string
+	UID      uint64
+	Username string
+	Avatar   string
+}
+
 func AddComment(videoID uint64, comment CommentInfo) error {
 	jsonString, err := json.Marshal(comment)
 	if err != nil {
@@ -31,7 +41,9 @@ func AddComment(videoID uint64, comment CommentInfo) error {
 	infoKey := constant.CommentInfoRedisPrefix + strconv.FormatUint(comment.ID, 10)
 	zSetKey := constant.CommentRedisZSetPrefix + strconv.FormatUint(videoID, 10)
 	keys := []string{infoKey, zSetKey}
-	args := []interface{}{jsonString, int64(constant.CommentInfoExpiration), comment.CreatedTime, comment.ID}
+	args := []interface{}{jsonString,
+		int64(constant.CommentInfoExpiration + time.Duration(rand.Intn(200))*time.Minute),
+		comment.CreatedTime, comment.ID}
 	// 执行 Redis 服务端缓存的 Lua 脚本
 	err = global.UserRC.EvalSha(global.CommentLuaScriptHash, keys, args...).Err()
 	if err != nil {
@@ -81,46 +93,50 @@ func SetCommentIDByVideoID(videoID uint64, cIDZ []*CommentIDZSet) error {
 }
 
 // GetCommentIDByVideoID 通过视频ID获取评论ID
-func GetCommentIDByVideoID(videoID uint64) ([]string, error) {
+func GetCommentIDByVideoID(videoID uint64) ([]uint64, error) {
 	key := constant.CommentRedisZSetPrefix + strconv.FormatUint(videoID, 10)
-	result, err := global.CommentRC.ZRange(key, 0, -1).Result()
+	strList, err := global.CommentRC.ZRange(key, 0, -1).Result()
 	if err != nil {
 		return nil, err
+	}
+	// ZRange 查不到数据不会返回 redis.Nil
+	if len(strList) == 0 {
+		return nil, redis.Nil
+	}
+	result := make([]uint64, 0, len(strList))
+	for _, str := range strList {
+		num, err := strconv.ParseUint(str, 10, 64)
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, num)
 	}
 	return result, nil
 }
 
-func GetCommentInfo(commentID uint64) (*model.Comment, error) {
-	return nil, nil
+func SetCommentInfo(ci *CommentInfo) error {
+	key := constant.CommentInfoRedisPrefix + strconv.FormatUint(ci.ID, 10)
+	ciJSON, err := json.Marshal(ci)
+	if err != nil {
+		return err
+	}
+	return global.CommentRC.Set(key, ciJSON,
+		constant.CommentInfoExpiration+time.Duration(rand.Intn(200))*time.Minute).Err()
 }
 
-// GetCommentList 获取
-func GetCommentList(commentIDList []string) ([]*model.Comment, error) {
-	jsonList, err := global.CommentRC.MGet(commentIDList...).Result()
+func GetCommentInfo(commentID uint64) (*CommentInfo, error) {
+	key := constant.CommentInfoRedisPrefix + strconv.FormatUint(commentID, 10)
+	result, err := global.CommentRC.Get(key).Result()
+	if err != nil {
+		return nil, err
+	}
+	ci := &CommentInfo{}
+	err = json.Unmarshal([]byte(result), ci)
 	if err != nil {
 		return nil, err
 	}
 
-	dbcList := make([]*model.Comment, len(jsonList))
-	for i := 0; i < len(jsonList); i++ {
-		err = json.Unmarshal(jsonList[i].([]byte), &dbcList[i])
-		if err != nil {
-			return nil, err
-		}
-	}
+	global.CommentRC.Expire(key, constant.CommentInfoExpiration+time.Duration(rand.Intn(200))*time.Minute)
 
-	return nil, nil
-}
-
-// GetCommentListByVideoID 获取视频评论数据
-func GetCommentListByVideoID(videoID uint64) ([]*model.Comment, error) {
-	commentIDList, err := GetCommentIDByVideoID(videoID)
-	if err != nil {
-		return nil, err
-	}
-	dbcList, err := GetCommentList(commentIDList)
-	if err != nil {
-		return nil, err
-	}
-	return dbcList, nil
+	return ci, nil
 }

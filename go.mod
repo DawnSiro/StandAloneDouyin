@@ -10,7 +10,7 @@ require (
 	github.com/apache/pulsar-client-go v0.11.0
 	github.com/apache/thrift v0.0.0-00010101000000-000000000000
 	github.com/bits-and-blooms/bloom/v3 v3.5.0
-	github.com/cloudwego/hertz v0.6.6
+	github.com/cloudwego/hertz v0.6.8
 	github.com/fsnotify/fsnotify v1.6.0
 	github.com/go-redis/redis v6.15.9+incompatible
 	github.com/gofrs/uuid v4.4.0+incompatible

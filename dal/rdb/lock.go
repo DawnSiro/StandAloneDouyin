@@ -114,7 +114,7 @@ func NewUserKeyLock(userID uint64, prefix string) DistributedLock {
 	return DistributedLock{
 		Key:             prefix + strconv.FormatUint(userID, 10),
 		RandomValue:     value,
-		TTL:             500,
+		TTL:             time.Duration(500),
 		TryLockInterval: timeInterval,
 		watchDog:        watchDog,
 	}

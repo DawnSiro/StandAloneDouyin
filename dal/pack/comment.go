@@ -3,7 +3,9 @@ package pack
 import (
 	"douyin/biz/model/api"
 	"douyin/dal/model"
+	"douyin/dal/rdb"
 	"douyin/pkg/errno"
+	"time"
 
 	"github.com/cloudwego/hertz/pkg/common/hlog"
 )
@@ -47,4 +49,18 @@ func CommentDataList(cdList []*model.CommentData) []*api.Comment {
 		res = append(res, CommentData(cdList[i]))
 	}
 	return res
+}
+
+func ApiComment(cInfo *rdb.CommentInfo, user *model.User, isFollow bool) *api.Comment {
+	return &api.Comment{
+		ID: int64(cInfo.ID),
+		User: &api.CommentUser{
+			ID:       int64(user.ID),
+			Name:     user.Username,
+			IsFollow: isFollow,
+			Avatar:   user.Avatar,
+		},
+		Content:    cInfo.Content,
+		CreateDate: time.Unix(int64(cInfo.CreatedTime), 0).Format("01-02"), // 评论发布日期，格式 mm-dd
+	}
 }

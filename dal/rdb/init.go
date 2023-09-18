@@ -4,6 +4,8 @@ import (
 	"douyin/pkg/viper"
 	"flag"
 	"fmt"
+	"github.com/cloudwego/hertz/pkg/common/hlog"
+	"strconv"
 	"sync"
 
 	"douyin/pkg/constant"
@@ -77,10 +79,20 @@ func initClient() {
 }
 
 // initBloomFilter 初始化布隆过滤器
-// TODO 考虑对布隆过滤器需要存储的数据进行预计算
 func initBloomFilter() {
 	global.UserIDBloomFilter = bloom.NewWithEstimates(100000, 0.01)
+	userIDList := make([]uint64, 0)
+	global.DB.Select("id").Table(constant.UserTableName).Find(&userIDList)
+	for _, u := range userIDList {
+		global.UserIDBloomFilter.AddString(strconv.FormatUint(u, 10))
+	}
 	global.VideoIDBloomFilter = bloom.NewWithEstimates(100000, 0.01)
+	videoIDList := make([]uint64, 0)
+	global.DB.Select("id").Table(constant.VideoTableName).Find(&videoIDList)
+	for _, v := range videoIDList {
+		global.VideoIDBloomFilter.AddString(strconv.FormatUint(v, 10))
+	}
+	hlog.Info("布隆过滤器初始化完成")
 }
 
 // initLuaScript 对需要用到的 Lua 脚本进行缓存
@@ -107,6 +119,24 @@ func initLuaScript() {
 
 	// 取消关注部分
 	global.CancelFollowLuaScriptHash, err = global.UserRC.ScriptLoad(constant.CancelFollowLuaScript).Result()
+	if err != nil {
+		panic(err)
+	}
+
+	// 点赞部分
+	global.FavoriteVideoLuaScriptHash, err = global.VideoRC.ScriptLoad(constant.FavoriteVideoLuaScript).Result()
+	if err != nil {
+		panic(err)
+	}
+
+	// 取消点赞部分
+	global.CancelFavoriteVideoLuaScriptHash, err = global.VideoRC.ScriptLoad(constant.CancelFavoriteVideoLuaScript).Result()
+	if err != nil {
+		panic(err)
+	}
+
+	// 发布视频部分
+	global.PublishVideoLuaScriptHash, err = global.VideoRC.ScriptLoad(constant.PublishVideoLuaScript).Result()
 	if err != nil {
 		panic(err)
 	}
