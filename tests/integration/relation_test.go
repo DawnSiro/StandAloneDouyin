@@ -29,9 +29,9 @@ var _ = Describe("relation test", func() {
 		)
 
 		BeforeEach(func() {
-			fanid_, token, err := util.GetUseridAndToken(fan, password)
+			fanid_, token, err := util.GetUserIDAndToken(fan, password)
 			Expect(err).To(BeNil())
-			upid_, _, err := util.GetUseridAndToken(up, password)
+			upid_, _, err := util.GetUserIDAndToken(up, password)
 			Expect(err).To(BeNil())
 			fanid = fanid_
 			upid = upid_
@@ -132,7 +132,7 @@ var _ = Describe("relation test", func() {
 		)
 
 		BeforeEach(func() {
-			id, token, err := util.GetUseridAndToken(fan, password)
+			id, token, err := util.GetUserIDAndToken(fan, password)
 			Expect(err).To(BeNil())
 			fanid = id
 			query["user_id"] = fmt.Sprintf("%d", id)
@@ -230,7 +230,7 @@ var _ = Describe("relation test", func() {
 		)
 
 		BeforeEach(func() {
-			id, token, err := util.GetUseridAndToken(up, password)
+			id, token, err := util.GetUserIDAndToken(up, password)
 			Expect(err).To(BeNil())
 			upid = id
 			query["user_id"] = fmt.Sprintf("%d", id)
@@ -312,7 +312,7 @@ var _ = Describe("relation test", func() {
 			)
 
 			BeforeEach(func() {
-				id, token, err := util.GetUseridAndToken(userA, password)
+				id, token, err := util.GetUserIDAndToken(userA, password)
 				Expect(err).To(BeNil())
 				query["user_id"] = fmt.Sprintf("%d", id)
 				query["token"] = token
@@ -346,12 +346,12 @@ var _ = Describe("relation test", func() {
 			)
 
 			BeforeEach(func() {
-				id, token, err := util.GetUseridAndToken(userA, password)
+				id, token, err := util.GetUserIDAndToken(userA, password)
 				Expect(err).To(BeNil())
 				queryA["user_id"] = fmt.Sprintf("%d", id)
 				queryA["token"] = token
 
-				id, token, err = util.GetUseridAndToken(userB, password)
+				id, token, err = util.GetUserIDAndToken(userB, password)
 				Expect(err).To(BeNil())
 				queryB["user_id"] = fmt.Sprintf("%d", id)
 				queryB["token"] = token
@@ -476,7 +476,7 @@ func actionFollowing(token, action string) (err error) {
 	for i := 1; i < fansNumber+1; i++ {
 		u := prefix + fmt.Sprintf("%d", i)
 		var uid int64
-		uid, _, err = util.GetUseridAndToken(u, password)
+		uid, _, err = util.GetUserIDAndToken(u, password)
 		if err != nil {
 			return
 		}
@@ -497,7 +497,7 @@ func actionFollower(upid int64, action string) error {
 	}
 	for i := 1; i < fansNumber+1; i++ {
 		f := user + fmt.Sprintf("%d", i)
-		_, token, err := util.GetUseridAndToken(f, password)
+		_, token, err := util.GetUserIDAndToken(f, password)
 		if err != nil {
 			return err
 		}

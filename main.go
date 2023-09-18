@@ -3,28 +3,33 @@
 package main
 
 import (
-	"douyin/ws"
+	"douyin/pkg/viper"
 	"flag"
 
 	"douyin/biz/mw"
+	"douyin/dal/db"
+	"douyin/dal/rdb"
 	"douyin/pkg/global"
 	"douyin/pkg/initialize"
+	"douyin/pkg/pulsar"
+	"douyin/ws"
 )
 
 func Init() {
 	flag.StringVar(&global.ConfigPath, "c", "./pkg/config/config.yml", "config file path")
 	flag.Parse()
 
-	initialize.Viper()
-	initialize.MySQL()
-	initialize.Redis()
-	initialize.Pulsar()
-	initialize.Global()
+	// 都放 initialize 包下进行初始化的话，跑单测的话会有循环引用问题
+	viper.InitConfig()
+	db.InitMySQL()
+	rdb.InitRedis()
+	pulsar.InitPulsar()
+	global.InitGlobal()
 
 	mw.InitJWT()
 
-	// initialize.Hertz() 需要保持在最下方，因为调用完后 Hertz 就启动完毕了
 	go ws.MannaClient.Run()
+	// initialize.Hertz() 需要保持在最下方，因为调用完后 Hertz 就启动完毕了
 	initialize.Hertz()
 }
 

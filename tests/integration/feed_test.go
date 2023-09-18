@@ -72,7 +72,7 @@ var _ = Describe("/douyin/feed api request", func() {
 		)
 
 		BeforeEach(func() {
-			_, token, err := util.GetUseridAndToken(username, password)
+			_, token, err := util.GetUserIDAndToken(username, password)
 			Expect(err).To(BeNil())
 			query["token"] = token
 		})

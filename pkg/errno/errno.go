@@ -36,7 +36,7 @@ var (
 	UsernameAlreadyExistsError                    = NewErrNo(int64(api.ErrCode_UsernameAlreadyExists), "用户名已存在")
 	PasswordVerificationFailedError               = NewErrNo(int64(api.ErrCode_PasswordVerificationFailed), "密码校验失败")
 	PasswordLengthNotEnoughError                  = NewErrNo(int64(api.ErrCode_PasswordLengthNotEnough), "密码长度不够 ")
-	PasswordStrengthNotEnoughError                = NewErrNo(int64(api.ErrCode_PasswordStrengthNotEnough), "密码强度不够")
+	PasswordStrengthNotEnoughError                = NewErrNo(int64(api.ErrCode_PasswordStrengthNotEnough), "密码强度不够，需要包含大小写字母，数字，特殊字符四种字符")
 	UserLoginError                                = NewErrNo(int64(api.ErrCode_UserLogin), "用户登陆异常")
 	UserAccountDoesNotExistError                  = NewErrNo(int64(api.ErrCode_UserAccountDoesNotExist), "用户账户不存在")
 	UserPasswordError                             = NewErrNo(int64(api.ErrCode_UserPassword), "用户密码错误")

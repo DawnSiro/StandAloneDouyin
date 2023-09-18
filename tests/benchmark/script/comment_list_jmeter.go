@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-	id, token, err := util.GetUseridAndToken("jmeter-comment", "123456")
+	id, token, err := util.GetUserIDAndToken("jmeter-comment", "123456")
 	if err != nil {
 		panic(err)
 	}
@@ -20,10 +20,10 @@ func main() {
 	}
 }
 
-func AddComments(token, video_id, content string, num int) error {
+func AddComments(token, videoID, content string, num int) error {
 	q := map[string]string{
 		"token":        token,
-		"video_id":     video_id,
+		"video_id":     videoID,
 		"action_type":  "1",
 		"comment_text": content,
 	}

@@ -8,10 +8,12 @@ const (
 	TokenMaxRefresh = 3 * time.Hour
 )
 
-// 点赞限制相关
+// 点赞、登录限制相关
 const (
 	VideoLikeLimit     = 10
 	VideoLikeLimitTime = 60 * time.Second
+	UserLoginLimit     = 10
+	UserLoginLimitTime = 10 * time.Minute
 )
 
 // ActionType 的枚举
@@ -37,47 +39,17 @@ const (
 const (
 	DataNotDeleted              = 0
 	DataDeleted                 = 1
-	CommentTableName            = "comment"
-	MessageTableName            = "message"
-	RelationTableName           = "relation"
-	UserFavoriteVideosTableName = "user_favorite_video"
-	VideoTableName              = "video"
-	UserTableName               = "user"
+	CommentTableName            = "`comment`"
+	MessageTableName            = "`message`"
+	RelationTableName           = "`relation`"
+	UserFavoriteVideosTableName = "`user_favorite_video`"
+	VideoTableName              = "`video`"
+	UserTableName               = "`user`"
+	FanListLimit                = 500 // 粉丝列表默认只展示前500个
 )
 
 // 业务相关
 const (
 	MaxVideoNum = 30
 	MaxFileSize = 3 * 1024 * 1024 // 3MB 另外 Hertz 默认的请求体大小是 4MB
-)
-
-// 微服务相关
-const (
-	ApiServiceName      = "api"
-	CommentServiceName  = "comment"
-	FavoriteServiceName = "Favorite"
-	FeedServiceName     = "feed"
-	MessageServiceName  = "message"
-	PublishServiceName  = "publish"
-	RelationServiceName = "relation"
-	UserServiceName     = "user"
-	UserServiceAddr     = ":30110"
-	ExportEndpoint      = ":4317"
-	ETCDAddress         = ":2379"
-	TCP                 = "tcp"
-)
-
-// 消息队列相关
-const (
-	FollowActionTopic        = "follow-action"
-	FollowActionSubscription = "follow-action-sub"
-
-	LikeActionTopic        = "like-action"
-	LikeActionSubscription = "like-action-sub"
-
-	MessageTopic       = "message"
-	MessageSubcription = "message-sub"
-
-	CommentActionTopic        = "comment-action"
-	CommentActionSubscription = "comment-action-sub"
 )

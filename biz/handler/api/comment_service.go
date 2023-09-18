@@ -71,7 +71,7 @@ func GetCommentList(ctx context.Context, c *app.RequestContext) {
 	hlog.Info("handler.comment_service.GetCommentList Request:", req)
 	userID := c.GetUint64(global.Config.JWTConfig.IdentityKey)
 	hlog.Info("handler.comment_service.GetCommentList GetUserID:", userID)
-	resp, err := service.GetCommentList(userID, uint64(req.VideoID))
+	resp, err := service.GetCommentList(ctx, userID, uint64(req.VideoID))
 	if err != nil {
 		errNo := errno.ConvertErr(err)
 		c.JSON(consts.StatusOK, &api.DouyinCommentListResponse{

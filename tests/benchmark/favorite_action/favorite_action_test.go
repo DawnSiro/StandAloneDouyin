@@ -34,7 +34,7 @@ var _ = Describe("favorite action benchmark", func() {
 	It("[favorite action]benchmark", func() {
 		e.Sample(func(idx int) {
 			n := fmt.Sprintf("%s-%d", FanPrefix, idx)
-			_, token, err := util.GetUseridAndToken(n, password)
+			_, token, err := util.GetUserIDAndToken(n, password)
 			Expect(err).To(BeNil())
 			q := map[string]string{
 				"token":       token,

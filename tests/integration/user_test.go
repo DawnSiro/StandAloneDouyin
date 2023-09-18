@@ -103,7 +103,7 @@ var _ = Describe("user test", func() {
 
 		BeforeEach(func() {
 			var err error
-			userid, _, err = util.GetUseridAndToken(username, password)
+			userid, _, err = util.GetUserIDAndToken(username, password)
 			Expect(err).To(BeNil())
 		})
 
@@ -172,7 +172,7 @@ var _ = Describe("user test", func() {
 
 		BeforeEach(func() {
 			var err error
-			id, token, err = util.GetUseridAndToken(username, password)
+			id, token, err = util.GetUserIDAndToken(username, password)
 			Expect(err).To(BeNil())
 			userid = fmt.Sprintf("%d", id)
 		})

@@ -1,29 +1,11 @@
 package db
 
 import (
-	"douyin/pkg/constant"
+	"douyin/dal/model"
 	"douyin/pkg/global"
 )
 
-type User struct {
-	ID              uint64 `json:"id"`                                                                  // 自增主键
-	Username        string `gorm:"index:idx_username,unique;type:varchar(63);not null" json:"username"` //用户名
-	Password        string `gorm:"type:varchar(255);not null" json:"password"`                          //用户密码
-	FollowingCount  int64  `gorm:"default:0;not null" json:"following_count"`                           //关注数
-	FollowerCount   int64  `gorm:"default:0;not null" json:"follower_count"`                            //粉丝数
-	Avatar          string `gorm:"type:varchar(255);null" json:"avatar"`                                //用户头像
-	BackgroundImage string `gorm:"type:varchar(255);not null" json:"background_image"`                  //用户个人页顶部大图
-	Signature       string `gorm:"type:varchar(255);not null" json:"signature"`                         //个人简介
-	TotalFavorited  int64  `gorm:"default:0;not null" json:"total_favorited"`                           //获赞数量
-	WorkCount       int64  `gorm:"default:0;not null" json:"work_count"`                                //作品数量
-	FavoriteCount   int64  `gorm:"default:0;not null" json:"favorite_count"`                            //点赞数量
-}
-
-func (u *User) TableName() string {
-	return constant.UserTableName
-}
-
-func CreateUser(user *User) (userID uint64, err error) {
+func CreateUser(user *model.User) (userID uint64, err error) {
 	// 这里不指明更新的字段的话，会全部赋零值，就无法使用数据库的默认值了
 	if err := global.DB.Select("username", "password").Create(user).Error; err != nil {
 		return 0, err
@@ -31,16 +13,17 @@ func CreateUser(user *User) (userID uint64, err error) {
 	return user.ID, nil
 }
 
-func SelectUserByID(userID uint64) (*User, error) {
-	res := User{ID: userID}
+func SelectUserByID(userID uint64) (*model.User, error) {
+	// TODO 优化查询字段
+	res := model.User{ID: userID}
 	if err := global.DB.First(&res).Error; err != nil {
 		return nil, err
 	}
 	return &res, nil
 }
 
-func SelectUserByIDs(ids map[uint64]struct{}) ([]*User, error) {
-	res := make([]*User, 0)
+func SelectUserByIDs(ids map[uint64]struct{}) ([]*model.User, error) {
+	res := make([]*model.User, 0)
 	err := global.DB.Where("id IN (?)", ids).Find(&res).Error
 	if err != nil {
 		return nil, err
@@ -48,8 +31,17 @@ func SelectUserByIDs(ids map[uint64]struct{}) ([]*User, error) {
 	return res, nil
 }
 
-func SelectUserByName(username string) ([]*User, error) {
-	res := make([]*User, 0)
+func SelectUserByIDList(uIDList []uint64) ([]*model.User, error) {
+	res := make([]*model.User, 0)
+	err := global.DB.Where("id IN (?)", uIDList).Find(&res).Error
+	if err != nil {
+		return nil, err
+	}
+	return res, nil
+}
+
+func SelectUserByName(username string) (*model.User, error) {
+	res := &model.User{}
 	if err := global.DB.Where("username = ?", username).Limit(1).Find(&res).Error; err != nil {
 		return nil, err
 	}
@@ -57,7 +49,7 @@ func SelectUserByName(username string) ([]*User, error) {
 }
 
 func IncreaseUserFavoriteCount(userID uint64) (int64, error) {
-	user := &User{ID: userID}
+	user := &model.User{ID: userID}
 	err := global.DB.First(&user).Error
 	if err != nil {
 		return 0, err
@@ -69,7 +61,7 @@ func IncreaseUserFavoriteCount(userID uint64) (int64, error) {
 }
 
 func DecreaseUserFavoriteCount(userID uint64) (int64, error) {
-	user := &User{ID: userID}
+	user := &model.User{ID: userID}
 	err := global.DB.First(&user).Error
 	if err != nil {
 		return 0, err
@@ -80,8 +72,8 @@ func DecreaseUserFavoriteCount(userID uint64) (int64, error) {
 	return user.FavoriteCount, nil
 }
 
-func SelectTopFollowers(limit int) ([]*User, error) {
-	res := make([]*User, 0)
+func SelectTopFollowers(limit int) ([]*model.User, error) {
+	res := make([]*model.User, 0)
 	err := global.DB.Order("follower_count DESC").Limit(limit).Find(&res).Error
 	if err != nil {
 		return nil, err

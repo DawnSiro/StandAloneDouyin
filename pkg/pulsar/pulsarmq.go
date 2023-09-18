@@ -5,14 +5,14 @@ import (
 	"github.com/cloudwego/hertz/pkg/common/hlog"
 )
 
-type PulsarMQ struct {
+type MQ struct {
 	Topic        string
 	Subscription string
 	Producer     pulsar.Producer
 	Consumer     pulsar.Consumer
 }
 
-func NewPulsarMQ(client pulsar.Client, topic, subscription string) *PulsarMQ {
+func NewPulsarMQ(client pulsar.Client, topic, subscription string) *MQ {
 	producer, err := client.CreateProducer(pulsar.ProducerOptions{
 		Topic: topic,
 	})
@@ -28,19 +28,19 @@ func NewPulsarMQ(client pulsar.Client, topic, subscription string) *PulsarMQ {
 		hlog.Fatalf("Failed to create consumer: %v", err)
 	}
 
-	return &PulsarMQ{producer.Topic(), consumer.Subscription(), producer, consumer}
+	return &MQ{producer.Topic(), consumer.Subscription(), producer, consumer}
 }
 
-func (mq *PulsarMQ) RunConsume(f func() error) {
+func (mq *MQ) RunConsume(f func() error) {
 	go func() {
 		err := f()
 		if err != nil {
-			hlog.Errorf("follow action cosumer error: %v", err)
+			hlog.Errorf("follow action consumer error: %v", err)
 		}
 	}()
 }
 
-func (mq *PulsarMQ) Close() {
+func (mq *MQ) Close() {
 	mq.Producer.Close()
 	mq.Consumer.Close()
 }

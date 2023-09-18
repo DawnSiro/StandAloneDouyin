@@ -2,13 +2,15 @@ package pulsar
 
 import (
 	"context"
+	"sync"
+
 	"douyin/dal/db"
 	"douyin/pkg/constant"
 	"douyin/pkg/global"
+
 	"github.com/apache/pulsar-client-go/pulsar"
 	"github.com/cloudwego/hertz/pkg/common/hlog"
 	"github.com/cloudwego/hertz/pkg/common/json"
-	"sync"
 )
 
 type LikeActionMessage struct {
@@ -18,7 +20,7 @@ type LikeActionMessage struct {
 }
 
 type LikeActionMQ struct {
-	*PulsarMQ
+	*MQ
 }
 
 var (
@@ -28,18 +30,16 @@ var (
 
 func GetLikeActionMQInstance() *LikeActionMQ {
 	// 懒汉式单例模式，同时保证线程安全
-	if lmq == nil {
-		lOnce.Do(func() {
-			lmq = newLikeActionMQ()
-		})
-	}
+	lOnce.Do(func() {
+		lmq = newLikeActionMQ()
+	})
 	return lmq
 }
 
 // 私有化创建实例函数
 func newLikeActionMQ() *LikeActionMQ {
 	res := &LikeActionMQ{
-		PulsarMQ: NewPulsarMQ(global.PulsarClient, constant.LikeActionTopic, constant.LikeActionSubscription),
+		MQ: NewPulsarMQ(global.PulsarClient, constant.LikeActionTopic, constant.LikeActionSubscription),
 	}
 	res.RunConsume(res.Consume)
 	return res
@@ -52,13 +52,13 @@ func (mq *LikeActionMQ) Consume() error {
 		if err != nil {
 			return err
 		}
-		hlog.Debugf("like action consumer: recieve message (id=%v)", msg.ID())
+		hlog.Debugf("like action consumer: receive message (id=%v)", msg.ID())
 
 		err = mq.Consumer.Ack(msg)
 		if err != nil {
 			return err
 		}
-		hlog.Debugf("like action consumer: acknowlege message (id=%v)", msg.ID())
+		hlog.Debugf("like action consumer: acknowledge message (id=%v)", msg.ID())
 
 		var res LikeActionMessage
 		err = json.Unmarshal(msg.Payload(), &res)
@@ -70,9 +70,9 @@ func (mq *LikeActionMQ) Consume() error {
 		}
 
 		switch res.Action {
-		case 1:
+		case constant.Favorite:
 			err = db.FavoriteVideo(res.UserID, res.VideoID)
-		case 2:
+		case constant.CancelFavorite:
 			err = db.CancelFavoriteVideo(res.UserID, res.VideoID)
 		}
 		if err != nil {

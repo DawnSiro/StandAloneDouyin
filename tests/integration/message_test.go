@@ -26,9 +26,9 @@ var _ = Describe("message test", func() {
 
 	BeforeEach(func() {
 		var err error
-		idA, tokenA, err = util.GetUseridAndToken(userA, password)
+		idA, tokenA, err = util.GetUserIDAndToken(userA, password)
 		Expect(err).To(BeNil())
-		idB, tokenB, err = util.GetUseridAndToken(userB, password)
+		idB, tokenB, err = util.GetUserIDAndToken(userB, password)
 		Expect(err).To(BeNil())
 		// DoRelationAction(map[string]string{
 		// 	"token":       tokenA,

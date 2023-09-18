@@ -1,14 +1,14 @@
-package initialize
+package viper
 
 import (
 	"douyin/pkg/global"
-
 	"github.com/cloudwego/hertz/pkg/common/hlog"
 	"github.com/fsnotify/fsnotify"
 	"github.com/spf13/viper"
 )
 
-func Viper() {
+// InitConfig 从配置文件中读取数据以初始化配置相关数据，注意需要提前解析
+func InitConfig() {
 	// 设置配置文件类型和路径
 	viper.SetConfigType("yml")
 	viper.SetConfigFile(global.ConfigPath)

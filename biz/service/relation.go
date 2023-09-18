@@ -4,45 +4,57 @@ import (
 	"douyin/biz/model/api"
 	"douyin/dal/db"
 	"douyin/dal/pack"
+	"douyin/dal/rdb"
 	"douyin/pkg/errno"
 	"douyin/pkg/global"
 	"douyin/pkg/pulsar"
-
-	"fmt"
-	"math/rand"
 	"strconv"
-	"sync"
-	"time"
 
 	"github.com/cloudwego/hertz/pkg/common/hlog"
-	"github.com/cloudwego/hertz/pkg/common/json"
 )
 
 func Follow(userID, toUserID uint64) (*api.DouyinRelationActionResponse, error) {
+	logTag := "service.relation.Follow err:"
 	if userID == toUserID {
 		errNo := errno.UserRequestParameterError
 		errNo.ErrMsg = "不能自己关注自己哦"
-		hlog.Error("service.relation.Follow err:", errNo.Error())
+		hlog.Error(logTag, errNo.Error())
 		return nil, errNo
 	}
-	isFollow := db.IsFollow(userID, toUserID)
+
+	// 查询缓存
+	isFollow, err := rdb.IsFollow(userID, toUserID)
+	// 缓存不存在则查询数据库
+	if err != nil {
+		hlog.Error(logTag, err.Error())
+		isFollow = db.IsFollow(userID, toUserID)
+		// 异步更新缓存，不阻塞
+		go func() {
+			set, err := db.SelectFollowUserIDSet(userID)
+			if err != nil {
+				hlog.Error(logTag, err.Error())
+				return
+			}
+			err = rdb.SetFollowUserIDSet(userID, set)
+			if err != nil {
+				hlog.Error(logTag, err.Error())
+			}
+		}()
+	}
+
 	if isFollow {
-		hlog.Error("service.relation.Follow err:", errno.RepeatOperationError)
+		hlog.Error(logTag, errno.RepeatOperationError)
 		return nil, errno.RepeatOperationError
 	}
 
-	//关注操作
-	// publish a message to pulsar
-	err := pulsar.GetFollowActionMQInstance().FollowAction(toUserID, userID)
+	// 关注操作
+	// 放入消息队列
+	err = pulsar.GetFollowActionMQInstance().FollowAction(toUserID, userID)
 	if err != nil {
-		hlog.Error("service.relation.Follow err:", err.Error())
-		return nil, err // TODO: errno
+		hlog.Error(logTag, err.Error())
+		return nil, err
 	}
 	hlog.Debug("service.relation.Follow: publish a message")
-
-	// Notify cache invalidation
-	// Publish a message to the Redis channel indicating a friend list change
-	global.UserInfoRC.Publish("friendList_changes", "friend_followed"+"&"+strconv.FormatUint(userID, 10)+"&"+strconv.FormatUint(toUserID, 10))
 
 	return &api.DouyinRelationActionResponse{
 		StatusCode: errno.Success.ErrCode,
@@ -50,25 +62,47 @@ func Follow(userID, toUserID uint64) (*api.DouyinRelationActionResponse, error) 
 }
 
 func CancelFollow(userID, toUserID uint64) (*api.DouyinRelationActionResponse, error) {
+	logTag := "service.relation.CancelFollow err:"
 	if userID == toUserID {
 		errNo := errno.UserRequestParameterError
 		errNo.ErrMsg = "不能自己取关自己哦"
-		hlog.Error("service.relation.CancelFollow err:", errNo.Error())
+		hlog.Error(logTag, errNo.Error())
 		return nil, errNo
 	}
 
-	//取消关注
-	// publish a message to pulsar
-	err := pulsar.GetFollowActionMQInstance().CancelFollowAction(toUserID, userID)
+	// 查询缓存
+	isFollow, err := rdb.IsFollow(userID, toUserID)
+	// 缓存不存在则查询数据库
 	if err != nil {
-		hlog.Error("service.relation.CancelFollow err:", err.Error())
-		return nil, err // TODO: errno
+		hlog.Error(logTag, err.Error())
+		isFollow = db.IsFollow(userID, toUserID)
+		// 异步更新缓存，不阻塞
+		go func() {
+			set, err := db.SelectFollowUserIDSet(userID)
+			if err != nil {
+				hlog.Error(logTag, err.Error())
+				return
+			}
+			err = rdb.SetFollowUserIDSet(userID, set)
+			if err != nil {
+				hlog.Error(logTag, err.Error())
+			}
+		}()
+	}
+
+	if !isFollow {
+		hlog.Error(logTag, errno.RepeatOperationError)
+		return nil, errno.RepeatOperationError
+	}
+
+	// 取消关注
+	// 放入消息队列
+	err = pulsar.GetFollowActionMQInstance().CancelFollowAction(toUserID, userID)
+	if err != nil {
+		hlog.Error(logTag, err.Error())
+		return nil, err
 	}
 	hlog.Debug("service.relation.CancelFollow: publish a message")
-
-	// Notify cache invalidation
-	// Publish a message to the Redis channel indicating a friend list change
-	global.UserInfoRC.Publish("friendList_changes", "friend_unfollowed"+"&"+strconv.FormatUint(userID, 10)+"&"+strconv.FormatUint(toUserID, 10))
 
 	return &api.DouyinRelationActionResponse{
 		StatusCode: errno.Success.ErrCode,
@@ -79,219 +113,167 @@ func CancelFollow(userID, toUserID uint64) (*api.DouyinRelationActionResponse, e
 // userID 为发送请求的用户ID，从 Token 里取到
 // selectUserID 为需要查询的用户的ID，做为请求参数传递
 func GetFollowList(userID, selectUserID uint64) (*api.DouyinRelationFollowListResponse, error) {
-	// Check if cache key is valid using Bloom filter
-	cacheKey := fmt.Sprintf("followList:%d", userID)
-	if bloomFilter.TestString(cacheKey) {
-		cachedData, err := global.UserInfoRC.Get(cacheKey).Result()
-		if err == nil {
-			// Cache hit, return cached data
-			var cachedResponse api.DouyinRelationFollowListResponse
-			if err := json.Unmarshal([]byte(cachedData), &cachedResponse); err != nil {
-				hlog.Error("service.relation.GetFollowList err: Error decoding cached data, ", err.Error())
-			} else {
-				return &cachedResponse, nil
-			}
+	logTag := "service.relation.GetFollowList err:"
+	// 使用布隆过滤器判断用户ID是否存在
+	if !global.UserIDBloomFilter.TestString(strconv.FormatUint(selectUserID, 10)) {
+		hlog.Error(logTag, "布隆过滤器拦截")
+		return nil, errno.UserRequestParameterError
+	}
+
+	followUserIDSet, err := rdb.GetFollowUserIDSet(userID)
+	if err != nil {
+		hlog.Error(logTag, err.Error())
+		// 查询数据库
+		set, err := db.SelectFollowUserIDSet(userID)
+		if err != nil {
+			hlog.Error(logTag, err.Error())
+			return nil, err
+		}
+		followUserIDSet = make(map[uint64]struct{}, len(set))
+		for _, value := range set {
+			followUserIDSet[value] = struct{}{}
+		}
+		// 设置缓存
+		err = rdb.SetFollowUserIDSet(userID, set)
+		if err != nil {
+			hlog.Error(logTag, err.Error())
 		}
 	}
 
-	// Create a random duration for cache expiration
-	minDuration := 6 * time.Hour
-	maxDuration := 12 * time.Hour
-	cacheDuration := minDuration + time.Duration(rand.Intn(int(maxDuration-minDuration)))
+	// 获取缓存
+	zSet, err := rdb.GetFollowUserZSet(selectUserID)
+	// 查询缓存
+	if err == nil {
+		followUser := make([]*api.FollowUser, len(zSet))
+		for i, data := range zSet {
+			var isFollow bool
+			// 判断是否在用户关注的集合中存在
+			if _, ok := followUserIDSet[data.UID]; ok {
+				isFollow = true
+			}
+			followUser[i] = pack.FollowUserWithRedis(data, isFollow)
+		}
 
-	// Create a WaitGroup for the cache update operation
-	waitGroup := &sync.WaitGroup{}
-	waitGroup.Add(1)
-
-	// Check if another thread is updating the cache
-	cacheMutex.Lock()
-	existingWaitGroup, exists := cacheStatus[cacheKey]
-	if exists {
-		cacheMutex.Unlock()
-		existingWaitGroup.Wait()
-		return GetFollowList(userID, selectUserID)
+		return &api.DouyinRelationFollowListResponse{
+			StatusCode: errno.Success.ErrCode,
+			UserList:   followUser,
+		}, nil
 	}
-	// Set cache status flag to indicate cache update is in progress
-	cacheStatus[cacheKey] = waitGroup
-	cacheMutex.Unlock()
 
-	// Cache miss, query the database
-	relationDataList, err := db.SelectFollowDataListByUserID(userID)
+	// 缓存未命中则查询数据库
+	followUserList, err := db.SelectFollowUserListByUserID(selectUserID)
 	if err != nil {
-		hlog.Error("service.relation.GetFollowList err:", err.Error())
-		// Release cache status flag to allow other threads to update cache
-		cacheMutex.Lock()
-		delete(cacheStatus, cacheKey)
-		cacheMutex.Unlock()
+		hlog.Error(logTag, err.Error())
 		return nil, err
 	}
-
-	// Convert to response format
-	response := &api.DouyinRelationFollowListResponse{
-		StatusCode: errno.Success.ErrCode,
-		UserList:   pack.RelationDataList(relationDataList),
-	}
-
-	// Store the data in Redis cache with the random expiration time
-	responseJSON, _ := json.Marshal(response)
-	err = global.UserInfoRC.Set(cacheKey, responseJSON, cacheDuration).Err()
+	// 设置缓存
+	err = rdb.SetFollowUserZSet(selectUserID, followUserList)
 	if err != nil {
-		hlog.Error("service.relation.GetFollowList err: Error storing data in cache, ", err.Error())
+		hlog.Error(logTag, err.Error())
 	}
-
-	// Release cache status flag and signal that cache update is done
-	cacheMutex.Lock()
-	delete(cacheStatus, cacheKey)
-	waitGroup.Done()
-	cacheMutex.Unlock()
-
-	return response, nil
+	// 返回结果
+	followUser := make([]*api.FollowUser, len(followUserList))
+	for i, data := range followUserList {
+		var isFollow bool
+		// 判断是否在用户关注的集合中存在
+		if _, ok := followUserIDSet[data.UID]; ok {
+			isFollow = true
+		}
+		followUser[i] = pack.FollowUser(data, isFollow)
+	}
+	return &api.DouyinRelationFollowListResponse{
+		StatusCode: errno.Success.ErrCode,
+		UserList:   followUser,
+	}, nil
 }
 
 func GetFollowerList(userID, selectUserID uint64) (*api.DouyinRelationFollowerListResponse, error) {
-	cacheKey := fmt.Sprintf("followerList:%d", userID)
-	if bloomFilter.TestString(cacheKey) {
-		cachedData, err := global.UserInfoRC.Get(cacheKey).Result()
-		if err == nil {
-			// Cache hit, return cached data
-			var cachedResponse api.DouyinRelationFollowerListResponse
-			if err := json.Unmarshal([]byte(cachedData), &cachedResponse); err != nil {
-				hlog.Error("service.relation.GetFollowerList err: Error decoding cached data, ", err.Error())
-			} else {
-				return &cachedResponse, nil
-			}
+	logTag := "service.relation.GetFollowerList err:"
+	// 使用布隆过滤器判断用户ID是否存在
+	if !global.UserIDBloomFilter.TestString(strconv.FormatUint(selectUserID, 10)) {
+		hlog.Error(logTag, "布隆过滤器拦截")
+		return nil, errno.UserRequestParameterError
+	}
+
+	// 查询用户关注列表缓存
+	followUserIDSet, err := rdb.GetFollowUserIDSet(userID)
+	if err != nil {
+		hlog.Error(logTag, err.Error())
+		// 查询数据库
+		set, err := db.SelectFollowUserIDSet(userID)
+		if err != nil {
+			hlog.Error(logTag, err.Error())
+			return nil, err
+		}
+		followUserIDSet = make(map[uint64]struct{}, len(set))
+		for _, value := range set {
+			followUserIDSet[value] = struct{}{}
+		}
+		// 设置缓存
+		err = rdb.SetFollowUserIDSet(userID, set)
+		if err != nil {
+			hlog.Error(logTag, err.Error())
 		}
 	}
 
-	// Create a random duration for cache expiration
-	minDuration := 6 * time.Hour
-	maxDuration := 12 * time.Hour
-	cacheDuration := minDuration + time.Duration(rand.Intn(int(maxDuration-minDuration)))
+	// 获取缓存
+	zSet, err := rdb.GetFanUserZSet(selectUserID)
+	// 查询缓存
+	if err == nil {
+		followUser := make([]*api.FollowerUser, len(zSet))
+		for i, data := range zSet {
+			var isFollow bool
+			// 判断是否在用户关注的集合中存在
+			if _, ok := followUserIDSet[data.UID]; ok {
+				isFollow = true
+			}
+			followUser[i] = pack.FollowerUserWithRedis(data, isFollow)
+		}
 
-	// Create a WaitGroup for the cache update operation
-	waitGroup := &sync.WaitGroup{}
-	waitGroup.Add(1)
-
-	// Check if another thread is updating the cache
-	cacheMutex.Lock()
-	existingWaitGroup, exists := cacheStatus[cacheKey]
-	if exists {
-		cacheMutex.Unlock()
-		existingWaitGroup.Wait()
-		return GetFollowerList(userID, selectUserID)
+		return &api.DouyinRelationFollowerListResponse{
+			StatusCode: errno.Success.ErrCode,
+			UserList:   followUser,
+		}, nil
 	}
-	// Set cache status flag to indicate cache update is in progress
-	cacheStatus[cacheKey] = waitGroup
-	cacheMutex.Unlock()
 
-	// Cache miss, query the database
-	relationDataList, err := db.SelectFollowerDataListByUserID(userID)
+	// 缓存未命中则查询数据库
+	followUserList, err := db.SelectFanUserListByUserID(selectUserID)
 	if err != nil {
-		hlog.Error("service.relation.GetFollowerList err: ", err.Error())
-		// Release cache status flag to allow other threads to update cache
-		cacheMutex.Lock()
-		delete(cacheStatus, cacheKey)
-		cacheMutex.Unlock()
+		hlog.Error(logTag, err.Error())
 		return nil, err
 	}
-
-	// Convert to response format
-	response := &api.DouyinRelationFollowerListResponse{
-		StatusCode: errno.Success.ErrCode,
-		UserList:   pack.RelationDataList(relationDataList),
-	}
-
-	// Store the data in Redis cache with the random expiration time
-	responseJSON, _ := json.Marshal(response)
-	err = global.UserInfoRC.Set(cacheKey, responseJSON, cacheDuration).Err()
+	// 设置缓存
+	err = rdb.SetFanUserZSet(selectUserID, followUserList)
 	if err != nil {
-		hlog.Error("service.relation.GetFollowerList err: Error storing data in cache, ", err.Error())
+		hlog.Error(logTag, err.Error())
 	}
-
-	// Release cache status flag and signal that cache update is done
-	cacheMutex.Lock()
-	delete(cacheStatus, cacheKey)
-	waitGroup.Done()
-	cacheMutex.Unlock()
-
-	return response, nil
+	// 返回结果
+	followUser := make([]*api.FollowerUser, len(followUserList))
+	for i, data := range followUserList {
+		var isFollow bool
+		// 判断是否在用户关注的集合中存在
+		if _, ok := followUserIDSet[data.UID]; ok {
+			isFollow = true
+		}
+		followUser[i] = pack.FollowerUser(data, isFollow)
+	}
+	return &api.DouyinRelationFollowerListResponse{
+		StatusCode: errno.Success.ErrCode,
+		UserList:   followUser,
+	}, nil
 }
 
 func GetFriendList(userID uint64) (*api.DouyinRelationFriendListResponse, error) {
-	cacheKey := fmt.Sprintf("friendList:%d", userID)
-	if bloomFilter.TestString(cacheKey) {
-		cachedData, err := global.UserInfoRC.Get(cacheKey).Result()
-		if err == nil {
-			// Cache hit, return cached data
-			var cachedResponse api.DouyinRelationFriendListResponse
-			if err := json.Unmarshal([]byte(cachedData), &cachedResponse); err != nil {
-				hlog.Error("service.relation.GetFriendList err: Error decoding cached data, ", err.Error())
-			} else {
-				return &cachedResponse, nil
-			}
-		}
-	}
-
-	// Create a random duration for cache expiration
-	minDuration := 6 * time.Hour
-	maxDuration := 12 * time.Hour
-	cacheDuration := minDuration + time.Duration(rand.Intn(int(maxDuration-minDuration)))
-
-	// Create a WaitGroup for the cache update operation
-	waitGroup := &sync.WaitGroup{}
-	waitGroup.Add(1)
-
-	// Check if another thread is updating the cache
-	cacheMutex.Lock()
-	existingWaitGroup, exists := cacheStatus[cacheKey]
-	if exists {
-		cacheMutex.Unlock()
-		existingWaitGroup.Wait()
-		return GetFriendList(userID)
-	}
-	// Set cache status flag to indicate cache update is in progress
-	cacheStatus[cacheKey] = waitGroup
-	cacheMutex.Unlock()
-
-	// Cache miss, query the database
-	userList, err := db.GetFriendList(userID)
+	logTag := "service.relation.GetFriendList err: "
+	// db 层进行了处理，解决了循环查询 DB 的问题
+	fuDataList, err := db.SelectFriendDataList(userID)
 	if err != nil {
-		hlog.Error("service.relation.GetFriendList err: ", err.Error())
-		// Release cache status flag to allow other threads to update cache
-		cacheMutex.Lock()
-		delete(cacheStatus, cacheKey)
-		cacheMutex.Unlock()
+		hlog.Error(logTag, err.Error())
 		return nil, err
 	}
 
-	// Convert to response format
-	friendUserList := make([]*api.FriendUser, 0, len(userList))
-	for _, u := range userList {
-		msg, err := db.GetLatestMsg(userID, u.ID)
-		if err != nil {
-			hlog.Error("service.relation.GetFriendList err: ", err.Error())
-			return nil, err
-		}
-		friendUserList = append(friendUserList, pack.FriendUser(u, db.IsFollow(userID, u.ID), msg.Content, msg.MsgType))
-	}
-
-	response := &api.DouyinRelationFriendListResponse{
+	return &api.DouyinRelationFriendListResponse{
 		StatusCode: errno.Success.ErrCode,
-		UserList:   friendUserList,
-	}
-
-	// Store the data in Redis cache with the random expiration time
-	responseJSON, _ := json.Marshal(response)
-	err = global.UserInfoRC.Set(cacheKey, responseJSON, cacheDuration).Err()
-	if err != nil {
-		hlog.Error("service.relation.GetFriendList err: Error storing data in cache, ", err.Error())
-	}
-
-	// Release cache status flag and signal that cache update is done
-	cacheMutex.Lock()
-	delete(cacheStatus, cacheKey)
-	waitGroup.Done()
-	cacheMutex.Unlock()
-
-	return response, nil
+		UserList:   pack.FriendUserDataList(fuDataList),
+	}, nil
 }
